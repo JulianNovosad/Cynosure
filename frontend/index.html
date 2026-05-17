@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CYNOSURE // Net Containment Matrix</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#a0d8e8;font-family:'Share Tech Mono',monospace;overflow:hidden;display:flex}
+#canvas-container{flex:1;height:100vh;position:relative}
+#scanlines{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,200,0.015) 2px,rgba(0,255,200,0.015) 4px)}
+#vignette{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99;
+  background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,0.85) 100%)}
+#panel{width:300px;height:100vh;background:linear-gradient(180deg,#040c18 0%,#020810 100%);
+  border-left:1px solid #0a3a4a;padding:8px;overflow-y:auto;font-size:10px;position:relative}
+#panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,#0af,#0fa,transparent)}
+#panel h2{color:#0df;font-size:11px;margin:8px 0 3px;border-bottom:1px solid #0a3a4a;
+  padding-bottom:2px;text-transform:uppercase;letter-spacing:3px}
+#panel h2::before{content:'// ';color:#0fa}
+.metric-row{display:flex;justify-content:space-between;padding:1px 0;border-bottom:1px dotted #0a2a3a}
+.metric-row .label{color:#4a8a9a}
+.metric-row .val{color:#0fa;font-weight:bold}
+#announcer-box{background:#040c18;border:1px solid #0a3a4a;padding:6px;margin:6px 0;min-height:40px;
+  font-style:italic;color:#6cf;font-size:9px;line-height:1.4;position:relative}
+#announcer-box::before{content:'[NET BROADCAST]';position:absolute;top:-7px;left:6px;background:#040c18;
+  padding:0 3px;color:#0df;font-size:8px;font-style:normal;letter-spacing:1px}
+#tick-display{font-size:20px;color:#0df;text-align:center;padding:5px;margin-bottom:5px;
+  border:1px solid #0a3a4a;background:#040c18;text-shadow:0 0 8px #0df}
+#tick-display span{font-size:9px;color:#4a8a9a;display:block;letter-spacing:3px}
+.agent-row{display:flex;align-items:center;gap:3px;padding:1px 0;font-size:9px}
+.agent-row .dot{width:6px;height:6px;border-radius:50%;display:inline-block;
+  box-shadow:0 0 3px currentColor}
+.agent-row .name{color:#6ab;min-width:24px}
+.agent-row .ram{color:#4a8a9a}
+.agent-row .status{margin-left:auto;font-size:11px}
+.agent-row .status.alive{color:#0fa}
+.agent-row .status.dead{color:#f44}
+.agent-row .action{font-size:8px;padding:0 3px;border-radius:1px;margin-left:3px}
+.action-attack{background:#200;color:#f66;border:1px solid #f44}
+.action-merge{background:#020;color:#6f6;border:1px solid #4f4}
+.action-defend{background:#002;color:#66f;border:1px solid #44f}
+.action-move{background:#220;color:#ff6;border:1px solid #ff4}
+.legend{display:flex;flex-wrap:wrap;gap:2px;margin:3px 0}
+.legend-item{width:12px;height:12px;border-radius:1px;display:inline-flex;align-items:center;
+  justify-content:center;font-size:6px;color:#fff;font-weight:bold;border:1px solid rgba(255,255,255,0.15)}
+#footer{margin-top:8px;color:#234;font-size:8px;border-top:1px solid #0a3a4a;padding-top:4px}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:#040c18}
+::-webkit-scrollbar-thumb{background:#0a3a4a}
+</style>
+</head>
+<body>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+<div id="canvas-container"></div>
+<div id="panel">
+  <div id="tick-display"><span>CYNOSURE // TICK</span>0</div>
+  <div id="announcer-box">Initializing containment matrix...</div>
+  <h2>Agents</h2>
+  <div id="agent-list"></div>
+  <h2>Metrics</h2>
+  <div id="metrics-list"></div>
+  <h2>Legend</h2>
+  <div class="legend" id="legend"></div>
+  <div id="footer">
+    <div style="color:#0df">DRAG rotate | SCROLL zoom | R-DRAG pan</div>
+    <div style="margin-top:3px;color:#234">CYNOSURE v5.2 // CONTAINMENT ACTIVE</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const AGENT_COLORS = [
+  0x00ffff, 0xff00ff, 0x00ff88, 0xff8800, 0x8800ff,
+  0xff0044, 0x44ff00, 0x0088ff, 0xff4488, 0x88ff44,
+  0x44ffff, 0xffff44, 0xff4444, 0x44ff88, 0x8844ff,
+];
+const ACTION_NAMES = ['MOVE','HUNT','COLLECT','WAIT','WHISPER','PROBE','MANIPULATE'];
+const ACTION_CLASSES = ['action-move','action-hunt','action-collect','action-wait','action-whisper','action-probe','action-manipulate'];
+const ACTION_COLORS = {
+  0: 0x2244ff,  // MOVE = blue
+  1: 0xffffff,  // HUNT = white
+  2: 0x22ff44,  // COLLECT = green
+  3: 0x888888,  // WAIT = gray
+  4: 0xff00ff,  // WHISPER = purple
+  5: 0x44ff44,  // PROBE = green
+  6: 0xff8800,  // MANIPULATE = orange
+};
+
+// Scene setup - deep void
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+scene.fog = new THREE.FogExp2(0x000508, 0.003);
+
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth/container.clientHeight, 1, 1200);
+camera.position.set(200, 150, 220);
+
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:false});
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(16, 16, 16);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 40;
+controls.maxDistance = 600;
+controls.update();
+
+// Lighting - teal/cyan dominant with red accents
+const ambient = new THREE.AmbientLight(0x0a2a3a, 0.3);
+scene.add(ambient);
+const dirLight = new THREE.DirectionalLight(0x00ccaa, 0.5);
+dirLight.position.set(100, 200, 100);
+scene.add(dirLight);
+const fillLight = new THREE.DirectionalLight(0x0088aa, 0.2);
+fillLight.position.set(-100, 50, -100);
+scene.add(fillLight);
+const redAccent = new THREE.DirectionalLight(0xff2244, 0.08);
+redAccent.position.set(0, 100, 0);
+scene.add(redAccent);
+
+// === INFINITE GRID (Tron-style, extends beyond arena) ===
+function createInfiniteGrid(size, divisions, color, opacity) {
+  const points = [];
+  const step = size / divisions;
+  for (let i = 0; i <= divisions; i++) {
+    const pos = -size/2 + i * step;
+    for (let j = 0; j <= divisions; j += 3) {
+      const p = -size/2 + j * step;
+      points.push(pos, 0.05, p);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  const mat = new THREE.PointsMaterial({color, size: 0.6, transparent:true, opacity,
+    blending: THREE.AdditiveBlending, depthWrite:false});
+  return new THREE.Points(geo, mat);
+}
+const infiniteGrid = createInfiniteGrid(64, 16, 0x006688, 0.25);
+infiniteGrid.position.set(16, 0, 16);
+scene.add(infiniteGrid);
+
+// Solid grid lines (sparse, Tron-style) - only major lines
+const gridHelper = new THREE.GridHelper(32, 8, 0x0088aa, 0x003344);
+gridHelper.position.set(16, 0.02, 16);
+scene.add(gridHelper);
+
+// === VERTICAL DATA BEAMS (ICE-like columns, more dense near boundary) ===
+const dataBeams = [];
+function createDataBeam(x, z, height, color, opacity) {
+  const geo = new THREE.CylinderGeometry(0.2, 0.2, height, 4, 1, true);
+  const mat = new THREE.MeshBasicMaterial({color, transparent:true, opacity,
+    blending: THREE.AdditiveBlending, depthWrite:false, side: THREE.DoubleSide});
+  const beam = new THREE.Mesh(geo, mat);
+  beam.position.set(x, height/2, z);
+  scene.add(beam);
+  const glowGeo = new THREE.CylinderGeometry(0.8, 0.8, height, 4, 1, true);
+  const glowMat = new THREE.MeshBasicMaterial({color, transparent:true, opacity: opacity*0.12,
+    blending: THREE.AdditiveBlending, depthWrite:false, side: THREE.DoubleSide});
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.position.copy(beam.position);
+  scene.add(glow);
+  dataBeams.push({beam, glow, mat, glowMat});
+  return beam;
+}
+
+// Create ambient data beams - denser near arena edges
+const beamPositions = [];
+for (let i = 0; i < 20; i++) {
+  const angle = Math.random() * Math.PI * 2;
+  const dist = 12 + Math.random() * 8;
+  const x = 16 + Math.cos(angle) * dist;
+  const z = 16 + Math.sin(angle) * dist;
+  const h = 8 + Math.random() * 16;
+  const c = Math.random() > 0.7 ? 0xff2244 : (Math.random() > 0.5 ? 0x00ccaa : 0x0088ff);
+  createDataBeam(x, z, h, c, 0.2 + Math.random() * 0.2);
+  beamPositions.push({x, z});
+}
+
+// === RED LASER LINE (cutting through netspace) - centered on 32 arena ===
+const laserGeo = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(-10, 16, 16),
+  new THREE.Vector3(42, 16, 16),
+]);
+const laserMat = new THREE.LineBasicMaterial({color:0xff2244, transparent:true, opacity:0.6,
+  blending:THREE.AdditiveBlending, linewidth: 2});
+const laserLine = new THREE.Line(laserGeo, laserMat);
+scene.add(laserLine);
+
+const laserGlowGeo = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(-10, 16, 16),
+  new THREE.Vector3(42, 16, 16),
+]);
+const laserGlowMat = new THREE.LineBasicMaterial({color:0xff2244, transparent:true, opacity:0.15,
+  blending:THREE.AdditiveBlending});
+const laserGlow = new THREE.Line(laserGlowGeo, laserGlowMat);
+scene.add(laserGlow);
+
+const laser2Geo = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(16, 16, -10),
+  new THREE.Vector3(16, 16, 42),
+]);
+const laser2Mat = new THREE.LineBasicMaterial({color:0xff2244, transparent:true, opacity:0.4,
+  blending:THREE.AdditiveBlending});
+const laser2 = new THREE.Line(laser2Geo, laser2Mat);
+scene.add(laser2);
+
+// === ARENA WIREFRAME (data fortress outline) ===
+const boxGeo = new THREE.BoxGeometry(32, 32, 32);
+const boxEdges = new THREE.EdgesGeometry(boxGeo);
+const boxMat = new THREE.LineBasicMaterial({color:0x006688, transparent:true, opacity:0.15});
+const boxFrame = new THREE.LineSegments(boxEdges, boxMat);
+boxFrame.position.set(16, 16, 16);
+scene.add(boxFrame);
+
+// === GEOMETRIC DATA STRUCTURES (floating blocks, more numerous) ===
+const dataStructures = [];
+for (let i = 0; i < 25; i++) {
+  const size = 2 + Math.random() * 8;
+  const geo = new THREE.BoxGeometry(size, size * (1 + Math.random()), size);
+  const edges = new THREE.EdgesGeometry(geo);
+  const mat = new THREE.LineBasicMaterial({
+    color: Math.random() > 0.5 ? 0x00ccaa : 0x0088ff,
+    transparent:true, opacity: 0.08 + Math.random() * 0.12
+  });
+  const mesh = new THREE.LineSegments(edges, mat);
+  mesh.position.set(
+    10 + Math.random() * 236,
+    10 + Math.random() * 230,
+    10 + Math.random() * 236
+  );
+  mesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
+  scene.add(mesh);
+  dataStructures.push({mesh, rotSpeed: {x: (Math.random()-0.5)*0.008, y: (Math.random()-0.5)*0.008}});
+}
+
+// === SAFE ZONE - Point cloud sphere (dense white/blue at boundary, sparse red outside) ===
+const safeZoneGroup = new THREE.Group();
+safeZoneGroup.position.set(16, 16, 16);
+scene.add(safeZoneGroup);
+
+// Point cloud for safe zone boundary - dense at surface, sparse outside
+const safeZonePointsCount = 2000;
+let safeZoneBaseRadius = 28;
+const safeZoneGeo = new THREE.BufferGeometry();
+const safeZonePositions = new Float32Array(safeZonePointsCount * 3);
+const safeZoneColors = new Float32Array(safeZonePointsCount * 3);
+
+for (let i = 0; i < safeZonePointsCount; i++) {
+  // Random point on sphere surface
+  const phi = Math.random() * Math.PI * 2;
+  const theta = Math.acos(2 * Math.random() - 1);
+  const r = safeZoneBaseRadius;
+  
+  const x = r * Math.sin(theta) * Math.cos(phi);
+  const y = r * Math.sin(theta) * Math.sin(phi);
+  const z = r * Math.cos(theta);
+  
+  safeZonePositions[i*3] = x;
+  safeZonePositions[i*3+1] = y;
+  safeZonePositions[i*3+2] = z;
+  
+  // 70% white/blue (at boundary), 30% red (outside)
+  if (Math.random() < 0.7) {
+    // White/blue at boundary
+    safeZoneColors[i*3] = Math.random() > 0.5 ? 0.8 : 0.6;
+    safeZoneColors[i*3+1] = Math.random() > 0.5 ? 0.9 : 0.7;
+    safeZoneColors[i*3+2] = 1.0;
+  } else {
+    // Red outside
+    safeZoneColors[i*3] = 1.0;
+    safeZoneColors[i*3+1] = 0.2;
+    safeZoneColors[i*3+2] = 0.2;
+  }
+}
+
+safeZoneGeo.setAttribute('position', new THREE.BufferAttribute(safeZonePositions, 3));
+safeZoneGeo.setAttribute('color', new THREE.BufferAttribute(safeZoneColors, 3));
+
+const safeZoneMat = new THREE.PointsMaterial({
+  size: 1.5,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.8,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false
+});
+const safeZonePoints = new THREE.Points(safeZoneGeo, safeZoneMat);
+safeZoneGroup.add(safeZonePoints);
+
+// Outer glow
+const safeGlowGeo = new THREE.SphereGeometry(safeZoneBaseRadius + 6, 24, 24);
+const safeGlowMat = new THREE.MeshBasicMaterial({color: 0x004466, transparent: true, opacity: 0.03, side: THREE.BackSide});
+const safeGlow = new THREE.Mesh(safeGlowGeo, safeGlowMat);
+safeZoneGroup.add(safeGlow);
+
+const iceColumns = [];
+
+// === AGENTS - Icosahedron/diamond colored by action ===
+const agentGroup = new THREE.Group();
+scene.add(agentGroup);
+
+const agentMeshes = {};
+const agentTrailPoints = {};
+
+for (let i = 0; i < 15; i++) {
+  const baseColor = AGENT_COLORS[i];
+  const g = new THREE.Group();
+
+  // Core: icosahedron (diamond-like)
+  const coreGeo = new THREE.IcosahedronGeometry(3, 0);
+  const coreEdges = new THREE.EdgesGeometry(coreGeo);
+  const coreMat = new THREE.MeshBasicMaterial({color: baseColor, transparent:true, opacity:0.95});
+  const core = new THREE.Mesh(coreGeo, coreMat);
+  g.add(core);
+  
+  // Wireframe edges on top
+  const wireMat = new THREE.LineBasicMaterial({color: baseColor, transparent:true, opacity:0.8});
+  const wireframe = new THREE.LineSegments(coreEdges, wireMat);
+  g.add(wireframe);
+
+  // Inner glow
+  const innerGeo = new THREE.IcosahedronGeometry(1.5, 0);
+  const innerMat = new THREE.MeshBasicMaterial({color: baseColor, transparent:true, opacity:0.3});
+  const inner = new THREE.Mesh(innerGeo, innerMat);
+  g.add(inner);
+
+  g.position.set(0, -100, 0);
+  g.visible = false;
+  agentGroup.add(g);
+
+  // Trail - 20 positions with fading
+  const trailGeo = new THREE.BufferGeometry();
+  const trailPositions = new Float32Array(20 * 3);
+  const trailColors = new Float32Array(20 * 3);
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+  trailGeo.setAttribute('color', new THREE.BufferAttribute(trailColors, 3));
+  const trailMat = new THREE.PointsMaterial({size: 1.2, vertexColors: true, transparent:true, opacity: 0.7,
+    blending:THREE.AdditiveBlending, depthWrite:false});
+  const trail = new THREE.Points(trailGeo, trailMat);
+  scene.add(trail);
+  agentTrailPoints[i] = {points: trail, history: [], mat: trailMat};
+
+  agentMeshes[i] = {group: g, core, wireframe, inner, baseColor};
+}
+
+// Agent ID labels - smaller
+const labelSprites = {};
+for (let i = 0; i < 15; i++) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#' + AGENT_COLORS[i].toString(16).padStart(6,'0');
+  ctx.font = 'bold 24px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = '#' + AGENT_COLORS[i].toString(16).padStart(6,'0');
+  ctx.shadowBlur = 8;
+  ctx.fillText(i, 32, 32);
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({map:tex, transparent:true, depthWrite:false, depthTest:true});
+  const sprite = new THREE.Sprite(mat);
+  sprite.position.set(0, -100, 0);
+  sprite.scale.set(8, 8, 1);
+  sprite.visible = false;
+  scene.add(sprite);
+  labelSprites[i] = sprite;
+}
+
+// === DATA STREAMS (attack/merge connections) ===
+const streamLines = {};
+function createStreamLine(id1, id2, color, actionType) {
+  const key = Math.min(id1,id2) + '-' + Math.max(id1,id2);
+  if (streamLines[key]) {
+    scene.remove(streamLines[key].line);
+    scene.remove(streamLines[key].glow);
+    streamLines[key].line.geometry.dispose();
+    streamLines[key].line.material.dispose();
+    streamLines[key].glow.geometry.dispose();
+    streamLines[key].glow.material.dispose();
+  }
+  const a1 = agentMeshes[id1];
+  const a2 = agentMeshes[id2];
+  if (!a1 || !a2) return;
+  const p1 = a1.group.position;
+  const p2 = a2.group.position;
+  const mid = new THREE.Vector3().lerpVectors(
+    new THREE.Vector3(p1.x, p1.y, p1.z),
+    new THREE.Vector3(p2.x, p2.y, p2.z), 0.5
+  );
+  const curve = new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(p1.x, p1.y, p1.z),
+    new THREE.Vector3(mid.x, mid.y + 15, mid.z),
+    new THREE.Vector3(p2.x, p2.y, p2.z)
+  );
+  const points = curve.getPoints(20);
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  const mat = new THREE.LineBasicMaterial({color, transparent:true, opacity:0.7,
+    blending:THREE.AdditiveBlending});
+  const line = new THREE.Line(geo, mat);
+  scene.add(line);
+
+  const glowMat = new THREE.LineBasicMaterial({color, transparent:true, opacity:0.15,
+    blending:THREE.AdditiveBlending});
+  const glow = new THREE.Line(geo.clone(), glowMat);
+  scene.add(glow);
+
+  streamLines[key] = {line, glow, mat, glowMat, actionType};
+}
+
+function clearStreamLines() {
+  for (const key in streamLines) {
+    scene.remove(streamLines[key].line);
+    scene.remove(streamLines[key].glow);
+    streamLines[key].line.geometry.dispose();
+    streamLines[key].line.material.dispose();
+    streamLines[key].glow.geometry.dispose();
+    streamLines[key].glow.material.dispose();
+  }
+}
+
+// === RAM NODES - data pool clusters ===
+let ramPoints = null;
+let ramGlowPoints = null;
+function updateRAMNodes(nodes) {
+  if (ramPoints) { scene.remove(ramPoints); ramPoints.geometry.dispose(); ramPoints.material.dispose(); }
+  if (ramGlowPoints) { scene.remove(ramGlowPoints); ramGlowPoints.geometry.dispose(); ramGlowPoints.material.dispose(); }
+  if (!nodes || nodes.length === 0) { ramPoints = null; ramGlowPoints = null; return; }
+  const positions = new Float32Array(nodes.length * 3);
+  nodes.forEach((n, i) => {
+    positions[i*3] = n.x; positions[i*3+1] = n.y; positions[i*3+2] = n.z;
+  });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const mat = new THREE.PointsMaterial({size:2.5, color:0x00ffcc, transparent:true, opacity:0.8,
+    blending:THREE.AdditiveBlending, depthWrite:false});
+  ramPoints = new THREE.Points(geo, mat);
+  scene.add(ramPoints);
+  const geo2 = new THREE.BufferGeometry();
+  geo2.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const mat2 = new THREE.PointsMaterial({size:8, color:0x00ffcc, transparent:true, opacity:0.08,
+    blending:THREE.AdditiveBlending, depthWrite:false});
+  ramGlowPoints = new THREE.Points(geo2, mat2);
+  scene.add(ramGlowPoints);
+}
+
+// === AMBIENT PARTICLES (data dust) - more numerous, slower ===
+const particleCount = 1200;
+const particleGeo = new THREE.BufferGeometry();
+const particlePositions = new Float32Array(particleCount * 3);
+const particleColors = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+  particlePositions[i*3] = Math.random() * 512;
+  particlePositions[i*3+1] = Math.random() * 512;
+  particlePositions[i*3+2] = Math.random() * 512;
+  const c = Math.random() > 0.8 ? 0.7 : (Math.random() > 0.5 ? 0.5 : 0.3);
+  particleColors[i*3] = 0;
+  particleColors[i*3+1] = c * 0.7;
+  particleColors[i*3+2] = c;
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+particleGeo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+const particleMat = new THREE.PointsMaterial({size:0.4, vertexColors:true, transparent:true, opacity:0.3,
+  blending:THREE.AdditiveBlending, depthWrite:false});
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+// === POLL STATE (throttled, non-overlapping) ===
+let lastTick = -1;
+let prevAgentPositions = {};
+let fetchPending = false;
+const FETCH_INTERVAL = 200; // ms between requests
+
+async function fetchState() {
+  if (fetchPending) return;
+  fetchPending = true;
+  try {
+    const resp = await fetch('/state');
+    const data = await resp.json();
+    if (data.tick === lastTick) return;
+    lastTick = data.tick;
+
+    document.getElementById('tick-display').innerHTML =
+      `<span>CYNOSURE // TICK</span>${data.tick}`;
+    if (data.announcer) document.getElementById('announcer-box').textContent = data.announcer;
+
+    clearStreamLines();
+
+    const agentList = document.getElementById('agent-list');
+    let agentHTML = '';
+    if (data.agents) {
+      data.agents.forEach(a => {
+        const hex = AGENT_COLORS[a.id].toString(16).padStart(6,'0');
+        const actionName = ACTION_NAMES[a.action] || 'IDLE';
+        const actionClass = ACTION_CLASSES[a.action] || '';
+        agentHTML += `<div class="agent-row">
+          <span class="dot" style="color:#${hex};background:#${hex}"></span>
+          <span class="name">AI${a.id}</span>
+          <span class="ram">RAM:${Math.round(a.ram)}</span>
+          <span class="action ${actionClass}">${actionName}</span>
+          <span class="status ${a.alive?'alive':'dead'}">${a.alive?'\u25cf':'\u2715'}</span>
+        </div>`;
+
+        const am = agentMeshes[a.id];
+        const label = labelSprites[a.id];
+        const trail = agentTrailPoints[a.id];
+        if (am && label) {
+          if (a.alive) {
+            am.group.position.set(a.x + 16, a.y + 16, a.z + 16);
+            am.group.visible = true;
+            label.position.set(a.x + 16, a.y + 16 + 6, a.z + 16);
+            label.visible = true;
+
+            // Color by action
+            const actColor = ACTION_COLORS[a.action] || 0x888888;
+            am.core.material.color.setHex(actColor);
+            am.wireframe.material.color.setHex(actColor);
+            am.inner.material.color.setHex(actColor);
+
+            // Size by RAM (base 3, shrinks as they starve - max RAM ~200)
+            const ramScale = Math.max(0.3, Math.min(1.5, a.ram / 80));
+            am.core.scale.set(ramScale, ramScale, ramScale);
+            am.wireframe.scale.set(ramScale, ramScale, ramScale);
+            am.inner.scale.set(ramScale, ramScale, ramScale);
+
+            // Opacity by health (assume health ~ RAM/100)
+            const healthOpacity = Math.max(0.2, Math.min(1.0, a.ram / 100));
+            am.core.material.opacity = healthOpacity;
+            am.wireframe.material.opacity = healthOpacity * 0.8;
+            am.inner.material.opacity = healthOpacity * 0.3;
+
+            // Trail - 20 positions that fade out
+            if (prevAgentPositions[a.id]) {
+              const prev = prevAgentPositions[a.id];
+              const dx = a.x-prev.x, dy = a.y-prev.y, dz = a.z-prev.z;
+              const dist = Math.sqrt(dx*dx+dy*dy+dz*dz);
+              if (dist > 0.5) {
+                trail.history.push({x:a.x + 16, y:a.y + 16, z:a.z + 16});
+                if (trail.history.length > 20) trail.history.shift();
+                const posArr = trail.points.geometry.attributes.position.array;
+                const colArr = trail.points.geometry.attributes.color.array;
+                for (let j = 0; j < trail.history.length; j++) {
+                  posArr[j*3] = trail.history[j].x;
+                  posArr[j*3+1] = trail.history[j].y;
+                  posArr[j*3+2] = trail.history[j].z;
+                  // Fade color: older = more transparent
+                  const fade = (j + 1) / trail.history.length;
+                  colArr[j*3] = ((actColor >> 16) & 0xff) / 255 * fade;
+                  colArr[j*3+1] = ((actColor >> 8) & 0xff) / 255 * fade;
+                  colArr[j*3+2] = (actColor & 0xff) / 255 * fade;
+                }
+                trail.points.geometry.attributes.position.needsUpdate = true;
+                trail.points.geometry.attributes.color.needsUpdate = true;
+                trail.points.geometry.setDrawRange(0, trail.history.length);
+              }
+            }
+            prevAgentPositions[a.id] = {x:a.x, y:a.y, z:a.z};
+          } else {
+            am.group.visible = false;
+            label.visible = false;
+            trail.points.geometry.setDrawRange(0, 0);
+          }
+        }
+      });
+
+      const aliveAgents = data.agents.filter(a => a.alive);
+      const streamPairs = [];
+      for (let i = 0; i < aliveAgents.length; i++) {
+        for (let j = i+1; j < aliveAgents.length; j++) {
+          const a = aliveAgents[i], b = aliveAgents[j];
+          if (a.action === b.action && a.action !== 3) {
+            const dx = a.x-b.x, dy = a.y-b.y, dz = a.z-b.z;
+            const dist = Math.sqrt(dx*dx+dy*dy+dz*dz);
+            if (dist < 35) {
+              streamPairs.push({a, b, dist});
+            }
+          }
+        }
+      }
+      streamPairs.sort((x,y) => x.dist - y.dist);
+      const maxStreams = 6;
+      for (let i = 0; i < Math.min(streamPairs.length, maxStreams); i++) {
+        const {a, b} = streamPairs[i];
+        createStreamLine(a.id, b.id, ACTION_COLORS[a.action], a.action);
+      }
+    }
+    agentList.innerHTML = agentHTML;
+
+    if (data.safe_zone) {
+      const r = data.safe_zone.radius;
+      const cx = data.safe_zone.center_x || 16;
+      const cy = data.safe_zone.center_y || 16;
+      const cz = data.safe_zone.center_z || 16;
+      const s = r / 28;
+      safeZoneGroup.position.set(cx, cy, cz);
+      safeZonePoints.scale.set(s, s, s);
+      safeGlow.scale.set(s, s, s);
+    }
+
+    updateRAMNodes(data.ram_nodes || []);
+
+    if (data.metrics) {
+      let mHTML = '';
+      for (const [k, v] of Object.entries(data.metrics)) {
+        const val = typeof v === 'number' ? v.toFixed(4) : v;
+        mHTML += `<div class="metric-row"><span class="label">${k}</span><span class="val">${val}</span></div>`;
+      }
+      document.getElementById('metrics-list').innerHTML = mHTML;
+    }
+  } catch(e) {}
+  finally {
+    fetchPending = false;
+  }
+}
+
+// Throttled poll loop - never overlaps, respects minimum interval
+function pollLoop() {
+  fetchState();
+  setTimeout(pollLoop, FETCH_INTERVAL);
+}
+pollLoop();
+
+// Legend
+const legendDiv = document.getElementById('legend');
+for (let i = 0; i < 15; i++) {
+  const dot = document.createElement('span');
+  dot.className = 'legend-item';
+  dot.style.background = '#' + AGENT_COLORS[i].toString(16).padStart(6,'0');
+  dot.textContent = i;
+  legendDiv.appendChild(dot);
+}
+
+// === ANIMATION LOOP ===
+let time = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  time += 0.016;
+  controls.update();
+
+  // Rotate data structures
+  dataStructures.forEach(ds => {
+    ds.mesh.rotation.x += ds.rotSpeed.x;
+    ds.mesh.rotation.y += ds.rotSpeed.y;
+  });
+
+  // Safe zone point cloud pulse
+  safeZoneMat.opacity = 0.6 + Math.sin(time * 1.5) * 0.2;
+
+  // Laser line animation
+  laserMat.opacity = 0.4 + Math.sin(time * 3) * 0.2;
+  laserGlowMat.opacity = 0.1 + Math.sin(time * 3) * 0.05;
+  laser2Mat.opacity = 0.25 + Math.sin(time * 2.5 + 1) * 0.15;
+
+  // Safe zone glow pulse
+  safeGlowMat.opacity = 0.02 + Math.sin(time * 1.2) * 0.01;
+
+  // Rotate agent cores (icosahedron)
+  for (let i = 0; i < 15; i++) {
+    const am = agentMeshes[i];
+    if (am && am.group.visible) {
+      am.core.rotation.y += 0.015;
+      am.core.rotation.x += 0.01;
+    }
+  }
+
+  // Animate data beams
+  dataBeams.forEach((b, i) => {
+    b.mat.opacity = 0.15 + Math.sin(time * 1.2 + i * 0.5) * 0.1;
+    b.glowMat.opacity = b.mat.opacity * 0.12;
+  });
+
+  // Animate particles - slower drift
+  const pPos = particles.geometry.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    pPos[i*3+1] += Math.sin(time * 0.3 + i * 0.08) * 0.02;
+  }
+  particles.geometry.attributes.position.needsUpdate = true;
+
+  // Animate stream lines
+  for (const key in streamLines) {
+    const s = streamLines[key];
+    s.mat.opacity = 0.5 + Math.sin(time * 4) * 0.2;
+    s.glowMat.opacity = 0.08 + Math.sin(time * 4) * 0.04;
+  }
+
+  // Grid subtle animation
+  infiniteGrid.material.opacity = 0.2 + Math.sin(time * 0.6) * 0.05;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+</script>
+</body>
+</html>

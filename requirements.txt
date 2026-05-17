@@ -1,0 +1,3 @@
+torch>=2.0.0 --index-url https://download.pytorch.org/whl/cu128
+numpy
+waitress>=3.0.0

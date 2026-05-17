@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pt
+*.jsonl
+*.log
+.pytest_cache/
+checkpoints/
+screenshot_current.png
+.ipynb_checkpoints/
+*.pyc
+*.pyo
+*.pyd
+.env
