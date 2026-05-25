@@ -1,5 +1,21 @@
 # Cynosure — Agent Guide
 
+## KNOWLEDGE BASE
+
+A unified knowledge base for all agents operating in this codebase is maintained at:
+
+**`CYNOSURE_KB.md`** (project root)
+
+Before taking any action in this codebase, search CYNOSURE_KB.md for relevant context on:
+- System architecture and component roles
+- Script purposes and execution entrypoints
+- Data schemas and artifact locations
+- Reward system logic and known issues
+- Conflict/hook event classification
+- Calibration and curriculum pipelines
+
+If you discover information that contradicts or extends the knowledge base, append your findings to the relevant section and update the "Last updated" timestamp.
+
 ## Non-Negotiables
 
 These rules are absolute. Never compromise on them for convenience, speed, or simplicity.
@@ -23,9 +39,10 @@ python tests/test_agent.py               # run single test file (also works stan
 ## Architecture
 
 - **Python 3.12+**, PyTorch, **CUDA required** for full runs (target: RTX 2070 8GB VRAM)
-- 15 autonomous AI agents compete in a 3D arena (256³ grid) with a contracting safe zone
+- **Scale**: Supports up to 15 autonomous agents in a 256³ grid (see `run_full.py`). Default configuration uses 10 agents in a 32³ grid for efficiency.
 - **Dual-loop execution**: physics at 10 TPS, LLM announcer every 10 ticks (1 TPS)
-- Each agent's "brain" is a **LRSG** (Layerless Recurrent Sparse Graph) — ~4.2M neurons, max out-degree 4, 5-step sparse forward pass per tick
+- Each agent's "brain" is a **LRSG** (Layerless Recurrent Sparse Graph) — ~4.2M neurons, max out-degree 24, 5-step sparse forward pass per tick
+- **Episodic Memory**: Recurrent autoencoder (Episodic Compressor) summarizes experience for broadcast.
 - **Announcer** uses TinyLlama 1.1B (Q4 quantized via bitsandbytes) or falls back to random whispers when `use_llm_announcer=False`
 
 ## Package Layout
@@ -43,6 +60,18 @@ python tests/test_agent.py               # run single test file (also works stan
 | `frontend/` | Web dashboard (served on localhost:8080 during simulation) |
 | `tests/` | pytest tests (also runnable as `python tests/test_*.py`) |
 
+## Simulation Economy
+
+| Action | RAM Cost | Range | Description |
+|--------|----------|-------|-------------|
+| **ATTACK** | 2 | 3.0 | High-damage collision |
+| **HUNT** | 1 | 8.0 | Stalk and steal RAM |
+| **COLLECT** | 0 | 15.0 | Harvest RAM node |
+| **MOVE** | 1 | N/A | Change coordinates |
+| **WHISPER** | 1 | N/A | Broadcast message |
+| **PROBE** | 0 | N/A | High-accuracy scan |
+| **MANIPULATE** | 3 | N/A | Structural edit |
+
 ## Entry Points
 
 | Script | Purpose |
@@ -50,16 +79,18 @@ python tests/test_agent.py               # run single test file (also works stan
 | `run_simulation.py` | Quick 100-tick run, 15 agents, 4.2M neurons |
 | `run_full.py` | Same as above with explicit config override |
 | `run_experiment.py` | Exp 1: 100K-tick baseline calibration with LLM announcer enabled |
+| `experiment_runner.py` | Thesis experiments: count ablation, time-series, reproducibility |
 | `summary.py` | Analyze `telemetry.jsonl` output after a run |
 | `analyze_run.py` | Lightweight telemetry analysis (survival, RAM, entropy) |
 
 ## Key Config Defaults (`src/config.py`)
 
-- `num_neurons`: 4,194,304 | `max_out_degree`: 4 | `propagation_steps`: 5
-- `threshold_theta`: 0.01 | `num_input_neurons`: 1848 | `num_output_neurons`: 12
-- `grid_size`: (256, 256, 256) | `num_agents`: 10 | `max_ticks`: 10,000
+- `num_neurons`: 4,194,304 | `max_out_degree`: 24 | `propagation_steps`: 5
+- `initial_ram`: 200 | `whisper_buffer_dim`: 48
+- `num_input_neurons`: 1848 | `num_output_neurons`: 527
+- `grid_size`: (32, 32, 32) | `num_agents`: 10 | `max_ticks`: 10,000
 - `use_llm_announcer`: **False** by default (set True in `run_experiment.py`)
-- Safe zone contracts every 50 ticks by fixed 5.0 units (min radius 5.0)
+- Safe zone contracts every 100 ticks by fixed 1.0 unit (min radius 5.0)
 
 ## Test Conventions
 
@@ -73,6 +104,7 @@ python tests/test_agent.py               # run single test file (also works stan
 - **LLM announcer requires `transformers` + `bitsandbytes`** — not in `requirements.txt`
 - Simulation starts a **dashboard HTTP server on port 8080** and a **visualizer** — both run in background threads
 - VRAM-heavy: 15 agents × 4.2M neurons × 4 bytes ≈ 1GB just for edge weights
-- Output files written to **repo root**: `telemetry.jsonl`, `conflicts.jsonl`, `security_audit.log`
+- Output files written to **repo root**: `telemetry.jsonl`, `conflicts.jsonl`, `security_audit.log`, `agent_whispers.jsonl`
 - `psutil` and `networkx` are runtime imports in the simulation loop but not listed in requirements
 - Tests that involve the full LRSG with 1848 input neurons require `vision_dims=1536` in config or they will fail on shape mismatch
+- **Triton Windows CUDA setup:** `triton-windows` installs to user site-packages. `find_cuda_bundled()` checks `sysconfig.get_paths()["platlib"]` which may differ from the actual install path. The module `src/lrsg/triton_kernels.py` auto-sets `CUDA_PATH` env var on import to fix this. MSVC `cl.exe` is auto-detected by `find_msvc()`. Set `CC` env var if auto-detection fails.

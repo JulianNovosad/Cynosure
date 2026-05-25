@@ -1,14 +1,31 @@
 # GEMINI.md - Project Cynosure Master Context & Instructions
 
+## KNOWLEDGE BASE
+
+A unified knowledge base for all agents operating in this codebase is maintained at:
+
+**`CYNOSURE_KB.md`** (project root)
+
+Before taking any action in this codebase, search CYNOSURE_KB.md for relevant context on:
+- System architecture and component roles
+- Script purposes and execution entrypoints
+- Data schemas and artifact locations
+- Reward system logic and known issues
+- Conflict/hook event classification
+- Calibration and curriculum pipelines
+
+If you discover information that contradicts or extends the knowledge base, append your findings to the relevant section and update the "Last updated" timestamp.
+
 ## Project Overview
 Project Cynosure is a sealed multi-agent simulation where 15 autonomous rogue AIs compete for survival in a collapsing 3D cyberspace arena (256³ grid). 
 
 ### Core Architecture: LRSG (Layerless Recurrent Sparse Graph)
 - **Mind-Body Entity:** No distinction between mind and body; spatial coordinates represent the localization of recurrent activity.
-- **Neural Scaling:** ~4.2M neurons per agent, sparse connectivity (max out-degree 4), 5-step sparse forward pass per tick.
+- **Neural Scaling:** ~4.2M neurons per agent, sparse connectivity (max out-degree 24), 5-step sparse forward pass per tick.
 - **Dual-Loop Execution:**
     - **Physics Loop (10 TPS):** Movement, RAM decay, 3D collisions, and Hebbian updates.
     - **Linguistic Loop (1 TPS):** The "Announcer" (LLM) injects semantic bias and translates arena state into global "whispers".
+- **Episodic Memory:** Each agent features a recurrent autoencoder (Episodic Compressor) that compresses local experience into a 10D summary vector for global broadcast.
 
 ## 🛑 Non-Negotiable Mandates
 These rules are absolute. Never compromise on them.
@@ -32,6 +49,17 @@ These rules are absolute. Never compromise on them.
 | `frontend/` | Web dashboard served on localhost:8080 during simulation. |
 | `tests/` | Pytest suite (runnable standalone via `python tests/test_*.py`). |
 
+## Simulation Economy
+| Action | RAM Cost | Description |
+|--------|----------|-------------|
+| **ATTACK** | 2 | High-risk combat (range 3.0) |
+| **HUNT** | 1 | Moderate-range stalking (range 8.0) |
+| **COLLECT** | 0 | Harvest RAM nodes |
+| **MOVE** | 1 | Positional change |
+| **WHISPER** | 1 | Local broadcast |
+| **PROBE** | 0 | Environmental scan |
+| **MANIPULATE** | 3 | High-cost influence |
+
 ## Building and Running
 
 ### Setup & Dependencies
@@ -48,16 +76,19 @@ pip install psutil networkx              # Required for simulation loop & metric
 | `run_simulation.py` | Standard 100-tick run, 15 agents, 4.2M neurons. |
 | `run_full.py` | Same as above with explicit config override. |
 | `run_experiment.py` | Exp 1: 100K-tick baseline calibration (LLM announcer enabled). |
+| `experiment_runner.py` | Thesis experiments: count ablation, time-series, reproducibility. |
 | `summary.py` | Analyze `telemetry.jsonl` output. |
 | `analyze_run.py` | Lightweight telemetry analysis (survival, RAM, entropy). |
 
 ## Development & Testing Conventions
 
 ### Configuration Defaults (`src/config.py`)
-- `num_neurons`: 4,194,304 | `max_out_degree`: 4 | `propagation_steps`: 5.
-- `grid_size`: (256, 256, 256) | `num_agents`: 10 | `max_ticks`: 10,000.
+- `num_neurons`: 4,194,304 | `max_out_degree`: 24 | `propagation_steps`: 5.
+- `initial_ram`: 200 | `whisper_buffer_dim`: 48.
+- `num_input_neurons`: 1848 | `num_output_neurons`: 527.
+- `grid_size`: (32, 32, 32) | `num_agents`: 10 | `max_ticks`: 10,000.
 - `use_llm_announcer`: **False** by default (must be enabled explicitly).
-- Safe zone contracts every 50 ticks by 5.0 units.
+- Safe zone contracts every 100 ticks by fixed 1.0 unit.
 
 ### Testing
 - Tests use reduced neuron counts (10,000) and small grids (50³) for CPU compatibility.
@@ -67,5 +98,5 @@ pip install psutil networkx              # Required for simulation loop & metric
 ## Gotchas & Troubleshooting
 - **Missing Dependencies:** `transformers`, `bitsandbytes`, `psutil`, and `networkx` are often required at runtime but might be missing from the base `requirements.txt`.
 - **VRAM Usage:** 15 agents × 4.2M neurons consumes ~1GB VRAM for edge weights alone.
-- **Output Files:** `telemetry.jsonl`, `conflicts.jsonl`, and `security_audit.log` are written to the repo root.
+- **Output Files:** `telemetry.jsonl`, `conflicts.jsonl`, `security_audit.log`, `agent_whispers.jsonl`.
 - **Background Processes:** Simulation starts a dashboard (port 8080) and a visualizer in background threads.
