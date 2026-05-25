@@ -1,6 +1,6 @@
 # CYNOSURE KNOWLEDGE BASE
 _Compiled by agent. Single source of truth for all agents operating in this codebase._
-_Last updated: 25 May 2026 (Phase 1+2 complete: double-execution bug fixed, Triton kernel enabled, fused clamp+nan, D2H batched, elementwise+copy+compare reduced from 70.9% → 67%, DtoH copy from 17.7% → 4.0%)_
+_Last updated: 25 May 2026 (Release v0.3.0: double-execution bug fixed, Triton kernel enabled, fused clamp+nan, D2H batched, elementwise+copy+compare reduced from 70.9% → 67%, DtoH copy from 17.7% → 4.0%, CI pipeline, 9 atomic commits)_
 
 ---
 
@@ -333,6 +333,22 @@ All Phase 2 changes applied after the double-execution fix. Tested on RTX 2070 8
 - ✅ Telemetry schema intact (all expected event types present)
 - ✅ Triton kernel correctness verified (0.0 error vs Python fallback)
 - ✅ W_proj+W_fb bmm fusion correctness verified (0.0 error vs sequential)
+
+---
+
+## 14. RELEASE HISTORY
+
+| Version | Date | Summary | Commits |
+|---------|------|---------|---------|
+| v0.3.0 | 25 May 2026 | Phase 2 performance optimizations, Triton kernel, D2H batching, CI pipeline, documentation | 9 atomic commits (077a5e7 ← e485b2f) |
+
+### v0.3.0 Highlights
+- **Double-execution bug fixed** in `loop.py` — stream and sequential plasticity paths made mutually exclusive. ~50% reduction in plasticity CUDA time. 5-agent benchmark: 42.5ms → 25.9ms (39% improvement).
+- **W_proj+W_fb bmm fusion** — single `torch.bmm` replaces two matmuls per agent.
+- **Triton kernel enabled** — `gamma_t` scalar fix unblocks `_propagation_kernel`. Fused `clamp_`+`nan_to_num_` kernel.
+- **D2H batching** — `decode_output` full-tensor copy eliminated. DtoH: 17.7% → 4.0% of CUDA time (77% reduction).
+- **CPU-only CI pipeline** — GitHub Actions with `@pytest.mark.cuda` test markers. Runs `pytest -k "not cuda"`.
+- **9 logical commits**: bug fix → bmm fusion → Triton → D2H → graph/config → source refactor → tests/CI → docs → entrypoints.
 
 ---
 
