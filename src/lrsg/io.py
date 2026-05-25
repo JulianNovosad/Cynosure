@@ -91,17 +91,111 @@ for i, tok in enumerate(WHISPER_VOCAB):
         SYSTEM_TOKEN_INDICES.add(i)
 
 
+def is_noun(token_idx: int) -> bool:
+    return 0 <= token_idx < 100 or 280 <= token_idx < 300
+
+def is_verb(token_idx: int) -> bool:
+    return 100 <= token_idx < 180
+
+def is_adj(token_idx: int) -> bool:
+    return 180 <= token_idx < 240
+
+def is_prep(token_idx: int) -> bool:
+    return 240 <= token_idx < 280
+
+import spacy
+
+_nlp = None
+
+def _get_nlp():
+    global _nlp
+    if _nlp is None:
+        try:
+            _nlp = spacy.load("en_core_web_sm")
+        except OSError:
+            _nlp = None
+    return _nlp
+
+POS_OVERRIDES = {
+    "agent": "NOUN",
+    "ai": "NOUN",
+    "ram": "NOUN",
+    "safe_zone": "NOUN",
+    "arena": "NOUN",
+    "grid": "NOUN",
+    "ram_node": "NOUN",
+    "self": "NOUN",
+    "me": "PRON",
+    "you": "PRON",
+    "they": "PRON",
+    "attack": "VERB",
+    "defend": "VERB",
+    "move": "VERB",
+    "merge": "VERB",
+    "survive": "VERB",
+    "probe": "VERB",
+    "manipulate": "VERB",
+    "hunt": "VERB",
+    "collect": "VERB",
+    "flee": "VERB",
+    "hide": "VERB",
+}
+
+def validate_curriculum(text: str, tick: int) -> int:
+    nlp = _get_nlp()
+    if not text:
+        return 0
+    
+    tokens = text.split()
+    doc = nlp(text) if nlp else None
+    
+    # Custom POS tagging combined with spaCy
+    tags = []
+    for i, token in enumerate(tokens):
+        if token.lower() in POS_OVERRIDES:
+            tags.append(POS_OVERRIDES[token.lower()])
+        elif doc is not None and i < len(doc):
+            tags.append(doc[i].pos_)
+        else:
+            tags.append("X")
+
+    # Stage 1 (0-1000): Noun + Verb (strict order)
+    if tick < 1000:
+        for i in range(len(tags) - 1):
+            if tags[i] in ["NOUN", "PRON"] and tags[i+1] == "VERB":
+                return 1
+    
+    # Stage 2 (1000-3000): Noun + Verb + Noun (SVO)
+    elif tick < 3000:
+        for i in range(len(tags) - 2):
+            if tags[i] in ["NOUN", "PRON"] and tags[i+1] == "VERB" and tags[i+2] in ["NOUN", "PRON"]:
+                return 2
+                    
+    # Stage 3 (3000+): 4-5 tokens, SVO or SVOO
+    else:
+        if len(tokens) >= 4:
+            # Check for SVO
+            for i in range(len(tags) - 2):
+                if tags[i] in ["NOUN", "PRON"] and tags[i+1] == "VERB" and tags[i+2] in ["NOUN", "PRON"]:
+                    return 3
+                
+    return 0
+
 def encode_input(
     vision: torch.Tensor,
     vitals: torch.Tensor,
-    announcer_embedding: torch.Tensor,
+    whisper_buffer: torch.Tensor,
     config: LRSGConfig,
 ) -> torch.Tensor:
+    # whisper_buffer is 48 neurons. 
+    # Total input is 1848. 1536 (vision) + 184 (vitals) + 48 (whisper) + 80 (pad)
+    pad = torch.zeros(80, device=vision.device)
     input_tensor = torch.cat(
         [
             vision.flatten(),
             vitals.flatten(),
-            announcer_embedding.flatten(),
+            whisper_buffer.flatten(),
+            pad,
         ]
     )
 
@@ -109,28 +203,28 @@ def encode_input(
     if input_tensor.shape[0] > expected:
         input_tensor = input_tensor[:expected]
     elif input_tensor.shape[0] < expected:
-        pad = torch.zeros(expected - input_tensor.shape[0], device=input_tensor.device)
-        input_tensor = torch.cat([input_tensor, pad])
+        pad_extra = torch.zeros(expected - input_tensor.shape[0], device=input_tensor.device)
+        input_tensor = torch.cat([input_tensor, pad_extra])
 
     return input_tensor
 
 
 def decode_whisper(output: torch.Tensor, config: LRSGConfig, tick: int = 0, total_tokens_seen: set = None) -> str:
-    whisper_latent = output[12:12 + config.whisper_latent_dim]
+    whisper_latent = output[15:15 + config.whisper_latent_dim] # Starts after action(7)+dir(6)+intent(2)
     if whisper_latent.numel() == 0:
         return ""
 
     if tick < 200:
         system_token_indices = list(SYSTEM_TOKEN_INDICES)
-        forced_token = WHISPER_VOCAB[system_token_indices[tick % len(system_token_indices)]]
-        tokens = [forced_token]
-        remaining = 7
+        forced_indices = [system_token_indices[(tick + i) % len(system_token_indices)] for i in range(5)]
+        tokens = [WHISPER_VOCAB[idx % len(WHISPER_VOCAB)] for idx in forced_indices]
     else:
         if tick < 1000:
             temp = 2.5
         else:
             temp = 2.5 - 1.8 * min(1.0, (tick - 1000) / 1000)
 
+        # Use the full latent vector (512 neurons) as logits
         boosted = whisper_latent.clone()
         boost_mult = 5.0 if tick < 800 else (5.0 * max(0, (1200 - tick) / 400))
         if boost_mult > 0:
@@ -141,78 +235,70 @@ def decode_whisper(output: torch.Tensor, config: LRSGConfig, tick: int = 0, tota
         probs = F.softmax(boosted / temp, dim=0)
         probs = probs + 1e-8
 
-        num_samples = min(8, config.whisper_vocab_size // 64, probs.numel())
-        if num_samples <= 0:
+        num_samples = 5
+        if probs.numel() < num_samples:
             return ""
         token_indices = torch.multinomial(probs, num_samples=num_samples, replacement=False)
         tokens = [WHISPER_VOCAB[idx.item() % len(WHISPER_VOCAB)] for idx in token_indices]
-        remaining = 0
-
-    natural_tokens = ["the", "a", "an", "to", "of", "in", "is", "it", "be", "as",
-                      "at", "by", "for", "with", "on", "that", "this", "have", "from"]
-    extra_tokens = [natural_tokens[(tick + i) % len(natural_tokens)] for i in range(remaining)]
-    tokens.extend(extra_tokens)
 
     return " ".join(tokens)
 
 
-def decode_output(output: torch.Tensor, config: LRSGConfig = None, tick: int = 0, seen_tokens: set = None) -> dict:
+def encode_whisper_to_indices(text: str) -> list:
+    if not text:
+        return []
+    tokens = text.split()
+    indices = []
+    vocab_map = {tok: i for i, tok in enumerate(WHISPER_VOCAB)}
+    for tok in tokens:
+        if tok in vocab_map:
+            indices.append(vocab_map[tok])
+    return indices
+
+
+def decode_output(output: torch.Tensor, config: LRSGConfig = None, tick: int = 0, seen_tokens: set = None, graph: 'LRSGraph' = None) -> dict:
     if output.numel() == 0:
         return {"action": 0, "direction": 0, "intent": 0, "whisper_text": "", "whisper_latent": []}
 
-    output_cpu = output.float().cpu()
-    noise = torch.randn_like(output_cpu) * 1e-6
-    noisy = output_cpu + noise
+    # Keep on GPU to avoid full D2H copy; only copy scalars when needed
+    noise = torch.randn_like(output) * 1e-6
+    noisy = output.float() + noise
 
-    action = noisy[0:7] if noisy.shape[0] >= 7 else torch.zeros(7)
-    direction = noisy[7:13] if noisy.shape[0] >= 13 else torch.zeros(6)
-    intent = noisy[13:15] if noisy.shape[0] >= 15 else torch.zeros(2)
+    action = noisy[:7]
+    direction = noisy[7:13]
+    intent = noisy[13:15]
 
-    whisper_latent = noisy[15:25] if output.shape[0] > 15 else torch.zeros(10)
-
+    # Use emergent LPH decoder if graph is provided, otherwise fallback to latent decoder
     whisper_text = ""
-    if config is not None and output.shape[0] > 12:
+    if graph is not None:
+        whisper_text = graph.decode_lph()
+    elif config is not None and output.shape[0] > 15:
         try:
-            whisper_text = decode_whisper(output_cpu, config, tick=tick, total_tokens_seen=seen_tokens)
+            cpu_slice = output[:15+512].float().cpu()
+            whisper_text = decode_whisper(cpu_slice, config, tick=tick, total_tokens_seen=seen_tokens)
         except Exception:
             whisper_text = ""
 
-    action_idx = 0
-    if action.numel() > 0:
-        try:
-            action_sum = action.sum().item()
-            if action_sum != 0 and not (action_sum != action_sum):
-                action_idx = int(torch.argmax(action).item())
-        except Exception:
-            pass
+    # Batch argmax D2H: one sync instead of three
+    action_probs = F.softmax(action, dim=0)
+    direction_probs = F.softmax(direction, dim=0)
+    intent_probs = F.softmax(intent, dim=0)
 
-    if tick % 10 == 0:
-        raw_logits = action.tolist()
-        print(f"[DIAGNOSTIC] TICK={tick} RAW_ACTIONS={raw_logits}")
-        print(f"  SELECTED={action_idx}  MOVE_VAL={raw_logits[3] if len(raw_logits) > 3 else 'N/A':.4f}")
+    argmax_vals = torch.stack([
+        torch.argmax(action_probs).float(),
+        torch.argmax(direction_probs).float(),
+        torch.argmax(intent_probs).float(),
+    ]).cpu()
+    action_idx = int(argmax_vals[0].item())
+    direction_idx = int(argmax_vals[1].item())
+    intent_idx = int(argmax_vals[2].item())
 
-    direction_idx = 0
-    if direction.numel() > 0:
-        try:
-            direction_sum = direction.sum().item()
-            if direction_sum != 0 and not (direction_sum != direction_sum):
-                direction_idx = int(torch.argmax(direction).item())
-        except Exception:
-            pass
-
-    intent_idx = 0
-    if intent.numel() > 0:
-        try:
-            intent_sum = intent.sum().item()
-            if intent_sum != 0 and not (intent_sum != intent_sum):
-                intent_idx = int(torch.argmax(intent).item())
-        except Exception:
-            pass
+    whisper_latent = noisy[15:15+512].cpu().tolist() if output.numel() > 15 else []
 
     return {
         "action": action_idx,
         "direction": direction_idx,
         "intent": intent_idx,
         "whisper_text": whisper_text,
-        "whisper_latent": whisper_latent.tolist() if whisper_latent.numel() > 0 else [],
+        "whisper_latent": whisper_latent,
     }
