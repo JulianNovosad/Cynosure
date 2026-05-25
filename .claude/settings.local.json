@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pytest *)",
+      "Bash(pip install *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\jumas\\.claude"
+    ]
+  }
+}

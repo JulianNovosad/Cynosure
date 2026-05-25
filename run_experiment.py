@@ -9,6 +9,7 @@ from src.simulation.loop import Simulation
 
 cfg = Config()
 cfg.simulation.use_llm_announcer = True
+cfg.simulation.num_agents = 2
 cfg.simulation.max_ticks = 100_000
 
 print("=" * 60)

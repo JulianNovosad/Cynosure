@@ -11,3 +11,6 @@ screenshot_current.png
 *.pyo
 *.pyd
 .env
+
+.gemini/
+gha-creds-*.json

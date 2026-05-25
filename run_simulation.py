@@ -88,20 +88,25 @@ def analyze_results():
         print("  CUDA not available")
 
 if __name__ == "__main__":
+    # Clean up logs
+    for f in ["security_audit.log", "agent_whispers.jsonl", "telemetry.jsonl", "conflicts.jsonl", "transitions.jsonl"]:
+        if os.path.exists(f):
+            os.remove(f)
+
     cfg = Config(
         lrsg=LRSGConfig(
             num_neurons=4_194_304,
             max_out_degree=12,
             context_size=256,
             whisper_vocab_size=512,
-            whisper_latent_dim=10,
+            whisper_latent_dim=512,
             probe_base_reward=0.3,
             whisper_base_reward=0.2,
             manipulate_base_reward=0.1,
         ),
         arena=ArenaConfig(grid_size=(32, 32, 32)),
         agent=AgentConfig(),
-        simulation=SimulationConfig(num_agents=5, max_ticks=2000),
+        simulation=SimulationConfig(num_agents=2, max_ticks=50, use_llm_announcer=True),
     )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -126,19 +131,6 @@ if __name__ == "__main__":
         t1 = time.perf_counter()
         tick_times.append((t1 - t0) * 1000)
         print(f"[DEBUG] Completed tick {sim.tick_count} in {t1-t0:.1f}s", flush=True)
-
-        if first_tick_with_block is None:
-            try:
-                with open("security_audit.log", "r") as f:
-                    for line in f:
-                        if "ProbeAttempt" in line and "BLOCKED" in line:
-                            match = re.search(r"TICK=(\d+)", line)
-                            if match:
-                                first_tick_with_block = int(match.group(1))
-                                print(f"\n>>> FIRST BLOCKED PROBE AT TICK {first_tick_with_block} <<<\n")
-                                break
-            except:
-                pass
 
         if sim.tick_count % 100 == 0:
             avg = sum(tick_times[-100:]) / min(100, len(tick_times))
