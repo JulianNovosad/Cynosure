@@ -1,5 +1,6 @@
 import sys
 import os
+import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import torch
@@ -19,6 +20,7 @@ def test_simulation_initialization():
     assert all(a.alive for a in sim.agents)
 
 
+@pytest.mark.cuda
 def test_simulation_tick():
     cfg = Config(
         lrsg=LRSGConfig(num_neurons=10000, num_input_neurons=100, num_output_neurons=12),
@@ -30,6 +32,7 @@ def test_simulation_tick():
     assert sim.tick_count == 1
 
 
+@pytest.mark.cuda
 def test_simulation_run():
     cfg = Config(
         lrsg=LRSGConfig(num_neurons=10000, num_input_neurons=100, num_output_neurons=12),
@@ -42,6 +45,7 @@ def test_simulation_run():
     assert "survival" in metrics
 
 
+@pytest.mark.cuda
 def test_simulation_status():
     cfg = Config(
         lrsg=LRSGConfig(num_neurons=10000, num_input_neurons=100, num_output_neurons=12),
@@ -56,6 +60,7 @@ def test_simulation_status():
     assert "safe_zone_radius" in status
 
 
+@pytest.mark.cuda
 def test_simulation_all_dead():
     cfg = Config(
         lrsg=LRSGConfig(num_neurons=10000, num_input_neurons=100, num_output_neurons=12),
@@ -68,11 +73,12 @@ def test_simulation_all_dead():
     assert sim.tick_count > 0
 
 
+@pytest.mark.cuda
 def test_linguistic_tick():
     cfg = Config(
         lrsg=LRSGConfig(num_neurons=10000, num_input_neurons=100, num_output_neurons=12),
         arena=ArenaConfig(grid_size=(50, 50, 50)),
-        simulation=SimulationConfig(num_agents=3, max_ticks=20),
+        simulation=SimulationConfig(num_agents=3, max_ticks=20, use_announcer=True),
     )
     sim = Simulation(cfg)
     for _ in range(10):

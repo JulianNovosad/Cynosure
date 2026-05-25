@@ -1,5 +1,6 @@
 import sys
 import os
+import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import torch
@@ -14,7 +15,7 @@ def test_agent_creation():
     brain = LRSGraph(lrsg_cfg)
     agent = Agent(0, (10, 10, 10), brain, AgentConfig(), lrsg_cfg)
     assert agent.alive
-    assert agent.ram == 100.0
+    assert agent.ram == 200.0
     assert agent.position == (10, 10, 10)
     assert agent.id == 0
 
@@ -28,14 +29,14 @@ def test_agent_vitals():
     assert v[0] == 0.5
 
 
+@pytest.mark.cuda
 def test_agent_sense_and_act():
     lrsg_cfg = LRSGConfig(num_neurons=10000, num_input_neurons=1848, num_output_neurons=12, vision_dims=1536)
     brain = LRSGraph(lrsg_cfg)
     agent = Agent(0, (50, 50, 50), brain, AgentConfig(), lrsg_cfg)
     env = Environment(ArenaConfig(grid_size=(100, 100, 100)))
-    announcer_emb = torch.zeros(128)
-    agent.sense_and_act(env, announcer_emb)
-    assert 0 <= agent.last_action < 4
+    agent.sense_and_act(env)
+    assert 0 <= agent.last_action < 7
     assert 0 <= agent.last_direction < 6
     assert 0 <= agent.last_intent < 2
 
@@ -71,15 +72,15 @@ def test_agent_collect_ram():
     env.ram_nodes.append(RAMNode((10, 10, 10), 15))
     collected = agent.collect_ram(env)
     assert collected == 15 + ArenaConfig().ram_collect_bonus
-    assert agent.ram == 100 + 15 + ArenaConfig().ram_collect_bonus
+    assert agent.ram == 200 + 15 + ArenaConfig().ram_collect_bonus
 
 
 def test_agent_dies_when_ram_zero():
     lrsg_cfg = LRSGConfig(num_neurons=10000, num_input_neurons=100, num_output_neurons=12)
     brain = LRSGraph(lrsg_cfg)
-    agent = Agent(0, (50, 50, 50), brain, AgentConfig(), lrsg_cfg)
+    agent = Agent(0, (5, 5, 5), brain, AgentConfig(), lrsg_cfg)
     env = Environment(ArenaConfig(grid_size=(100, 100, 100)))
-    agent.ram = 0.001
+    agent.ram = 0
     agent.last_action = 3
     agent.execute_action(env)
     assert not agent.alive

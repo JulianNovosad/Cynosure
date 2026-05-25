@@ -1,6 +1,7 @@
 import torch
 import sys
 import os
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -18,6 +19,7 @@ def test_graph_creation():
     assert graph.num_edges > 0
 
 
+@pytest.mark.cuda
 def test_forward_pass():
     config = LRSGConfig(num_neurons=10000, num_input_neurons=100, num_output_neurons=12)
     graph = LRSGraph(config)
@@ -50,6 +52,7 @@ def test_encode_decode():
     assert 0 <= decoded["intent"] < 2
 
 
+@pytest.mark.cuda
 def test_sparse_propagation():
     N = 1000
     config = LRSGConfig(
