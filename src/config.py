@@ -4,13 +4,14 @@ from typing import Tuple
 
 @dataclass
 class LRSGConfig:
-    num_neurons: int = 4_194_304
-    max_out_degree: int = 24
+    num_neurons: int = 1_048_576
+    max_out_degree: int = 12
     num_input_neurons: int = 1848
-    num_output_neurons: int = 25
+    num_output_neurons: int = 527
+    h_window: int = 4096
     propagation_steps: int = 5
     threshold_theta: float = 0.01
-    announcer_embed_dim: int = 128
+    whisper_buffer_dim: int = 48
 
     vision_dims: int = 1536
     vitals_dims: int = 184
@@ -25,11 +26,18 @@ class LRSGConfig:
     exploration_bias_range: Tuple[float, float] = (0.2, 0.8)
 
     whisper_vocab_size: int = 512
-    whisper_latent_dim: int = 10
+    whisper_latent_dim: int = 512
 
     probe_base_reward: float = 0.3
     whisper_base_reward: float = 0.2
     manipulate_base_reward: float = 0.1
+    pwm_activation: str = "tanh" # options: "tanh", "leaky_relu"
+
+    # PWM character prediction parameters
+    char_pred_lr: float = 0.002
+    language_hebbian_lr: float = 0.001
+    bigram_bootstrap_weight: float = 0.1
+    char_surprise_reward_scale: float = 0.9
 
 
 @dataclass
@@ -60,13 +68,27 @@ class AgentConfig:
 
 
 @dataclass
+class EpisodicCompressorConfig:
+    input_dim: int = 10
+    hidden_dim: int = 50
+    latent_dim: int = 32
+    buffer_max_size: int = 100
+    train_interval: int = 10
+    summary_interval: int = 10
+    context_inject_weight: float = 0.3
+    summary_history_size: int = 5
+
+
+@dataclass
 class SimulationConfig:
     physics_tps: int = 10
     linguistic_tps: int = 1
     num_agents: int = 10
     max_ticks: int = 10_000
-    use_llm_announcer: bool = False
+    use_llm_announcer: bool = True
     announcer_model: str = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+    headless: bool = False
+    use_announcer: bool = False
 
 
 @dataclass
@@ -75,3 +97,4 @@ class Config:
     arena: ArenaConfig = field(default_factory=ArenaConfig)
     agent: AgentConfig = field(default_factory=AgentConfig)
     simulation: SimulationConfig = field(default_factory=SimulationConfig)
+    episodic: EpisodicCompressorConfig = field(default_factory=EpisodicCompressorConfig)
