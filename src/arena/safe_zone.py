@@ -59,11 +59,14 @@ class SafeZone:
         dz = point[2] - self.center[2]
         return math.sqrt(dx * dx + dy * dy + dz * dz)
 
-    def damage_at_point(self, point: tuple, damage_rate: float) -> float:
+    def damage_at_point(self, point: tuple, damage_rate: float, tick: int = 0) -> float:
         outside = self.distance_to_boundary(point)
         if outside <= 0:
             return 0.0
-        return outside * damage_rate
+        # Storm intensity increases over time
+        intensity = 1.0 + (tick / 500.0)
+        # Exponential damage based on distance + base penalty
+        return (outside * damage_rate * 50.0 * intensity) + (5.0 * intensity)
 
     def weight_corruption_at_point(self, point: tuple, corruption_rate: float) -> float:
         outside = self.distance_to_boundary(point)

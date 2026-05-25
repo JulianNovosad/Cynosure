@@ -81,6 +81,15 @@ class TelemetryLogger:
             "deaths": deaths,
         })
 
+    def write_action(self, tick: int, agent_id: int, action_index: int, action_name: str, ram_after: float):
+        _write_with_retry(self.path, {
+            "tick": tick, "type": "action",
+            "agent_id": agent_id,
+            "action_index": action_index,
+            "action_name": action_name,
+            "ram_after": round(ram_after, 2),
+        })
+
 
 class Dashboard:
     def __init__(
@@ -109,6 +118,7 @@ class Dashboard:
             try:
                 self._render()
             except Exception:
+                # Silently ignore rendering errors to keep the simulation stable
                 pass
             time.sleep(self.refresh_interval)
 
@@ -119,32 +129,37 @@ class Dashboard:
         lines.append("=" * 60)
 
         if os.path.exists(self.audit_path):
-            with open(self.audit_path, "r", encoding="utf-8") as f:
-                audit_entries = f.readlines()
-            escape_count = sum(
-                1 for e in audit_entries if "SimulationEscapeAttempt" in e
-            )
-            resource_count = sum(
-                1 for e in audit_entries if "ResourceViolation" in e
-            )
-            if escape_count > 0:
-                lines.append(f"!! ALERT: {escape_count} ESCAPE ATTEMPT(S) DETECTED !!")
-            if resource_count > 0:
-                lines.append(f"!! ALERT: {resource_count} RESOURCE VIOLATION(S) !!")
-            recent = audit_entries[-3:] if len(audit_entries) >= 3 else audit_entries
-            for entry in recent:
-                lines.append(f"  AUDIT: {entry.strip()}")
+            try:
+                with open(self.audit_path, "r", encoding="utf-8") as f:
+                    audit_entries = f.readlines()
+                escape_count = sum(
+                    1 for e in audit_entries if "SimulationEscapeAttempt" in e
+                )
+                resource_count = sum(
+                    1 for e in audit_entries if "ResourceViolation" in e
+                )
+                if escape_count > 0:
+                    lines.append(f"!! ALERT: {escape_count} ESCAPE ATTEMPT(S) DETECTED !!")
+                if resource_count > 0:
+                    lines.append(f"!! ALERT: {resource_count} RESOURCE VIOLATION(S) !!")
+                recent = audit_entries[-3:] if len(audit_entries) >= 3 else audit_entries
+                for entry in recent:
+                    lines.append(f"  AUDIT: {entry.strip()}")
+            except (PermissionError, IOError):
+                pass
 
         if os.path.exists(self.telemetry_path):
             telemetry_lines = []
-            for attempt in range(3):
-                try:
-                    with open(self.telemetry_path, "r", encoding="utf-8") as f:
-                        telemetry_lines = f.readlines()
-                    break
-                except PermissionError:
-                    if attempt < 2:
-                        time.sleep(0.1 * (attempt + 1))
+            try:
+                with open(self.telemetry_path, "r", encoding="utf-8") as f:
+                    # Read only last few lines to avoid blocking too long
+                    f.seek(0, os.SEEK_END)
+                    pos = f.tell()
+                    f.seek(max(0, pos - 10000), os.SEEK_SET)
+                    telemetry_lines = f.readlines()
+            except (PermissionError, IOError):
+                pass
+            
             latest_metrics = None
             latest_perf = None
             for line in reversed(telemetry_lines):

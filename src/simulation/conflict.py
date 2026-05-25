@@ -45,11 +45,11 @@ def resolve_conflict(
 
     a_action = attacker.last_action
     
-    # Range Checks
-    if a_action == ACTION_ATTACK and distance > 5.0:
+    # Range Checks — attack is short-range (collision-based), hunt is moderate
+    if a_action == ACTION_ATTACK and distance > 3.0:
         log_conflict_attempt(tick, attacker, defender, distance, "RANGE_FAIL")
         return
-    if a_action == ACTION_HUNT and distance > 10.0:
+    if a_action == ACTION_HUNT and distance > 8.0:
         log_conflict_attempt(tick, attacker, defender, distance, "RANGE_FAIL")
         return
 

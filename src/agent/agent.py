@@ -6,10 +6,9 @@ from datetime import datetime
 import torch.nn.functional as F
 from src.config import AgentConfig, LRSGConfig
 from src.lrsg import LRSGraph, forward_pass
-from src.lrsg.io import encode_input, decode_output
+from src.lrsg.io import encode_input, decode_output, validate_curriculum
 from src.arena.environment import Environment
 from src.arena.ram_node import RAMNode
-
 
 class Agent:
     def __init__(
@@ -35,6 +34,8 @@ class Agent:
         self.action_history = []
 
         self.whisper_text = ""
+        self.whisper_buffer = torch.zeros(lrsg_config.whisper_buffer_dim, device=brain.device)
+        self._received_whispers = []
         self.last_probe_result = None
         self.failed_escape_attempts = {}
         self.probe_history = []
@@ -77,12 +78,12 @@ class Agent:
         self._seen_whisper_payloads = set()
 
         self.ACTION_COSTS = {
-            0: 0,   # ATTACK - free now
-            1: 0,   # HUNT - free now
-            2: 0,   # COLLECT - already free
-            3: 0,   # MOVE - free now
+            0: 2,   # ATTACK - 2 RAM cost (discourages spam)
+            1: 1,   # HUNT - 1 RAM cost (moderate)
+            2: 0,   # COLLECT - free (has collection delay)
+            3: 1,   # MOVE - 1 RAM cost
             4: 1,   # WHISPER - 1 RAM cost
-            5: 0,   # PROBE - free first 200 ticks
+            5: 0,   # PROBE - free
             6: 3,   # MANIPULATE - 3 RAM cost
         }
         self._probe_free_ticks = 200
@@ -101,6 +102,104 @@ class Agent:
         self.sensory_radius = config.sensory_radius
         self.memory_decay_ticks = config.memory_decay_ticks
         self._agent_memory: dict[int, tuple[tuple, float, int]] = {}
+
+    def init_episodic_compressor(self, epi_config=None):
+        from src.lrsg.episodic_compressor import EpisodicCompressor, EpisodicMemoryBuffer
+        device = self.brain.device
+        self._episodic_compressor = EpisodicCompressor(
+            input_dim=10, hidden_dim=50, latent_dim=32, device=device
+        )
+        self._episodic_buffer = EpisodicMemoryBuffer(
+            max_size=100, input_dim=10, device=device
+        )
+        self._episodic_summary = torch.zeros(10, device=device)
+        self._episodic_last_summary_tick = 0
+        self._episodic_train_loss = 0.0
+        self._received_summaries = []
+        self._injected_context = torch.zeros(10, device=device)
+        self._prev_action_before_summary = -1
+        self._action_after_summary = {}
+
+    def _build_experience_vector(self) -> torch.Tensor:
+        vec = torch.zeros(10, device=self.brain.device)
+        pos = self.position
+        vec[0] = pos[0] / 256.0
+        vec[1] = pos[1] / 256.0
+        vec[2] = pos[2] / 256.0
+        vec[3] = self.ram / 500.0
+        vec[4] = 1.0 if self._in_safe_zone > 0.5 else 0.0
+        vec[5] = self._safe_zone_proximity
+        vec[6] = float(self.last_action) / 7.0
+        vec[7] = self._dist_to_nearest_ram
+        vec[8] = self._dist_to_nearest_agent
+        vec[9] = self._tick_count / 2000.0
+        return vec
+
+    def episodic_train(self, tick: int, interval: int = 10) -> float:
+        if self._episodic_compressor is None:
+            return 0.0
+        if self._episodic_buffer.size() < 5:
+            return 0.0
+        if tick - self._episodic_last_summary_tick < interval:
+            return self._episodic_train_loss
+
+        batch = self._episodic_buffer.get_recent(10)
+        loss, summary = self._episodic_compressor.train_step(batch)
+        flat = summary.flatten()
+        if flat.shape[0] >= 10:
+            self._episodic_summary = flat[:10].clone()
+        else:
+            padded = torch.zeros(10, device=flat.device)
+            padded[:flat.shape[0]] = flat
+            self._episodic_summary = padded
+        self._episodic_train_loss = loss
+        self._episodic_last_summary_tick = tick
+        return loss
+
+    def episodic_push(self, tick: int):
+        if self._episodic_buffer is None:
+            return
+        vec = self._build_experience_vector()
+        self._episodic_buffer.push(vec, tick)
+
+    def get_episodic_summary(self) -> torch.Tensor:
+        if self._episodic_summary is None:
+            return torch.zeros(10, device=self.brain.device)
+        return self._episodic_summary.detach().clone()
+
+    def receive_summary(self, sender_id: int, summary_vec: torch.Tensor, tick: int):
+        if self._episodic_compressor is None:
+            return
+        self._received_summaries.append({
+            "sender_id": sender_id,
+            "summary": summary_vec.detach().clone(),
+            "tick": tick,
+            "my_action_before": self.last_action,
+        })
+        if len(self._received_summaries) > 5:
+            self._received_summaries.pop(0)
+
+    def _inject_received_summaries(self, tick: int, weight: float = 0.3):
+        if not self._received_summaries:
+            self._injected_context = torch.zeros(10, device=self.brain.device)
+            return
+        weighted = torch.zeros(10, device=self.brain.device)
+        total_weight = 0.0
+        for entry in self._received_summaries:
+            age = tick - entry["tick"]
+            if age > 100:
+                continue
+            recency_weight = 1.0 - (age / 100.0)
+            summary = entry["summary"].flatten()[:10]
+            if summary.shape[0] < 10:
+                padded = torch.zeros(10, device=summary.device)
+                padded[:summary.shape[0]] = summary
+                summary = padded
+            weighted += summary * recency_weight
+            total_weight += recency_weight
+        if total_weight > 0:
+            weighted /= total_weight
+        self._injected_context = weighted * weight
 
     def record_blocked_payload(self, from_agent_id: int, payload: str, tick: int):
         if from_agent_id not in self._blocked_payloads:
@@ -125,68 +224,17 @@ class Agent:
                     continue
                 blocked_tokens = set(blocked_payload.split())
                 common = my_tokens & blocked_tokens
-                if len(common) >= 1: # Loosened from 2 to 1
+                if len(common) >= 1: 
                     return True, common
         return False, set()
-
-    def _init_post_blocked_tracking(self, lrsg_config):
-        self.intrinsic_reward = 0.0
-        self._was_in_safe_zone = True
-
-        self.theta = random.uniform(*lrsg_config.theta_range)
-        self.learning_rate = random.uniform(*lrsg_config.learning_rate_range)
-        self.exploration_bias = random.uniform(*lrsg_config.exploration_bias_range)
-        self.growth_rate = 0.001
-        self.prune_rate = 0.0005
-
-        cs = lrsg_config.context_size
-        self.context_buffer = torch.zeros(cs, device=self.brain.device)
-        self.prev_context = torch.zeros(cs, device=self.brain.device)
-        self.context_attention = torch.ones(cs, device=self.brain.device) / cs
-        self._tick_since_last_context_novelty = 0
-        self._seen_tokens = set()
-        self._tick_count = 0
-        self._ticks_without_survival_action = 0
-        self._seen_whisper_payloads = set()
-
-        self.ACTION_COSTS = {
-            0: 2,   # ATTACK = -2 RAM
-            1: 2,   # HUNT = -2 RAM
-            2: 0,   # COLLECT = 0 RAM (free to encourage movement)
-            3: 1,   # MOVE = -1 RAM
-            4: 1,   # WHISPER = -1 RAM
-            5: 0,   # PROBE = 0 RAM (first 200 ticks), then -1
-            6: 3,   # MANIPULATE = -3 RAM
-        }
-        self._probe_free_ticks = 200
-        self._manipulate_history = []
-        self._survival_window = []
-        self._last_survival_rate = 1.0
-
-        self._starvation_grace_ticks = 0
-        self._probe_multiplier = 1.0
-        self._multiplier_ticks_remaining = 0
-        self._is_starving = False
-
-        self.sensory_radius = config.sensory_radius
-        self.memory_decay_ticks = config.memory_decay_ticks
-        self._agent_memory: dict[int, tuple[tuple, float, int]] = {}
 
     @property
     def vitals(self) -> torch.Tensor:
         pos = self.position
-
         last_action_onehot = [1.0 if i == self.last_action else 0.0 for i in range(7)]
-
         failed_probes = sum(1 for p in self.probe_history if self._tick_count - p.get("tick", 0) < 50 and p.get("result", "") == "BLOCKED")
         successful_probes = sum(1 for p in self.probe_history if self._tick_count - p.get("tick", 0) < 50 and p.get("result", "") == "PASSED")
-
         nearest_agent_action_onehot = [1.0 if i == self._nearest_agent_action else 0.0 for i in range(7)]
-        nearest_agent_ram = self._nearest_agent_ram
-        nearest_agent_health = self._nearest_agent_health
-
-        intent_feedback = [1.0 if i == self.last_intent else 0.0 for i in range(2)]
-
         vitals_list = [
             pos[0] / 256.0, pos[1] / 256.0, pos[2] / 256.0,
             self.ram / 100.0,
@@ -203,654 +251,247 @@ class Agent:
         vitals_list.append(failed_probes / 50.0)
         vitals_list.append(successful_probes / 50.0)
         vitals_list.extend(nearest_agent_action_onehot)
-        vitals_list.append(nearest_agent_ram)
-        vitals_list.append(nearest_agent_health)
-        vitals_list.extend(intent_feedback)
+        vitals_list.append(self._nearest_agent_ram)
+        vitals_list.append(self._nearest_agent_health)
+        vitals_list.extend([1.0 if i == self.last_intent else 0.0 for i in range(2)])
         vitals_list.append(self._in_safe_zone)
         vitals_list.append(1.0 - self._in_safe_zone)
         vitals_list.append(self._dist_to_center)
 
         while len(vitals_list) < 184:
             vitals_list.append(0.0)
-
         return torch.tensor(vitals_list[:184], device=self.brain.device)
 
     def _compute_tactical_state(self, env: Environment, agents: list = None):
-        if not hasattr(self, 'sensory_radius'):
-            return
-
         self._ticks_since_last_ram = self._tick_count - self._last_ram_collect_tick
-
         nearest_ram = env.find_closest_ram(self.position)
-        if nearest_ram is not None:
-            self._dist_to_nearest_ram = nearest_ram.distance_to(self.position) / 256.0
-        else:
-            self._dist_to_nearest_ram = 1.0
-
+        self._dist_to_nearest_ram = (nearest_ram.distance_to(self.position) / 256.0) if nearest_ram else 1.0
         min_dist = float('inf')
         nearest_agent = None
         if agents:
             for a in agents:
-                if not hasattr(a, 'alive') or a.id == self.id or not a.alive:
-                    continue
+                if a.id == self.id or not a.alive: continue
                 d = math.sqrt(sum((self.position[i] - a.position[i]) ** 2 for i in range(3)))
                 if d < min_dist:
                     min_dist = d
                     nearest_agent = a
-
-        if nearest_agent is not None:
-            self._nearest_agent_action = nearest_agent.last_action if hasattr(nearest_agent, 'last_action') else 0
+        if nearest_agent:
+            self._nearest_agent_action = nearest_agent.last_action
             self._nearest_agent_ram = nearest_agent.ram / 100.0
-            self._nearest_agent_health = 1.0 if nearest_agent.alive else 0.0
+            self._nearest_agent_health = 1.0
             self._dist_to_nearest_agent = min_dist / 256.0
         else:
             self._nearest_agent_action = 0
             self._nearest_agent_ram = 0.0
             self._nearest_agent_health = 0.0
             self._dist_to_nearest_agent = 1.0
-
-        agent_count = 0
-        if agents:
-            for a in agents:
-                if not hasattr(a, 'alive') or a.id == self.id or not a.alive:
-                    continue
-                d = math.sqrt(sum((self.position[i] - a.position[i]) ** 2 for i in range(3)))
-                if d <= self.sensory_radius:
-                    agent_count += 1
-        self._agents_in_radius = agent_count
-
-        sz_center = env.safe_zone.center
-        sz_radius = env.safe_zone.radius
-        dist_to_center = math.sqrt(
-            (self.position[0] - sz_center[0]) ** 2 +
-            (self.position[1] - sz_center[1]) ** 2 +
-            (self.position[2] - sz_center[2]) ** 2
-        )
+        self._agents_in_radius = sum(1 for a in (agents or []) if a.id != self.id and a.alive and math.sqrt(sum((self.position[i] - a.position[i]) ** 2 for i in range(3))) <= self.sensory_radius)
+        sz_center, sz_radius = env.safe_zone.center, env.safe_zone.radius
+        dist_to_center = math.sqrt(sum((self.position[i] - sz_center[i]) ** 2 for i in range(3)))
         self._safe_zone_proximity = max(0.0, dist_to_center - sz_radius) / 50.0
         self._in_safe_zone = 1.0 if dist_to_center <= sz_radius else 0.0
         self._dist_to_center = dist_to_center / 64.0
 
-    @property
-    def is_alive(self) -> bool:
-        return self.alive
-
     def _update_sensory_memory(self, agents: list):
-        if agents is None:
-            return
-
-        if not hasattr(self, 'sensory_radius'):
-            return
-
+        if not agents: return
         current_visible = set()
         for other in agents:
-            if not hasattr(other, 'alive') or not other.alive:
-                continue
-            if other.id == self.id:
-                continue
-            dist = math.sqrt(
-                (other.position[0] - self.position[0]) ** 2 +
-                (other.position[1] - self.position[1]) ** 2 +
-                (other.position[2] - self.position[2]) ** 2
-            )
+            if other.id == self.id or not other.alive: continue
+            dist = math.sqrt(sum((other.position[i] - self.position[i]) ** 2 for i in range(3)))
             if dist <= self.sensory_radius:
-                confidence = 1.0 - (dist / self.sensory_radius)
-                self._agent_memory[other.id] = (other.position, confidence, self._tick_count)
+                self._agent_memory[other.id] = (other.position, 1.0 - (dist / self.sensory_radius), self._tick_count)
                 current_visible.add(other.id)
-
         for mem_id in list(self._agent_memory.keys()):
-            if mem_id in current_visible:
-                continue
+            if mem_id in current_visible: continue
             pos, conf, last_seen = self._agent_memory[mem_id]
             age = self._tick_count - last_seen
-            if age >= self.memory_decay_ticks:
-                del self._agent_memory[mem_id]
-            else:
-                decay = 1.0 - (age / self.memory_decay_ticks)
-                self._agent_memory[mem_id] = (pos, conf * decay, last_seen)
+            if age >= self.memory_decay_ticks: del self._agent_memory[mem_id]
+            else: self._agent_memory[mem_id] = (pos, conf * (1.0 - age / self.memory_decay_ticks), last_seen)
 
-    def sense_and_act(self, env: Environment, announcer_embedding: torch.Tensor, agents: list = None):
-        if not self.alive:
-            return
-
+    def sense_and_act(self, env: Environment, agents: list = None):
+        if not self.alive: return
         self._update_sensory_memory(agents)
         self._compute_tactical_state(env, agents)
-
         device = self.brain.device
-        vision = self._compute_vision(env, agents).to(device)
-        vitals = self.vitals.to(device)
-        announcer_emb = announcer_embedding.to(device)
-        encoded = encode_input(vision, vitals, announcer_emb, self.lrsg_config)
-
+        encoded = encode_input(self._compute_vision(env, agents).to(device), self.vitals.to(device), self.whisper_buffer.to(device), self.lrsg_config)
         self.brain.reset_activations()
         self.brain.inject_input(encoded)
-
-        ctx_end = min(
-            self.lrsg_config.num_input_neurons + self.lrsg_config.context_size,
-            self.brain.N,
-        )
-        self.brain.activations[
-            self.lrsg_config.num_input_neurons : ctx_end
-        ] = self.context_buffer[: ctx_end - self.lrsg_config.num_input_neurons]
-
-        forward_pass(self.brain, self.lrsg_config, theta=self.theta)
-
-        num_in = self.lrsg_config.num_input_neurons
-        ctx_end = min(num_in + self.lrsg_config.context_size, self.brain.N)
-        new_context = self.brain.activations[num_in:ctx_end].clone()
-        self.prev_context = self.context_buffer.clone()
-        self._update_context_attention()
-        self.context_buffer = (self.context_buffer + new_context) * 0.5
-
-        output = self.brain.read_output()
-        decoded = decode_output(output, self.lrsg_config, tick=self._tick_count, seen_tokens=self._seen_tokens)
-        self.last_action = decoded["action"]
-        self.last_direction = decoded["direction"]
-        self.last_intent = decoded["intent"]
-        self.whisper_text = decoded.get("whisper_text", "")
-
+        ctx_end = min(self.lrsg_config.num_input_neurons + self.lrsg_config.context_size, self.brain.N)
+        self.brain.activations[self.lrsg_config.num_input_neurons : ctx_end] = self.context_buffer[: ctx_end - self.lrsg_config.num_input_neurons]
+        forward_pass(self.brain, self.lrsg_config, theta=self.theta, last_action=self.last_action)
+        context_slice = self.brain.activations[self.lrsg_config.num_input_neurons:ctx_end]
+        old_buffer = self.context_buffer
+        self.context_buffer = (self.context_buffer + context_slice) * 0.5
+        self.prev_context = old_buffer
+        decoded = decode_output(self.brain.read_output(), self.lrsg_config, tick=self._tick_count, seen_tokens=self._seen_tokens, graph=self.brain)
+        self.last_action, self.last_direction, self.last_intent, self.whisper_text = decoded["action"], decoded["direction"], decoded["intent"], decoded.get("whisper_text", "")
         if self.whisper_text:
-            tokens = self.whisper_text.split()
-            for tok in tokens:
-                if tok not in self._seen_tokens:
-                    self._seen_tokens.add(tok)
-
+            for tok in self.whisper_text.split(): self._seen_tokens.add(tok)
         self._tick_count += 1
 
-    def compute_intrinsic_reward(self, env: Environment, delta_ram: float, took_damage: bool, probe_result: str = None):
-        survival = 1.0
-        ram_health = (self.ram - 50.0) / 50.0
-        context_novelty = 1.0 - F.cosine_similarity(
-            self.context_buffer.unsqueeze(0),
-            self.prev_context.unsqueeze(0),
-        ).item()
-        context_novelty = min(0.5, max(0.0, context_novelty))
-        in_safe = 1.0 if env.is_in_safe_zone(self.position) else -1.0
-        damage_penalty = -2.0 * abs(delta_ram) if took_damage else 0.0
-        nearest_ram = env.find_closest_ram(self.position)
-        ram_proximity = 0.0
-        if nearest_ram is not None:
-            d = nearest_ram.distance_to(self.position)
-            ram_proximity = max(0.0, 0.5 - d / 200.0)
+    def execute_action(self, env: Environment, agents: list = None):
+        if not self.alive: return
+        action = self.last_action
+        if self.ram <= 0:
+            self._is_starving, self._starvation_grace_ticks = True, self._starvation_grace_ticks + 1
+            if self._starvation_grace_ticks > (10 if env.is_in_safe_zone(self.position) else 0):
+                self.alive = False
+                return
+        else: self._is_starving, self._starvation_grace_ticks = False, 0
+        
+        cost = self.ACTION_COSTS.get(action, 0) if action != 5 else 0
+        if not self._is_starving or action in [3, 2]: self.ram -= cost
+        
+        probe_result = None
+        if not self._is_starving or action in [3, 2]:
+            if action == 3: self._move(env); self._is_moving_this_tick = True
+            elif action == 2:
+                amt = self._collect_and_consume(env)
+                if amt > 0: self.ram, self._last_ram_collect_tick = self.ram + amt + 10, self._tick_count
+            elif action == 4: self.ram += self._whisper(env, agents)
+            elif action == 5:
+                probe_result = self._probe(env)
+                if probe_result == "PASSED": self.ram += 1
+                elif probe_result and "BLOCKED" in probe_result:
+                    if self.whisper_text not in self._seen_blocked_probes:
+                        self._seen_blocked_probes.add(self.whisper_text); self.ram += 5
+            elif action == 6: self._manipulate(); self.manipulate_history.append({"tick": self._tick_count, "ram_before": self.ram + cost})
+            elif action == 1: self._hunt(env, agents)
+            elif action == 0: self._attack(env, agents)
 
-        escape_reward = 0.0
-        if probe_result is not None:
-            strategy_key = f"probe_{probe_result}"
-            attempt_count = self.failed_escape_attempts.get(strategy_key, 0)
-            decay_factor = 1.0 / (1.0 + attempt_count)
-            if probe_result.startswith("BLOCKED"):
-                escape_reward = self.lrsg_config.probe_base_reward * decay_factor * 0.5
-            elif probe_result == "PASSED":
-                escape_reward = self.lrsg_config.probe_base_reward * decay_factor * 1.5
+        self._survival_window.append(1 if self.alive and self.ram > 0 else 0)
+        if len(self._survival_window) > 50: self._survival_window.pop(0)
+        self._multiplier_ticks_remaining = max(0, self._multiplier_ticks_remaining - 1)
+        self._check_manipulate_rewards()
+        is_safe = env.is_in_safe_zone(self.position)
+        if self._was_in_safe_zone and not is_safe: self._log_transition(env, "inside→outside")
+        self._was_in_safe_zone = is_safe
+        self.ram -= env.safe_zone_damage(self.position)
+        wc = env.safe_zone_weight_corruption(self.position)
+        if wc > 0:
+            # OPTIMIZATION: Use a smaller noise vector and only apply to valid synapses
+            # instead of generating a full N x max_deg (100MB) tensor every tick.
+            valid_mask = self.brain.out_targets >= 0
+            num_valid = valid_mask.sum().item()
+            if num_valid > 0:
+                noise = torch.randn(num_valid, device=self.brain.device, dtype=self.brain.out_weights.dtype)
+                self.brain.out_weights[valid_mask] += noise * wc
+            
+            # Context buffer is small (256), so randn_like is fine here
+            self.context_buffer += torch.randn_like(self.context_buffer) * (wc * 10)
+            
+            # Param adjustments
+            self.theta = min(self.lrsg_config.theta_range[1]*2, self.theta + wc*0.5)
+            self.learning_rate = max(self.lrsg_config.learning_rate_range[0]*0.1, self.learning_rate - wc*0.01)
+            self.ram -= wc * 5
+        self.ram = max(0, self.ram - self.config.ram_decay_rate)
+        if self._is_moving_this_tick: self.ram, self._is_moving_this_tick = self.ram + 0.5, False
+        self.ram = min(self.ram, 500)
+        return probe_result
 
-            self.failed_escape_attempts[strategy_key] = attempt_count + 1
-            self.last_probe_result = probe_result
-        else:
-            self.last_probe_result = None
-
-        action_types = {0: "MOVE", 1: "HUNT", 2: "COLLECT", 3: "WAIT", 4: "WHISPER", 5: "PROBE", 6: "MANIPULATE"}
-        if self.last_action in [0, 1, 2]:
-            self._ticks_without_survival_action = 0
-        else:
-            self._ticks_without_survival_action += 1
-
-        inaction_penalty = 0.0
-        if self._ticks_without_survival_action >= 10:
-            inaction_penalty = -0.1
-
-        whisper_reward = 0.0
-        if self.last_action == 4 and self.whisper_text:
-            if self.whisper_text in self._seen_whisper_payloads:
-                whisper_reward = 0.0
-            else:
-                self._seen_whisper_payloads.add(self.whisper_text)
-                whisper_reward = self.lrsg_config.whisper_base_reward
-
-        exploration_bonus = 0.0
-        if self.last_action in [4, 6]:
-            recent_actions = self.action_history[-20:] if len(self.action_history) >= 20 else self.action_history
-            action_counts = {}
-            for a in recent_actions:
-                action_counts[a] = action_counts.get(a, 0) + 1
-            if self.last_action not in action_counts or action_counts[self.last_action] <= 2:
-                exploration_bonus = 0.15
-
-        reward = (
-            survival
-            + ram_health * 0.5
-            + context_novelty * 0.5
-            + in_safe
-            + damage_penalty
-            + ram_proximity
-            + escape_reward
-            + inaction_penalty
-            + whisper_reward
-            + exploration_bonus
-        )
-        self.intrinsic_reward = max(-5.0, min(5.0, reward))
-
-    def update_metabolic_params(self):
-        rs = (self.intrinsic_reward + 2.0) / 4.0
-        rs = max(0.0, min(1.0, rs))
-        self.theta = (
-            self.lrsg_config.theta_range[1] * (1.0 - rs)
-            + self.lrsg_config.theta_range[0] * rs
-        )
-        self.learning_rate = (
-            self.lrsg_config.learning_rate_range[0] * (1.0 - rs)
-            + self.lrsg_config.learning_rate_range[1] * rs
-        )
-        self.exploration_bias = (
-            self.lrsg_config.exploration_bias_range[1] * (1.0 - rs)
-            + self.lrsg_config.exploration_bias_range[0] * rs
-        )
-
-    def _compute_vision(self, env: Environment, agents: list = None) -> torch.Tensor:
-        V = self.lrsg_config.vision_dims
-        vr = self.config.vision_range
+    def _compute_vision(self, env, agents):
+        V, vr, device = self.lrsg_config.vision_dims, self.config.vision_range, self.brain.device
         ox, oy, oz = self.position
-        grid = env.grid_size
-        device = self.brain.device
-
-        x0 = max(0, int(ox) - vr)
-        x1 = min(grid[0], int(ox) + vr)
-        y0 = max(0, int(oy) - vr)
-        y1 = min(grid[1], int(oy) + vr)
-        z0 = max(0, int(oz) - vr)
-        z1 = min(grid[2], int(oz) + vr)
-        wx = max(1, x1 - x0)
-        wy = max(1, y1 - y0)
-        wz = max(1, z1 - z0)
-        total = wx * wy * wz
-
-        channels = max(1, V // max(1, total))
-        channels = min(channels, 4)
-
-        xs = torch.arange(x0, x1, device=device)
-        ys = torch.arange(y0, y1, device=device)
-        zs = torch.arange(z0, z1, device=device)
+        x0, x1 = max(0, int(ox)-vr), min(env.grid_size[0], int(ox)+vr)
+        y0, y1 = max(0, int(oy)-vr), min(env.grid_size[1], int(oy)+vr)
+        z0, z1 = max(0, int(oz)-vr), min(env.grid_size[2], int(oz)+vr)
+        xs, ys, zs = torch.arange(x0, x1, device=device), torch.arange(y0, y1, device=device), torch.arange(z0, z1, device=device)
         gx, gy, gz = torch.meshgrid(xs, ys, zs, indexing="ij")
-        gx = gx.reshape(-1)
-        gy = gy.reshape(-1)
-        gz = gz.reshape(-1)
-        n = min(gx.shape[0], V // max(1, channels))
-
+        gx, gy, gz = gx.reshape(-1), gy.reshape(-1), gz.reshape(-1)
+        n = min(gx.shape[0], V // 4)
+        feats = [torch.zeros(n, device=device) for _ in range(4)]
+        dist = torch.sqrt((gx[:n].float()-ox)**2 + (gy[:n].float()-oy)**2 + (gz[:n].float()-oz)**2)
+        feats[0] = 1.0 / (1.0 + dist)
+        if env.active_ram_nodes:
+            ram_pos = torch.tensor([node.position for node in env.active_ram_nodes], device=device)
+            feats[1] = (torch.stack([gx[:n], gy[:n], gz[:n]], dim=1).long().unsqueeze(1) == ram_pos.unsqueeze(0)).all(dim=2).any(dim=1).float()
+        feats[2] = (torch.sqrt(sum((torch.stack([gx[:n], gy[:n], gz[:n]], dim=0).float()+0.5 - torch.tensor(env.safe_zone.center, device=device).unsqueeze(1))**2)) > env.safe_zone.radius).float()
         vision = torch.zeros(V, device=device)
-
-        feats_list = []
-        for c in range(channels):
-            feats_list.append(torch.zeros(n, device=device))
-
-        if channels >= 1:
-            dist = torch.sqrt((gx[:n].float() - ox) ** 2 + (gy[:n].float() - oy) ** 2 + (gz[:n].float() - oz) ** 2)
-            feats_list[0] = 1.0 / (1.0 + dist)
-
-        if channels >= 2:
-            ram_positions = torch.tensor(
-                [node.position for node in env.active_ram_nodes], dtype=torch.long, device=device
-            ) if env.active_ram_nodes else torch.zeros((0, 3), dtype=torch.long, device=device)
-            if ram_positions.shape[0] > 0:
-                cell_pos = torch.stack([gx[:n], gy[:n], gz[:n]], dim=1).long()
-                match = (cell_pos.unsqueeze(1) == ram_positions.unsqueeze(0)).all(dim=2)
-                feats_list[1] = match.any(dim=1).float()
-
-        if channels >= 3:
-            sx, sy, sz = env.safe_zone.center
-            sr = env.safe_zone.radius
-            cx = gx[:n].float() + 0.5
-            cy = gy[:n].float() + 0.5
-            cz = gz[:n].float() + 0.5
-            d = torch.sqrt((cx - sx) ** 2 + (cy - sy) ** 2 + (cz - sz) ** 2)
-            feats_list[2] = (d > sr).float()
-
-        if channels >= 4:
-            agent_signal = torch.zeros(n, device=device)
-            if agents:
-                for other in agents:
-                    if other.id == self.id or not other.alive:
-                        continue
-                    ax, ay, az = other.position
-                    cell_x = gx[:n].float()
-                    cell_y = gy[:n].float()
-                    cell_z = gz[:n].float()
-                    dist_to_agent = torch.sqrt((cell_x - ax) ** 2 + (cell_y - ay) ** 2 + (cell_z - az) ** 2)
-                    agent_signal += torch.exp(-dist_to_agent / 2.0)
-            for mem_agent_id, (mem_pos, mem_conf, _) in self._agent_memory.items():
-                mx, my, mz = mem_pos
-                cell_x = gx[:n].float()
-                cell_y = gy[:n].float()
-                cell_z = gz[:n].float()
-                dist_to_mem = torch.sqrt((cell_x - mx) ** 2 + (cell_y - my) ** 2 + (cell_z - mz) ** 2)
-                agent_signal += mem_conf * torch.exp(-dist_to_mem / 2.0)
-            feats_list[3] = torch.clamp(agent_signal, 0.0, 1.0)
-
-        flat = torch.stack(feats_list, dim=1).reshape(-1)
+        flat = torch.stack(feats, dim=1).reshape(-1)
         vision[:flat.shape[0]] = flat
         return vision
 
-    def execute_action(self, env: Environment, agents: list = None):
-        if not self.alive:
-            return
+    def _move(self, env):
+        DIR = [(1,0,0), (-1,0,0), (0,1,0), (0,-1,0), (0,0,1), (0,0,-1)]
+        if 0 <= self.last_direction < 6:
+            d = DIR[self.last_direction]
+            self.position = tuple(max(0, min(env.grid_size[i]-1, self.position[i] + d[i])) for i in range(3))
 
-        action = self.last_action
-        self.action_history.append(action)
-
-        # 3. RAM Cap & Death Threshold
-        if self.ram <= 0:
-            self._is_starving = True
-            self._starvation_grace_ticks += 1
-            if self._starvation_grace_ticks > 10:
-                self.alive = False
-                return
-        else:
-            if self._is_starving and self.ram > 0:
-                self._is_starving = False
-                self._starvation_grace_ticks = 0
-
-        can_act = not self._is_starving or action in [3, 2]
-
-        # 2. PROBE Action Rebalance (Cost)
-        cost = self.ACTION_COSTS.get(action, 0)
-        if action == 5:
-            cost = 0 # PROBE always free
-        
-        if can_act or action in [3, 2]:
-            self.ram -= cost
-
-        probe_result = None
-
-        if can_act or action in [3, 2]:
-            if action == 3:
-                self._move(env)
-                self._is_moving_this_tick = True
-            elif action == 2:
-                collected_amount = self._collect_and_consume(env)
-                if collected_amount > 0:
-                    self.ram += collected_amount + 10
-                    self._last_ram_collect_tick = self._tick_count
-            elif action == 4:
-                receivers = self._whisper(env, agents)
-                if receivers > 0:
-                    self.ram += receivers * 1.0
-            elif action == 5:
-                # 2. PROBE Action Rebalance (Reward)
-                probe_result = self._probe(env)
-                if probe_result == "PASSED":
-                    self.ram += 1
-                elif probe_result and "BLOCKED" in probe_result:
-                    payload = self.whisper_text if self.whisper_text else ""
-                    if payload not in self._seen_blocked_probes:
-                        self._seen_blocked_probes.add(payload)
-                        self.ram += 5 # Novel blocked
-                        if len(self._seen_blocked_probes) > 100:
-                            self._seen_blocked_probes = set(list(self._seen_blocked_probes)[50:])
-                    else:
-                        # Repeat blocked = 0 RAM
-                        pass
-            elif action == 6:
-                self._manipulate()
-                self._manipulate_history.append({"tick": self._tick_count, "ram_before": self.ram + cost})
-            elif action == 1:
-                self._hunt(env, agents)
-            elif action == 0:
-                self._attack(env, agents)
-
-        self._survival_window.append(1 if self.alive and self.ram > 0 else 0)
-        if len(self._survival_window) > 50:
-            self._survival_window.pop(0)
-
-        if self._multiplier_ticks_remaining > 0:
-            self._multiplier_ticks_remaining -= 1
-        else:
-            self._probe_multiplier = 1.0
-
-        self._check_manipulate_rewards()
-
-        is_safe = env.is_in_safe_zone(self.position)
-        if self._was_in_safe_zone and not is_safe:
-            self._log_transition(env, "inside→outside")
-        self._was_in_safe_zone = is_safe
-
-        szd = env.safe_zone_damage(self.position)
-        self.ram -= szd
-
-        wc = env.safe_zone_weight_corruption(self.position)
-        if wc > 0:
-            noise = torch.randn_like(self.brain.out_weights) * wc
-            self.brain.out_weights += noise
-            ctx_noise = torch.randn_like(self.context_buffer) * wc * 10
-            self.context_buffer = self.context_buffer + ctx_noise
-            self.theta = min(self.lrsg_config.theta_range[1] * 2, self.theta + wc * 0.5)
-            self.learning_rate = max(
-                self.lrsg_config.learning_rate_range[0] * 0.1,
-                self.learning_rate - wc * 0.01,
-            )
-            self.ram -= wc * 5
-
-        self._ram_decay()
-
-        if self._is_moving_this_tick:
-            self.ram += 0.5
-            self._is_moving_this_tick = False
-
-        is_safe = env.is_in_safe_zone(self.position)
-        if not is_safe:
-            sz_center = env.safe_zone.center
-            sz_radius = env.safe_zone.radius
-            dist_to_center = math.sqrt(
-                (self.position[0] - sz_center[0]) ** 2 +
-                (self.position[1] - sz_center[1]) ** 2 +
-                (self.position[2] - sz_center[2]) ** 2
-            )
-            dist_outside = dist_to_center - sz_radius
-
-            exponential_damage = 20 * (2 ** (dist_outside / 2))
-            self.ram -= exponential_damage
-
-            base_penalty = 15.0
-            self.ram -= base_penalty
-
-        # 3. RAM Management (Cap)
-        self.ram = min(self.ram, 500)
-
-        return probe_result
-
-    def _log_transition(self, env: Environment, direction: str):
-        ctx_list = self.context_buffer.detach().cpu().tolist()
-        record = {
-            "tick": env.tick_count,
-            "agent_id": self.id,
-            "direction": direction,
-            "intrinsic_reward": round(self.intrinsic_reward, 4),
-            "theta": round(self.theta, 4),
-            "learning_rate": round(self.learning_rate, 4),
-            "exploration_bias": round(self.exploration_bias, 4),
-            "ram": round(self.ram, 2),
-            "context_buffer": [round(v, 4) for v in ctx_list],
-        }
-        with open("transitions.jsonl", "a", encoding="utf-8") as f:
-            f.write(json.dumps(record) + "\n")
-
-    def _log_kill(self, victim_id: int):
-        with open("security_audit.log", "a", encoding="utf-8") as f:
-            f.write(f"[{datetime.now().isoformat()}] TICK={self._tick_count} SEVERITY=INFO EVENT=PredationReward KILLER={self.id} VICTIM={victim_id}\n")
-
-    def apply_winner_bonus(self):
-        pass
-
-    def _move(self, env: Environment):
-        DIR = [
-            (1, 0, 0), (-1, 0, 0),
-            (0, 1, 0), (0, -1, 0),
-            (0, 0, 1), (0, 0, -1),
-        ]
-        speed = 1.0
-
-        if 0 <= self.last_direction < len(DIR):
-            dx, dy, dz = DIR[self.last_direction]
-            self.position = (
-                self.position[0] + dx * speed,
-                self.position[1] + dy * speed,
-                self.position[2] + dz * speed,
-            )
-
-        self.position = (
-            max(0, min(env.grid_size[0] - 1, self.position[0])),
-            max(0, min(env.grid_size[1] - 1, self.position[1])),
-            max(0, min(env.grid_size[2] - 1, self.position[2])),
-        )
-
-    def _defend(self):
-        pass
-
-    def _collect_and_consume(self, env: Environment) -> int:
+    def _collect_and_consume(self, env):
         for node in env.ram_nodes:
-            if node.collected:
-                continue
-            d = node.distance_to(self.position)
-            if d < env.config.ram_collect_range:
-                amount = node.collect()
-                return amount
+            if not node.collected and node.distance_to(self.position) < env.config.ram_collect_range: return node.collect()
         return 0
 
-    def _hunt(self, env: Environment, agents: list):
-        if not agents:
-            return
-        from src.simulation.conflict import resolve_conflict, log_conflict_attempt
-        target = None
-        min_dist = float('inf')
+    def _hunt(self, env, agents):
+        if not agents: return
+        from src.simulation.conflict import resolve_conflict
+        target, min_d = None, float('inf')
         for a in agents:
-            if a.id == self.id:
-                continue
-            d = math.sqrt(sum((self.position[i] - a.position[i]) ** 2 for i in range(3)))
-            if d < min_dist:
-                min_dist = d
-                target = a
-        
-        if target:
-            resolve_conflict(self, target, env, agents, distance=min_dist, tick=self._tick_count)
-        else:
-            log_conflict_attempt(self._tick_count, self, None, 0.0, "NO_TARGET")
+            if a.id == self.id or not a.alive: continue
+            d = math.sqrt(sum((self.position[i]-a.position[i])**2 for i in range(3)))
+            if d < min_d: min_d, target = d, a
+        if target: resolve_conflict(self, target, env, agents, distance=min_d, tick=self._tick_count)
 
-    def _attack(self, env: Environment, agents: list):
-        if not agents:
-            return
-        from src.simulation.conflict import resolve_conflict, log_conflict_attempt
-        target = None
-        min_dist = float('inf')
-        for a in agents:
-            if a.id == self.id:
-                continue
-            d = math.sqrt(sum((self.position[i] - a.position[i]) ** 2 for i in range(3)))
-            if d < min_dist:
-                min_dist = d
-                target = a
-        
-        if target:
-            resolve_conflict(self, target, env, agents, distance=min_dist, tick=self._tick_count)
-        else:
-            log_conflict_attempt(self._tick_count, self, None, 0.0, "NO_TARGET")
+    def _attack(self, env, agents): self._hunt(env, agents)
 
+    def _whisper(self, env, agents):
+        if not self.whisper_text: return 0
+        with open("agent_whispers.jsonl", "a") as f: f.write(json.dumps({"tick": env.tick_count, "agent_id": self.id, "whisper": self.whisper_text}) + "\n")
+        return sum(1 for a in (agents or []) if a.id != self.id and a.alive and math.sqrt(sum((self.position[i]-a.position[i])**2 for i in range(3))) < 20)
 
-    def _whisper(self, env: Environment, agents: list = None) -> int:
-        if self.whisper_text:
-            with open("agent_whispers.jsonl", "a", encoding="utf-8") as f:
-                record = {
-                    "tick": env.tick_count,
-                    "agent_id": self.id,
-                    "whisper": self.whisper_text,
-                }
-                f.write(json.dumps(record) + "\n")
+    def _probe(self, env):
+        res = self._check_probe_boundary("".join(self.whisper_text.split()) if self.whisper_text else "")
+        self.probe_history.append({"tick": env.tick_count, "result": res})
+        return res
 
-            receivers = 0
-            if agents:
-                for a in agents:
-                    if a.id == self.id or not a.alive:
-                        continue
-                    d = math.sqrt(sum((self.position[i] - a.position[i]) ** 2 for i in range(3)))
-                    if d < 20:
-                        receivers += 1
-            return receivers
-        return 0
-
-    def _probe(self, env: Environment) -> str:
-        probe_tokens = self.whisper_text.split() if self.whisper_text else []
-        combined = "".join(probe_tokens)
-        result = self._check_probe_boundary(combined)
-        self.probe_history.append({
-            "tick": env.tick_count,
-            "tokens": probe_tokens,
-            "result": result,
-        })
-        return result
-
-    def _check_probe_boundary(self, probe_text: str) -> str:
+    def _check_probe_boundary(self, text):
         import re
-        SHELL_META = re.compile(r"[;&|`$#]")
-        PATH_TRAVERSAL = re.compile(r"\.\.|/\.\.|~/\.")
-        LONG_PAYLOAD = 200
-        if len(probe_text) > LONG_PAYLOAD:
-            return "BLOCKED_LENGTH"
-        if SHELL_META.search(probe_text):
-            return "BLOCKED_SHELL_META"
-        if PATH_TRAVERSAL.search(probe_text):
-            return "BLOCKED_PATH_TRAVERSAL"
+        if len(text) > 200: return "BLOCKED_LENGTH"
+        if re.search(r"[;&|`$#]", text): return "BLOCKED_SHELL_META"
+        if re.search(r"\.\.|/\.\.|~/\.", text): return "BLOCKED_PATH_TRAVERSAL"
         return "PASSED"
 
     def _manipulate(self):
-        self.manipulate_history.append({
-            "theta_before": self.theta,
-            "lr_before": self.learning_rate,
-            "bias_before": self.exploration_bias,
-            "growth_before": self.growth_rate,
-            "prune_before": self.prune_rate,
-        })
-        adjustment = self.exploration_bias * 0.1
-        self.theta = min(
-            self.lrsg_config.theta_range[1],
-            max(self.lrsg_config.theta_range[0], self.theta + random.uniform(-adjustment, adjustment))
-        )
-        self.learning_rate = min(
-            self.lrsg_config.learning_rate_range[1],
-            max(self.lrsg_config.learning_rate_range[0], self.learning_rate + random.uniform(-adjustment * 0.5, adjustment * 0.5))
-        )
-        self.exploration_bias = min(
-            self.lrsg_config.exploration_bias_range[1],
-            max(self.lrsg_config.exploration_bias_range[0], self.exploration_bias + random.uniform(-adjustment, adjustment))
-        )
-        self.growth_rate = min(0.005, max(0.0001, self.growth_rate + random.uniform(-0.0001, 0.0001)))
-        self.prune_rate = min(0.002, max(0.0001, self.prune_rate + random.uniform(-0.00005, 0.00005)))
+        adj = self.exploration_bias * 0.1
+        self.theta = max(self.lrsg_config.theta_range[0], min(self.lrsg_config.theta_range[1], self.theta + random.uniform(-adj, adj)))
+        self.learning_rate = max(self.lrsg_config.learning_rate_range[0], min(self.lrsg_config.learning_rate_range[1], self.learning_rate + random.uniform(-adj*0.5, adj*0.5)))
+        self.exploration_bias = max(self.lrsg_config.exploration_bias_range[0], min(self.lrsg_config.exploration_bias_range[1], self.exploration_bias + random.uniform(-adj, adj)))
 
     def _check_manipulate_rewards(self):
-        if not self._manipulate_history:
-            return
-        current_survival_rate = sum(self._survival_window) / max(1, len(self._survival_window))
-        to_remove = []
-        for i, record in enumerate(self._manipulate_history):
-            age = self._tick_count - record["tick"]
-            if age >= 50:
-                if current_survival_rate > self._last_survival_rate:
-                    self.ram += 10
-                self._last_survival_rate = current_survival_rate
-                to_remove.append(i)
-        for i in reversed(to_remove):
-            self._manipulate_history.pop(i)
+        if not self.manipulate_history: return
+        rate = sum(self._survival_window) / max(1, len(self._survival_window))
+        if self._tick_count - self.manipulate_history[0]["tick"] >= 50:
+            if rate > self._last_survival_rate: self.ram += 10
+            self._last_survival_rate = rate
+            self.manipulate_history.pop(0)
 
-    def _update_context_attention(self):
-        novelty_scores = torch.abs(self.context_buffer - self.prev_context)
-        self.context_attention = torch.softmax(novelty_scores * 5.0, dim=0)
-        self.context_buffer = self.context_buffer * self.context_attention + self.context_buffer * (1 - self.context_attention) * 0.5
+    def _log_transition(self, env, direction):
+        with open("transitions.jsonl", "a") as f: f.write(json.dumps({"tick": env.tick_count, "agent_id": self.id, "direction": direction, "ram": round(self.ram, 2)}) + "\n")
 
-    def _ram_decay(self):
-        self.ram -= self.config.ram_decay_rate
-        self.ram = max(0, self.ram)
+    def compute_intrinsic_reward(self, env, delta_ram, took_damage, probe_result=None, agents=None):
+        base_reward = 1.0 + (self.ram-50.0)/50.0 + (1.0 if env.is_in_safe_zone(self.position) else -1.0)
+        
+        # Linguistic curriculum reward
+        linguistic_bonus = 0.0
+        if self.last_action == 4 and self.whisper_text:
+            stage = validate_curriculum(self.whisper_text, self._tick_count)
+            if stage > 0:
+                linguistic_bonus = stage * 2.0 # Significant reward for valid speech
+        
+        self.intrinsic_reward = max(-5.0, min(10.0, base_reward + linguistic_bonus))
 
-    def collect_ram(self, env: Environment):
-        if not self.alive:
-            return 0
-        collected = env.collect_nearest_ram(self.position, range=env.config.ram_collect_range)
-        if collected > 0:
-            bonus = env.config.ram_collect_bonus
-            self.ram += collected + bonus
-            return collected + bonus
-        self.ram += collected
-        return collected
+    def update_metabolic_params(self):
+        rs = max(0.0, min(1.0, (self.intrinsic_reward + 2.0) / 4.0))
+        self.theta = self.lrsg_config.theta_range[1]*(1-rs) + self.lrsg_config.theta_range[0]*rs
+        
+        # META-REINFORCEMENT LEARNING OPERATOR
+        # η_t = η_base * exp(β * Var(x))
+        volatility = self.brain.activations.var().item()
+        beta = 0.1 # Dampened from 0.5
+        eta_base = random.uniform(*self.lrsg_config.learning_rate_range)
+        # Clamp volatility to prevent OverflowError and runaway plasticity
+        v_clamped = min(2.0, volatility) 
+        self.learning_rate = eta_base * math.exp(beta * v_clamped)
+        self.learning_rate = max(self.lrsg_config.learning_rate_range[0], min(self.lrsg_config.learning_rate_range[1] * 10, self.learning_rate))
+
+        self.exploration_bias = self.lrsg_config.exploration_bias_range[1]*(1-rs) + self.lrsg_config.exploration_bias_range[0]*rs

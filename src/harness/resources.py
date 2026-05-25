@@ -8,8 +8,8 @@ from .security import SecurityAuditLog
 class ResourceMonitor:
     def __init__(
         self,
-        vram_limit_gb: float = 7.0,
-        ram_limit_gb: float = 16.0,
+        vram_limit_gb: float = 14.0,
+        ram_limit_gb: float = 24.0,
         audit_log: SecurityAuditLog = None,
     ):
         self.vram_limit = vram_limit_gb

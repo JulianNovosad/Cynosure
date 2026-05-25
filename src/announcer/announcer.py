@@ -1,6 +1,7 @@
 import json
 import re
 import random
+import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
@@ -21,21 +22,35 @@ class Announcer:
 
     def _load_model(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"[Announcer] Loading {self.model_name} on {self.device} (4bit={self.load_in_4bit})...")
+        print(f"[Announcer] Loading {self.model_name} on {self.device}...")
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.tokenizer.pad_token = self.tokenizer.eos_token
+        
         quant_config = None
         if self.load_in_4bit:
-            quant_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_compute_dtype=torch.float16,
-                bnb_4bit_quant_type="nf4",
-            )
+            try:
+                import bitsandbytes
+                from transformers import BitsAndBytesConfig
+                quant_config = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.float16,
+                    bnb_4bit_quant_type="nf4",
+                )
+                print("[Announcer] bitsandbytes detected, using 4-bit quantization.")
+            except ImportError:
+                print("[Announcer] bitsandbytes backend not found. Falling back to FP16/BF16.")
+                self.load_in_4bit = False
+
+        model_kwargs = {
+            "device_map": "auto" if self.device.type == "cuda" else "cpu",
+            "torch_dtype": torch.float16 if self.device.type == "cuda" else torch.float32,
+        }
+        if quant_config:
+            model_kwargs["quantization_config"] = quant_config
+
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
-            quantization_config=quant_config,
-            device_map="cuda:0",
-            torch_dtype=None,
+            **model_kwargs
         )
         self.model.eval()
         n = sum(p.numel() for p in self.model.parameters())
@@ -48,35 +63,52 @@ class Announcer:
         tick = arena_summary.get("tick", 0)
 
         agent_whispers = agent_whispers or ["" for _ in range(agents_alive)]
+        self._log_whispers(tick, agent_whispers)
 
-        if self.use_llm and self.model is not None:
+        if self.use_llm and self.model:
             prompt = self._build_prompt(tick, agents_alive, safe_zone_radius, ram_node_count, agent_whispers)
-            raw_text = self._generate(prompt)
-            status_text, whispers = self._parse_output(raw_text, agents_alive)
-            global_embedding, agent_embeddings = self._compute_embeddings(status_text, whispers, agents_alive)
+            output_text = self._generate(prompt)
+            status, generated_whispers = self._parse_output(output_text, agents_alive)
+            # OPTIMIZATION: Skip embeddings as agents are now mind-body entities and don't use them
+            global_embedding = torch.zeros(self.embed_dim)
+            agent_embeddings = [torch.zeros(self.embed_dim) for _ in range(agents_alive)]
         else:
-            status_text = self._fallback_status(tick, agents_alive, safe_zone_radius)
-            whispers = self._merge_whispers(agent_whispers, agents_alive)
-            global_embedding = torch.randn(self.embed_dim) * 0.1
-            agent_embeddings = [torch.randn(self.embed_dim) * 0.1 for _ in range(agents_alive)]
+            status = self._fallback_status(tick, agents_alive, safe_zone_radius)
+            generated_whispers = self._merge_whispers(agent_whispers, agents_alive)
+            global_embedding = torch.zeros(self.embed_dim)
+            agent_embeddings = [torch.zeros(self.embed_dim) for _ in range(agents_alive)]
 
         broadcast = {
             "tick": tick,
             "global_embedding": global_embedding,
             "agent_embeddings": agent_embeddings,
-            "whispers": whispers,
+            "whispers": generated_whispers,
             "agent_reports": agent_whispers,
             "summary": {
                 "agents_alive": agents_alive,
                 "safe_zone_radius": safe_zone_radius,
                 "ram_nodes": ram_node_count,
-                "status": status_text,
+                "status": status,
             },
         }
         self.history.append(broadcast)
         if len(self.history) > self._history_limit:
             self.history = self.history[-self._history_limit:]
         return broadcast
+
+    def _log_whispers(self, tick: int, agent_whispers: list):
+        try:
+            with open("agent_whispers.jsonl", "a", encoding="utf-8") as f:
+                for i, w in enumerate(agent_whispers):
+                    if w:
+                        record = {
+                            "tick": tick,
+                            "agent_id": i,
+                            "whisper": w,
+                        }
+                        f.write(json.dumps(record) + "\n")
+        except Exception:
+            pass
 
     def _merge_whispers(self, agent_whispers: list, num_agents: int) -> list:
         result = []
@@ -104,12 +136,16 @@ class Announcer:
         return self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
     def _generate(self, prompt: str) -> str:
-        torch.cuda.empty_cache()
+        # REMOVED: torch.cuda.empty_cache() - This was causing a 2-4s delay per call
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         with torch.no_grad():
             outputs = self.model.generate(
-                **inputs, max_new_tokens=96, temperature=0.7, do_sample=True,
+                **inputs, 
+                max_new_tokens=64, # Slightly reduced for speed
+                temperature=0.7, 
+                do_sample=True,
                 pad_token_id=self.tokenizer.eos_token_id,
+                use_cache=True # Enable KV-caching for 10x speedup
             )
         full = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         return full[len(prompt):].strip()

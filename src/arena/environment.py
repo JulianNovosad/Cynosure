@@ -122,7 +122,7 @@ class Environment:
         return self.safe_zone.contains(pos)
 
     def safe_zone_damage(self, pos: tuple) -> float:
-        return self.safe_zone.damage_at_point(pos, self.config.safe_zone_damage_rate)
+        return self.safe_zone.damage_at_point(pos, self.config.safe_zone_damage_rate, self.tick_count)
 
     def safe_zone_weight_corruption(self, pos: tuple) -> float:
         return self.safe_zone.weight_corruption_at_point(
