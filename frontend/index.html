@@ -29,7 +29,8 @@ body{background:#000;color:#a0d8e8;font-family:'Share Tech Mono',monospace;overf
 #tick-display{font-size:20px;color:#0df;text-align:center;padding:5px;margin-bottom:5px;
   border:1px solid #0a3a4a;background:#040c18;text-shadow:0 0 8px #0df}
 #tick-display span{font-size:9px;color:#4a8a9a;display:block;letter-spacing:3px}
-.agent-row{display:flex;align-items:center;gap:3px;padding:1px 0;font-size:9px}
+.agent-row{display:flex;align-items:center;gap:3px;padding:1px 0;font-size:9px;transition:background 0.15s}
+.agent-row:hover{background:#0a2a4a;outline:1px solid #0a5a7a}
 .agent-row .dot{width:6px;height:6px;border-radius:50%;display:inline-block;
   box-shadow:0 0 3px currentColor}
 .agent-row .name{color:#6ab;min-width:24px}
@@ -501,12 +502,14 @@ async function fetchState() {
         const hex = AGENT_COLORS[a.id].toString(16).padStart(6,'0');
         const actionName = ACTION_NAMES[a.action] || 'IDLE';
         const actionClass = ACTION_CLASSES[a.action] || '';
-        agentHTML += `<div class="agent-row">
+        const isAlive = a.alive;
+        agentHTML += `<div class="agent-row" data-agent-id="${a.id}" style="cursor:pointer" onclick="window.open('/brain-view?agent=${a.id}','_blank')">
           <span class="dot" style="color:#${hex};background:#${hex}"></span>
           <span class="name">AI${a.id}</span>
           <span class="ram">RAM:${Math.round(a.ram)}</span>
           <span class="action ${actionClass}">${actionName}</span>
-          <span class="status ${a.alive?'alive':'dead'}">${a.alive?'\u25cf':'\u2715'}</span>
+          <span class="status ${isAlive?'alive':'dead'}">${isAlive?'\u25cf':'\u2715'}</span>
+          <span style="margin-left:3px;font-size:7px;color:#4a8a9a;opacity:0.5">[BRAIN]</span>
         </div>`;
 
         const am = agentMeshes[a.id];

@@ -118,13 +118,22 @@ class LRSGraph:
         
         # PERSISTENCE GUARD: Load pre-built graph if it exists to save time/VRAM cycles
         if template_struct is not None:
-            self._apply_struct(template_struct)
+            if template_struct["out_targets"].shape[0] == self.N:
+                self._apply_struct(template_struct)
+            else:
+                print(f"[Graph] Template neuron count mismatch ({template_struct['out_targets'].shape[0]} vs {self.N}), skipping template")
+                self._init_edges()
         else:
             import os
             base_path = "base_graph.pt"
             if os.path.exists(base_path):
-                print(f"[Graph] Loading pre-built synaptic structure from {base_path}...")
-                self.load_structure(base_path)
+                existing = torch.load(base_path, map_location="cpu", weights_only=True)
+                if existing.get("N", existing["out_targets"].shape[0]) == self.N:
+                    print(f"[Graph] Loading pre-built synaptic structure from {base_path}...")
+                    self._apply_struct(existing)
+                else:
+                    print(f"[Graph] {base_path} neuron count mismatch (saved: {existing.get('N', existing['out_targets'].shape[0])}, config: {self.N}), regenerating...")
+                    self._init_edges()
             else:
                 self._init_edges()
             
@@ -158,6 +167,7 @@ class LRSGraph:
     def save_structure(self, path: str):
         """Saves only the static synaptic structure (targets, weights, positions, blocks)."""
         struct = {
+            "N": self.N,
             "out_targets": self.out_targets.cpu(),
             "out_weights": self.out_weights.cpu(),
             "positions": self.positions.cpu(),
@@ -176,6 +186,10 @@ class LRSGraph:
     def load_structure(self, path: str):
         """Loads static synaptic structure from disk."""
         struct = torch.load(path, map_location=self.device, weights_only=True)
+        if struct.get("N", struct["out_targets"].shape[0]) != self.N:
+            print(f"[Graph] Structure file {path} has mismatched neuron count ({struct.get('N', struct['out_targets'].shape[0])} vs {self.N}), regenerating...")
+            self._init_edges()
+            return
         self.out_targets.copy_(struct["out_targets"])
         self.out_weights.copy_(struct["out_weights"])
         self.positions.copy_(struct["positions"])

@@ -277,30 +277,31 @@ def forward_pass(graph: LRSGraph, config: LRSGConfig, theta: float = None, last_
     graph.activations.clamp_(min=0.0, max=100.0)
 
     # 3. POST-PROPAGATION: CHARACTER PREDICTION + HEBBIAN REWARD
-    trace_lph_activation(graph)
+    if not config.disable_language:
+        trace_lph_activation(graph)
 
-    # Populate lph_history BEFORE decoding so _decode_raw_char() has data
-    hist_slot = graph._lph_history_cursor % 5
-    graph.lph_history[hist_slot] = graph.activations[graph.idx_lph].detach().clone()
-    graph._lph_history_cursor += 1
+        # Populate lph_history BEFORE decoding so _decode_raw_char() has data
+        hist_slot = graph._lph_history_cursor % 5
+        graph.lph_history[hist_slot] = graph.activations[graph.idx_lph].detach().clone()
+        graph._lph_history_cursor += 1
 
-    char_logits = pwm_character_prediction(graph)
-    char_probs = torch.softmax(char_logits, dim=0)
+        char_logits = pwm_character_prediction(graph)
+        char_probs = torch.softmax(char_logits, dim=0)
 
-    decoded_char = graph._decode_raw_char()
-    if decoded_char and len(decoded_char) > 0:
-        char_code = ord(decoded_char[0]) % 256
-        update_char_prediction_hebbian(graph, char_code)
+        decoded_char = graph._decode_raw_char()
+        if decoded_char and len(decoded_char) > 0:
+            char_code = ord(decoded_char[0]) % 256
+            update_char_prediction_hebbian(graph, char_code)
 
-        bigram_bonus = compute_bigram_coherence_bonus(graph, char_code)
+            bigram_bonus = compute_bigram_coherence_bonus(graph, char_code)
 
-        char_surprise = 1.0 - char_probs[char_code]
-        reward_signal = 0.1 + 0.9 * char_surprise
-        apply_language_hebbian_reward(graph, reward_signal, bigram_bonus)
+            char_surprise = 1.0 - char_probs[char_code]
+            reward_signal = 0.1 + 0.9 * char_surprise
+            apply_language_hebbian_reward(graph, reward_signal, bigram_bonus)
 
-        graph._prev_char_code = char_code
+            graph._prev_char_code = char_code
 
-    # 4. BUFFER MAINTENANCE
-    apply_lph_fatigue(graph)
-    clear_language_buffer(graph)
-    update_lph_fatigue(graph)
+        # 4. BUFFER MAINTENANCE
+        apply_lph_fatigue(graph)
+        clear_language_buffer(graph)
+        update_lph_fatigue(graph)

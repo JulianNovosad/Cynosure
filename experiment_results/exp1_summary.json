@@ -1,0 +1,35 @@
+[
+  {
+    "num_agents": 3,
+    "survival_mean": 0.0,
+    "survival_std": 0.0,
+    "survival_rates": [
+      0.0
+    ],
+    "conflict_rate_mean": 0.0,
+    "conflict_rate_std": 0.0,
+    "ae_similarity_mean": 0.0751
+  },
+  {
+    "num_agents": 5,
+    "survival_mean": 0.0,
+    "survival_std": 0.0,
+    "survival_rates": [
+      0.0
+    ],
+    "conflict_rate_mean": 0.0,
+    "conflict_rate_std": 0.0,
+    "ae_similarity_mean": -0.0388
+  },
+  {
+    "num_agents": 10,
+    "survival_mean": 0.2,
+    "survival_std": 0.0,
+    "survival_rates": [
+      0.2
+    ],
+    "conflict_rate_mean": 0.0005,
+    "conflict_rate_std": 0.0,
+    "ae_similarity_mean": 0.1664
+  }
+]

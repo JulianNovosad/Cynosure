@@ -33,6 +33,10 @@ class LRSGConfig:
     manipulate_base_reward: float = 0.1
     pwm_activation: str = "tanh" # options: "tanh", "leaky_relu"
 
+    # Experiment control flags
+    disable_language: bool = False
+    disable_structural_plasticity: bool = False
+
     # PWM character prediction parameters
     char_pred_lr: float = 0.002
     language_hebbian_lr: float = 0.001

@@ -8,6 +8,11 @@ FRONTEND_DIR = None
 LATEST_STATE = {"tick": 0, "agents": [], "safe_zone": {"radius": 128}, "ram_nodes": [], "metrics": {}, "announcer": ""}
 STATE_LOCK = threading.Lock()
 
+BRAIN_STATE = {}
+BRAIN_STATE_LOCK = threading.Lock()
+BRAIN_GRAPH_STATE = {}
+BRAIN_GRAPH_STATE_LOCK = threading.Lock()
+
 
 @app.route("/")
 def index():
@@ -24,6 +29,29 @@ def get_state():
     with STATE_LOCK:
         snapshot = dict(LATEST_STATE)
     return jsonify(snapshot)
+
+
+@app.route("/brain/<int:agent_id>")
+def get_brain(agent_id):
+    from flask import request
+    mode = request.args.get("mode", "blocks")
+    with BRAIN_STATE_LOCK:
+        data = dict(BRAIN_STATE.get(agent_id, {"agent_id": agent_id, "tick": 0, "offline": True}))
+    if mode == "graph":
+        with BRAIN_GRAPH_STATE_LOCK:
+            graph = dict(BRAIN_GRAPH_STATE.get(agent_id, {"agent_id": agent_id, "tick": 0, "offline": True}))
+        return jsonify(graph)
+    return jsonify(data)
+
+
+@app.route("/brain-view")
+def brain_view():
+    if FRONTEND_DIR is None:
+        return "Frontend directory not set", 500
+    resp = make_response(send_from_directory(FRONTEND_DIR, "brain_view.html"))
+    resp.cache_control.no_cache = True
+    resp.cache_control.must_revalidate = True
+    return resp
 
 
 class SimulationVisualizer:
@@ -43,7 +71,6 @@ class SimulationVisualizer:
             try:
                 self._server.run()
             except Exception:
-                # Suppress errors during shutdown (common with Waitress on Windows)
                 pass
 
     def stop(self):
@@ -53,10 +80,19 @@ class SimulationVisualizer:
             except Exception:
                 pass
         if self._thread:
-            # Short timeout to avoid hanging the main process
             self._thread.join(timeout=1)
 
     def push_state(self, state: dict):
         global LATEST_STATE
         with STATE_LOCK:
             LATEST_STATE.update(state)
+
+    def push_brain_state(self, agent_id: int, data: dict):
+        global BRAIN_STATE
+        with BRAIN_STATE_LOCK:
+            BRAIN_STATE[agent_id] = data
+
+    def push_brain_graph_state(self, agent_id: int, data: dict):
+        global BRAIN_GRAPH_STATE
+        with BRAIN_GRAPH_STATE_LOCK:
+            BRAIN_GRAPH_STATE[agent_id] = data

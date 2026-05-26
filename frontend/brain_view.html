@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CYNOSURE // Neural Topology</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#14161a;color:#8a9aaa;font-family:'Share Tech Mono',monospace;overflow:hidden;display:flex}
+#canvas-container{flex:1;height:100vh;position:relative}
+#scanlines{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,180,255,0.006) 3px,rgba(0,180,255,0.006) 6px)}
+#panel{width:300px;height:100vh;background:linear-gradient(180deg,#1a1d22 0%,#111316 100%);
+  border-left:1px solid #2a2d32;padding:10px;overflow-y:auto;font-size:10px;position:relative}
+#panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,#0af,#f0a,transparent)}
+#panel h2{color:#6cf;font-size:11px;margin:8px 0 3px;border-bottom:1px solid #2a2d32;
+  padding-bottom:2px;text-transform:uppercase;letter-spacing:3px}
+#panel h2::before{content:'// ';color:#f0a}
+.stat-row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dotted #1e2228}
+.stat-row .label{color:#5a6a7a}
+.stat-row .val{color:#8cf;font-weight:bold}
+.stat-row .val.danger{color:#f44}
+.stat-row .val.hot{color:#f80}
+#agent-header{font-size:14px;color:#6cf;text-align:center;padding:6px;margin-bottom:5px;
+  border:1px solid #2a2d32;background:#111316;text-shadow:0 0 6px #6cf}
+#agent-header span{font-size:9px;color:#5a6a7a;display:block;letter-spacing:3px}
+#back-link{display:block;text-align:center;color:#5a6a7a;font-size:9px;padding:6px;margin-bottom:4px;
+  border:1px solid #2a2d32;background:#111316;text-decoration:none;cursor:pointer;letter-spacing:1px}
+#back-link:hover{color:#8cf;border-color:#8cf}
+#legend-bar{display:flex;height:10px;margin:4px 0;border:1px solid #2a2d32;border-radius:2px;overflow:hidden}
+#legend-bar div{flex:1}
+.bar-cold{background:#1a3a6a}
+.bar-cool{background:#2a6a8a}
+.bar-warm{background:#6a8a2a}
+.bar-hot{background:#aa4a1a}
+.bar-firing{background:#cc2200}
+#conn-legend{display:flex;align-items:center;gap:6px;margin:4px 0;padding:4px;background:#111316;border:1px solid #2a2d32}
+#conn-legend .thin{height:2px;width:20px;background:#5a3a6a}
+#conn-legend .thick{height:4px;width:20px;background:#ffaa00}
+#status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.online{background:#4cf;box-shadow:0 0 4px #4cf}
+.offline{background:#444}
+#agent-selector{width:100%;background:#111316;border:1px solid #2a2d32;color:#6cf;
+  font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px;margin-bottom:4px}
+#agent-selector option{background:#111316;color:#6cf}
+#region-legend{display:flex;gap:4px;margin:4px 0;flex-wrap:wrap}
+.region-tag{font-size:7px;padding:1px 4px;border-radius:2px;border:1px solid #2a2d32}
+.reg-input{color:#6af;background:#0a1a2a}
+.reg-hidden-a{color:#8f8;background:#0a1a0a}
+.reg-hidden-b{color:#ff8;background:#1a1a00}
+.reg-hidden-c{color:#f8a;background:#1a0a10}
+.reg-output{color:#f66;background:#1a0000}
+#footer{margin-top:8px;color:#2a3a3a;font-size:8px;border-top:1px solid #2a2d32;padding-top:4px}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:#111316}
+::-webkit-scrollbar-thumb{background:#2a2d32}
+#status-msg{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:#1a1d22;border:1px solid #2a2d32;padding:6px 14px;font-size:9px;color:#5a6a7a;z-index:200;pointer-events:none;
+  opacity:0;transition:opacity 0.5s;text-align:center}
+#status-msg.visible{opacity:1}
+</style>
+</head>
+<body>
+<div id="scanlines"></div>
+<div id="canvas-container"></div>
+<div id="panel">
+  <div id="back-link">&larr; RETURN TO CONTAINMENT</div>
+  <div id="agent-header"><span>CYNOSURE // NEURAL TOPOLOGY</span>AGENT <span id="agent-id-display">—</span></div>
+  <h2>Status</h2>
+  <div class="stat-row"><span class="label">Link</span><span class="val"><span id="status-dot" class="offline"></span><span id="status-text">OFFLINE</span></span></div>
+  <div class="stat-row"><span class="label">Tick</span><span class="val" id="stat-tick">0</span></div>
+  <div class="stat-row"><span class="label">Neurons (sampled)</span><span class="val" id="stat-neurons">—</span></div>
+  <div class="stat-row"><span class="label">Synapses (sampled)</span><span class="val" id="stat-edges">—</span></div>
+  <div class="stat-row"><span class="label">Mean Activation</span><span class="val" id="stat-mean-act">—</span></div>
+  <div class="stat-row"><span class="label">Synaptic Births</span><span class="val" id="stat-births">0</span></div>
+  <div class="stat-row"><span class="label">Synaptic Pruning</span><span class="val" id="stat-deaths">0</span></div>
+  <h2>Activation</h2>
+  <div id="legend-bar">
+    <div class="bar-cold" title="Inactive"></div>
+    <div class="bar-cool" title="Low"></div>
+    <div class="bar-warm" title="Medium"></div>
+    <div class="bar-hot" title="High"></div>
+    <div class="bar-firing" title="Firing"></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:7px;color:#5a6a7a">
+    <span>COLD</span><span>LOW</span><span>MED</span><span>HIGH</span><span>FIRE</span>
+  </div>
+  <h2>Synaptic Weight</h2>
+  <div id="conn-legend">
+    <span class="thin"></span><span style="font-size:8px;color:#7a5a8a">weak</span>
+    <span class="thick"></span><span style="font-size:8px;color:#ca8">strong</span>
+  </div>
+  <h2>Regions</h2>
+  <div id="region-legend">
+    <span class="region-tag reg-input">INPUT</span>
+    <span class="region-tag reg-hidden-a">BLOCK A</span>
+    <span class="region-tag reg-hidden-b">BLOCK B</span>
+    <span class="region-tag reg-hidden-c">BLOCK C</span>
+    <span class="region-tag reg-output">OUTPUT</span>
+  </div>
+  <h2>Switch Agent</h2>
+  <select id="agent-selector"><option value="">— select —</option></select>
+  <div id="footer">
+    <div style="color:#4a6a7a">DRAG rotate &bull; SCROLL zoom &bull; R-DRAG pan</div>
+    <div style="margin-top:3px;color:#2a3a3a">CYNOSURE v5.2 // TOPOLOGY VIEW</div>
+  </div>
+</div>
+<div id="status-msg">Linking to neural topology...</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const AGENT_ID = parseInt(new URLSearchParams(window.location.search).get('agent')) || 0;
+const POLL_INTERVAL = 400;
+
+let lastTick = -1;
+let fetchPending = false;
+let prevBirths = 0;
+let prevDeaths = 0;
+
+const $ = id => document.getElementById(id);
+const statusDot = $('status-dot');
+const statusText = $('status-text');
+const statusMsg = $('status-msg');
+
+// === THREE.js Scene ===
+const container = $('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x14161a);
+
+const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 1, 500);
+camera.position.set(35, 18, 40);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.8;
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(5, 0, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.1;
+controls.minDistance = 15;
+controls.maxDistance = 200;
+controls.autoRotate = false;
+
+// === Lighting — server room ambience ===
+scene.add(new THREE.AmbientLight(0x3a4a5a, 0.5));
+const d1 = new THREE.DirectionalLight(0x8ab4ff, 0.3);
+d1.position.set(40, 50, 30);
+scene.add(d1);
+const d2 = new THREE.DirectionalLight(0x446688, 0.15);
+d2.position.set(-30, -10, 40);
+scene.add(d2);
+const rim = new THREE.DirectionalLight(0xff8844, 0.08);
+rim.position.set(-20, 30, -40);
+scene.add(rim);
+
+// === Floor grid (server room) ===
+const gridHelper = new THREE.GridHelper(120, 40, 0x2a3a4a, 0x1a2a3a);
+gridHelper.position.y = -22;
+scene.add(gridHelper);
+
+// === Background rack lines ===
+for (let z = -30; z <= 30; z += 8) {
+  const rackGeo = new THREE.BufferGeometry();
+  const rackPos = new Float32Array([-55, -20, z, -55, 25, z]);
+  rackGeo.setAttribute('position', new THREE.BufferAttribute(rackPos, 3));
+  const rackMat = new THREE.LineBasicMaterial({ color: 0x1e2228, transparent: true, opacity: 0.3 });
+  scene.add(new THREE.Line(rackGeo, rackMat));
+}
+for (let x = -55; x <= -30; x += 6) {
+  const rackGeo = new THREE.BufferGeometry();
+  const rackPos = new Float32Array([x, -20, -30, x, -20, 30]);
+  rackGeo.setAttribute('position', new THREE.BufferAttribute(rackPos, 3));
+  const rackMat = new THREE.LineBasicMaterial({ color: 0x1e2228, transparent: true, opacity: 0.15 });
+  scene.add(new THREE.Line(rackGeo, rackMat));
+}
+
+// === Neuron Groups ===
+const NEURON_RADIUS = 1.2;
+const neuronGroup = new THREE.Group();
+scene.add(neuronGroup);
+
+const sphereGeo = new THREE.SphereGeometry(NEURON_RADIUS, 12, 10);
+const neuronMeshes = [];
+
+// === Synapse Lines ===
+const synapseGroup = new THREE.Group();
+scene.add(synapseGroup);
+const synapseMeshes = [];
+
+// === Birth Sparks ===
+const sparkGroup = new THREE.Group();
+scene.add(sparkGroup);
+const sparkGeo = new THREE.SphereGeometry(0.12, 6, 6);
+const sparks = [];
+for (let i = 0; i < 200; i++) {
+  const m = new THREE.Mesh(sparkGeo, new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0,
+  }));
+  m.visible = false;
+  sparkGroup.add(m);
+  sparks.push({ mesh: m, life: 0, maxLife: 0, vx: 0, vy: 0, vz: 0 });
+}
+
+// === Pruning Markers ===
+const pruneGroup = new THREE.Group();
+scene.add(pruneGroup);
+const pruneMeshes = [];
+for (let i = 0; i < 50; i++) {
+  const g = new THREE.BufferGeometry();
+  const p = new Float32Array(6);
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  const m = new THREE.Line(g, new THREE.LineBasicMaterial({
+    color: 0x8855aa,
+    transparent: true,
+    opacity: 0,
+  }));
+  m.visible = false;
+  pruneGroup.add(m);
+  pruneMeshes.push({ line: m, life: 0, maxLife: 0 });
+}
+
+// === Region Labels ===
+const labelGroup = new THREE.Group();
+scene.add(labelGroup);
+
+function makeLabel(text, color) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  ctx.font = '18px Share Tech Mono';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 64, 16);
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.7, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(12, 3, 1);
+  return sprite;
+}
+
+// === Force-Directed Layout ===
+function forceLayout(neurons, synapses, iterations) {
+  const n = neurons.length;
+  const pos = neurons.map(n => ({ x: n.lx, y: n.ly, z: n.lz }));
+  const vel = neurons.map(() => ({ x: 0, y: 0, z: 0 }));
+
+  const K = 0.015;
+  const C = 3;
+  const MAX_DISPLACEMENT = 1;
+  const DAMPING = 0.9;
+
+  for (let iter = 0; iter < iterations; iter++) {
+    const forces = neurons.map(() => ({ x: 0, y: 0, z: 0 }));
+
+    // Repulsion between all pairs
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        let dx = pos[i].x - pos[j].x;
+        let dy = pos[i].y - pos[j].y;
+        let dz = pos[i].z - pos[j].z;
+        let dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (dist < 0.1) dist = 0.1;
+        const rep = C / (dist * dist);
+        const fx = rep * dx / dist;
+        const fy = rep * dy / dist;
+        const fz = rep * dz / dist;
+        forces[i].x += fx; forces[i].y += fy; forces[i].z += fz;
+        forces[j].x -= fx; forces[j].y -= fy; forces[j].z -= fz;
+      }
+    }
+
+    // Spring attraction along synapses
+    const weightMap = {};
+    for (const s of synapses) {
+      const key = `${Math.min(s.src, s.dst)}-${Math.max(s.src, s.dst)}`;
+      weightMap[key] = (weightMap[key] || 0) + Math.abs(s.weight);
+    }
+
+    for (const s of synapses) {
+      const si = neurons.findIndex(n => n.id === s.src);
+      const ti = neurons.findIndex(n => n.id === s.dst);
+      if (si < 0 || ti < 0) continue;
+      let dx = pos[ti].x - pos[si].x;
+      let dy = pos[ti].y - pos[si].y;
+      let dz = pos[ti].z - pos[si].z;
+      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 0.1;
+      const w = Math.abs(s.weight);
+      const rest = 3 + 5 / (1 + w * 10);
+      const spring = K * w * (dist - rest);
+      const fx = spring * dx / dist;
+      const fy = spring * dy / dist;
+      const fz = spring * dz / dist;
+      forces[si].x += fx; forces[si].y += fy; forces[si].z += fz;
+      forces[ti].x -= fx; forces[ti].y -= fy; forces[ti].z -= fz;
+    }
+
+    // Apply forces
+    let totalEnergy = 0;
+    for (let i = 0; i < n; i++) {
+      const f = forces[i];
+      const mag = Math.sqrt(f.x*f.x + f.y*f.y + f.z*f.z);
+      if (mag > MAX_DISPLACEMENT) {
+        f.x = f.x / mag * MAX_DISPLACEMENT;
+        f.y = f.y / mag * MAX_DISPLACEMENT;
+        f.z = f.z / mag * MAX_DISPLACEMENT;
+      }
+      vel[i].x = (vel[i].x + f.x) * DAMPING;
+      vel[i].y = (vel[i].y + f.y) * DAMPING;
+      vel[i].z = (vel[i].z + f.z) * DAMPING;
+      pos[i].x += vel[i].x;
+      pos[i].y += vel[i].y;
+      pos[i].z += vel[i].z;
+      totalEnergy += vel[i].x*vel[i].x + vel[i].y*vel[i].y + vel[i].z*vel[i].z;
+    }
+    if (totalEnergy / n < 0.001) break;
+  }
+  return pos;
+}
+
+// === Build Scene ===
+let currentGraphData = null;
+
+function buildGraph(data) {
+  // Clear old
+  while (neuronGroup.children.length) {
+    const c = neuronGroup.children[0];
+    c.geometry && c.geometry.dispose();
+    c.material && c.material.dispose();
+    neuronGroup.remove(c);
+  }
+  while (synapseGroup.children.length) {
+    const c = synapseGroup.children[0];
+    c.geometry && c.geometry.dispose();
+    c.material && c.material.dispose();
+    synapseGroup.remove(c);
+  }
+  neuronMeshes.length = 0;
+  synapseMeshes.length = 0;
+  currentGraphData = data;
+
+  const neurons = data.neurons || [];
+  const synapses = data.synapses || [];
+  if (!neurons.length) return;
+
+  // Split into regions — hidden grouped into 3 equal buckets (A/B/C)
+  const inputs = neurons.filter(n => n.region === 'input');
+  const outputs = neurons.filter(n => n.region === 'output');
+  const hidden = neurons.filter(n => n.region === 'hidden');
+  const hiddenSorted = [...hidden].sort((a, b) => a.block_id - b.block_id);
+  const h3 = Math.max(1, Math.floor(hiddenSorted.length / 3));
+  const hidA = hiddenSorted.slice(0, h3);
+  const hidB = hiddenSorted.slice(h3, 2 * h3);
+  const hidC = hiddenSorted.slice(2 * h3);
+  for (const n of hidA) n._sub = 'A';
+  for (const n of hidB) n._sub = 'B';
+  for (const n of hidC) n._sub = 'C';
+
+  // Cluster centers
+  const centers = {
+    input:  { x: -14, y: 0, z: 0 },
+    hidA:   { x: -4,  y: 0, z: 0 },
+    hidB:   { x: 4,   y: 0, z: 0 },
+    hidC:   { x: 12,  y: 0, z: 0 },
+    output: { x: 20,  y: 0, z: 0 },
+  };
+  const R = 2.5; // cluster radius
+
+  // Initial layout: tight clusters
+  for (const n of neurons) {
+    let cx, cy, cz;
+    if (n.region === 'input') {
+      cx = centers.input.x; cy = centers.input.y; cz = centers.input.z;
+    } else if (n.region === 'output') {
+      cx = centers.output.x; cy = centers.output.y; cz = centers.output.z;
+    } else if (n.region === 'hidden') {
+      const key = 'hid' + (n._sub || 'B');
+      cx = centers[key].x; cy = centers[key].y; cz = centers[key].z;
+    } else {
+      cx = 0; cy = 0; cz = 0;
+    }
+    n.lx = cx + (Math.random() - 0.5) * R * 2;
+    n.ly = cy + (Math.random() - 0.5) * R * 2;
+    n.lz = cz + (Math.random() - 0.5) * R * 2;
+  }
+
+  // Gentle force-directed (low repulsion, just pulls connected together)
+  const finalPos = forceLayout(neurons, synapses, 40);
+
+  // Update region labels
+  while (labelGroup.children.length) labelGroup.remove(labelGroup.children[0]);
+  const labelDefs = [
+    { key: 'input',  text: 'INPUT',   color: '#66aaff' },
+    { key: 'hidA',   text: 'BLOCK A', color: '#88ff88' },
+    { key: 'hidB',   text: 'BLOCK B', color: '#ffff88' },
+    { key: 'hidC',   text: 'BLOCK C', color: '#ff88aa' },
+    { key: 'output', text: 'OUTPUT',  color: '#ff6666' },
+  ];
+  for (const ld of labelDefs) {
+    const c = centers[ld.key];
+    const lbl = makeLabel(ld.text, ld.color);
+    lbl.position.set(c.x, 5, 0);
+    labelGroup.add(lbl);
+  }
+
+  // Create neuron spheres
+  const globalMaxAct = Math.max(...neurons.map(n => Math.abs(n.activation)), 0.001);
+
+  for (let i = 0; i < neurons.length; i++) {
+    const n = neurons[i];
+    const p = finalPos[i];
+    const mat = new THREE.MeshStandardMaterial({
+      color: activationColor(n.activation, globalMaxAct),
+      emissive: activationColor(n.activation, globalMaxAct),
+      emissiveIntensity: 0.2 + Math.min(1, Math.abs(n.activation) / globalMaxAct) * 0.6,
+      metalness: 0.1,
+      roughness: 0.6,
+    });
+    const mesh = new THREE.Mesh(sphereGeo.clone(), mat);
+    mesh.position.set(p.x, p.y, p.z);
+    const scale = 0.8 + Math.min(1, Math.abs(n.activation) / globalMaxAct) * 1.0;
+    mesh.scale.setScalar(scale);
+    mesh.userData = { neuronId: n.id, region: n.region, activation: n.activation, blockId: n.block_id, sub: n._sub };
+    neuronGroup.add(mesh);
+    neuronMeshes.push(mesh);
+  }
+
+  // Create synapse lines
+  for (const s of synapses) {
+    const si = neurons.findIndex(n => n.id === s.src);
+    const ti = neurons.findIndex(n => n.id === s.dst);
+    if (si < 0 || ti < 0) continue;
+    const p0 = finalPos[si];
+    const p1 = finalPos[ti];
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array([p0.x, p0.y, p0.z, p1.x, p1.y, p1.z]);
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const w = Math.abs(s.weight);
+    const color = weightColor(w);
+    const mat = new THREE.LineBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: Math.min(0.85, 0.25 + w * 20),
+      linewidth: 1,
+    });
+    const line = new THREE.Line(geo, mat);
+    synapseGroup.add(line);
+    synapseMeshes.push({ line, weight: w });
+  }
+}
+
+// === Color functions ===
+function activationColor(val, maxVal) {
+  const n = maxVal > 0.001 ? Math.min(1, Math.abs(val) / maxVal) : 0;
+  if (n < 0.2) return new THREE.Color(0x1a4a8a);
+  if (n < 0.4) return new THREE.Color(0x2a8a8a);
+  if (n < 0.6) return new THREE.Color(0x5aaa3a);
+  if (n < 0.8) return new THREE.Color(0xcc8822);
+  return new THREE.Color(0xdd3311);
+}
+
+function weightColor(w) {
+  const n = Math.min(1, w * 30);
+  if (n < 0.25) return new THREE.Color(0x5a3a7a);
+  if (n < 0.5) return new THREE.Color(0x8a6a5a);
+  if (n < 0.75) return new THREE.Color(0xcc8833);
+  return new THREE.Color(0xffcc44);
+}
+
+// === Birth sparks ===
+function emitSparks(count, positions) {
+  let slot = 0;
+  for (let i = 0; i < sparks.length && slot < count; i++) {
+    if (sparks[i].life <= 0) {
+      const p = positions[slot % positions.length];
+      sparks[i].mesh.position.set(p.x, p.y, p.z);
+      sparks[i].mesh.visible = true;
+      sparks[i].life = 1;
+      sparks[i].maxLife = 1;
+      sparks[i].vx = (Math.random() - 0.5) * 0.8;
+      sparks[i].vy = (Math.random() - 0.5) * 0.8;
+      sparks[i].vz = (Math.random() - 0.5) * 0.8;
+      slot++;
+    }
+  }
+}
+
+// === Fetch Brain Graph ===
+async function fetchBrainData() {
+  if (fetchPending) return;
+  fetchPending = true;
+  try {
+    const resp = await fetch(`/brain/${AGENT_ID}?mode=graph`);
+    const data = await resp.json();
+    if (data.offline) {
+      statusDot.className = 'offline';
+      statusText.textContent = 'OFFLINE';
+      return;
+    }
+    if (data.tick === lastTick) return;
+    const prevTick = lastTick;
+    lastTick = data.tick;
+
+    statusDot.className = 'online';
+    statusText.textContent = `ONLINE (t=${data.tick})`;
+    $('stat-tick').textContent = data.tick;
+    $('stat-neurons').textContent = data.num_neurons || 0;
+    $('stat-edges').textContent = data.num_edges || 0;
+    $('stat-mean-act').textContent = data.neurons
+      ? (data.neurons.reduce((s, n) => s + Math.abs(n.activation), 0) / data.neurons.length).toFixed(6)
+      : '—';
+    $('stat-births').textContent = data.births || 0;
+    $('stat-deaths').textContent = data.deaths || 0;
+
+    const births = data.births || 0;
+    const deaths = data.deaths || 0;
+
+    buildGraph(data);
+
+    // Birth sparks
+    if (births > prevBirths && currentGraphData && currentGraphData.neurons) {
+      const activeNeurons = currentGraphData.neurons
+        .filter(n => Math.abs(n.activation) > 0.01)
+        .map(n => neuronMeshes[currentGraphData.neurons.indexOf(n)])
+        .filter(m => m);
+      const sparkPositions = activeNeurons.slice(0, Math.min(10, activeNeurons.length)).map(m => m.position);
+      emitSparks(Math.min(births - prevBirths, 20), sparkPositions);
+    }
+    prevBirths = births;
+    prevDeaths = deaths;
+
+  } catch(e) {
+    statusDot.className = 'offline';
+    statusText.textContent = 'DISCONNECTED';
+  } finally {
+    fetchPending = false;
+  }
+}
+
+// === Fetch Agent List ===
+async function fetchAgentList() {
+  try {
+    const resp = await fetch('/state');
+    const data = await resp.json();
+    const sel = $('agent-selector');
+    if (data.agents) {
+      sel.innerHTML = '';
+      for (const a of data.agents) {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = `AI${a.id} ${a.alive ? '●' : '✕'} RAM:${Math.round(a.ram)}`;
+        if (a.id === AGENT_ID) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    }
+  } catch(e) {}
+}
+
+// === Animation ===
+let animTime = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  animTime += 0.016;
+  controls.update();
+
+  // Update spark particles
+  for (const s of sparks) {
+    if (s.life > 0) {
+      s.life -= 0.025;
+      s.mesh.position.x += s.vx * 0.05;
+      s.mesh.position.y += s.vy * 0.05;
+      s.mesh.position.z += s.vz * 0.05;
+      s.mesh.scale.setScalar(s.life * 3);
+      s.mesh.material.opacity = s.life;
+      if (s.life <= 0) {
+        s.mesh.visible = false;
+        s.mesh.material.opacity = 0;
+      }
+    }
+  }
+
+  // Subtle neuron breathing — very slow
+  for (let i = 0; i < neuronMeshes.length; i++) {
+    const m = neuronMeshes[i];
+    const activation = m.userData.activation || 0;
+    const pulse = 1 + Math.sin(animTime * 0.3 + i * 0.1) * 0.03 * Math.min(1, Math.abs(activation) * 5);
+    m.scale.setScalar(m.userData._baseScale || m.scale.x);
+    if (!m.userData._baseScale) m.userData._baseScale = m.scale.x;
+    m.scale.setScalar(m.userData._baseScale * pulse);
+  }
+
+  renderer.render(scene, camera);
+}
+
+// === Poll Loop ===
+function pollLoop() {
+  fetchBrainData();
+  setTimeout(pollLoop, POLL_INTERVAL);
+}
+
+// === UI ===
+$('back-link').addEventListener('click', () => { window.location.href = '/'; });
+$('agent-selector').addEventListener('change', function() {
+  if (this.value !== '') window.location.href = `/brain-view?agent=${this.value}`;
+});
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+// === Start ===
+statusMsg.classList.add('visible');
+setTimeout(() => statusMsg.classList.remove('visible'), 3000);
+$('agent-id-display').textContent = `AI${AGENT_ID}`;
+document.title = `CYNOSURE // Neural Topology — AI${AGENT_ID}`;
+fetchAgentList();
+pollLoop();
+animate();
+</script>
+</body>
+</html>

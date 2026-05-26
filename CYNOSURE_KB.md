@@ -336,7 +336,37 @@ All Phase 2 changes applied after the double-execution fix. Tested on RTX 2070 8
 
 ---
 
-## 14. RELEASE HISTORY
+## 14. LEARNING EXPERIMENT RESULTS
+
+Conducted 26 May 2026. 100 seeds × 2 conditions (learning, baseline) × 10 episodes × 500 ticks.
+
+**Design:** Single LRSG agent (100K neurons, no language/LPH, no structural plasticity) in 10×10×10 grid. RAM node at (8,8,8), spawn at (2,2,2), collect distance=4.0. Reward=+1.0 on collection (episode ends). Hebbian update fires only on collection ticks (reward>0). Baseline: same but `learning_rate=0.0`.
+
+### Overall Collection Rates
+| Condition | Ep 1 | Ep 2 | Ep 3 | Ep 4 | Ep 5 | Ep 6 | Ep 7 | Ep 8 | Ep 9 | Ep 10 |
+|-----------|------|------|------|------|------|------|------|------|------|-------|
+| Learning  | 11%  | 13%  | 15%  | 16%  | 14%  | 10%  | 14%  | 13%  | 11%  | 10%   |
+| Baseline  | 18%  | 14%  | 13%  | 16%  | 15%  | 15%  | 14%  | 15%  | 12%  | 8%    |
+
+### Statistical Test (Episode 10)
+- Learning: 10/100 (10.0%)
+- Baseline: 8/100 (8.0%)
+- t = 0.492, p = 0.623 — **Not significant**
+
+### Trend (ticks-to-collect slope over episodes 1-10)
+- Learning: mean slope = +0.86 ± 6.31 (no improvement)
+- Baseline: mean slope = +0.95 ± 6.87 (no improvement)
+
+### Verdict
+**LEARNING FAILURE.** LRSG performs at or below random walk baseline (p=0.623). Collection rates fluctuate randomly (10-16%) in both conditions across all 10 episodes, with no upward trend in the learning condition. Ticks-to-collect remain ~350 regardless of condition or episode number.
+
+**Root cause:** Hebbian plasticity with sparse reward (fires only on collection) cannot solve temporal credit assignment. The weight update reinforces whatever neural pattern was active at collection time, but this does not generalize to navigating from (2,2,2) to (8,8,8) in a future episode. The behavioral effect of the learning update is indistinguishable from noise.
+
+**No further development on LRSG learning should proceed until the credit assignment mechanism is fundamentally redesigned.**
+
+---
+
+## 15. RELEASE HISTORY
 
 | Version | Date | Summary | Commits |
 |---------|------|---------|---------|
@@ -352,7 +382,13 @@ All Phase 2 changes applied after the double-execution fix. Tested on RTX 2070 8
 
 ---
 
-## APPENDIX: FILE INDEX
+## APPENDIX A: LEARNING EXPERIMENT FILES
+- `run_learning_experiment.py`: Entrypoint with resume support (checks completed seeds via JSON Lines).
+- `analyze_learning_experiment.py`: Post-hoc analysis with collection rates, t-test, slopes, verdict.
+- `experiment_results/learning_experiment.json`: 200 records (100 seeds × 2 conditions), JSON array.
+- `experiment_results/_test85.py`, `experiment_results/_finish.py`: Temp scripts (cleanup ok).
+
+## APPENDIX B: FILE INDEX
 - `_gen_figures.py`: Generates thesis charts.
 - `agent.py`: Core agent logic (sensing, acting, rewards).
 - `config.py`: Central configuration dataclasses.

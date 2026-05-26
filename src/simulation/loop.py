@@ -225,6 +225,184 @@ class Simulation:
         }
         self._visualizer.push_state(state)
 
+        if self.tick_count % 10 == 0:
+            for agent in self.agents:
+                if agent.alive:
+                    brain_data = self._compute_brain_aggregates(agent)
+                    self._visualizer.push_brain_state(agent.id, brain_data)
+                    graph_data = self._sample_brain_graph(agent)
+                    self._visualizer.push_brain_graph_state(agent.id, graph_data)
+
+    def _sample_brain_graph(self, agent):
+        brain = agent.brain
+        N = brain.N
+        num_input = self.config.lrsg.num_input_neurons
+        num_output = self.config.lrsg.num_output_neurons
+        h_start = num_input
+        h_end = N - num_output
+
+        n_input = min(30, num_input)
+        n_hidden = 140
+        n_output = min(30, num_output)
+
+        in_idxs = torch.randperm(num_input, device=brain.device)[:n_input]
+        h_size = max(1, h_end - h_start)
+        h_idxs = torch.randperm(h_size, device=brain.device)[:min(n_hidden, h_size)] + h_start
+        out_idxs = torch.randperm(num_output, device=brain.device)[:n_output] + (N - num_output)
+
+        core_idxs = torch.sort(torch.cat([in_idxs, h_idxs, out_idxs])).values
+        core_set = set(core_idxs.tolist())
+
+        # Collect synapses from core neurons (up to 4 top-weighted per core)
+        # and gather unique target ids as peripheral nodes
+        peripheral_set = set()
+        for idx in core_idxs:
+            i = idx.item()
+            targets = brain.out_targets[i]
+            weights = brain.out_weights[i]
+            deg = (targets >= 0).sum().item()
+            if deg == 0:
+                continue
+            n_syn = min(deg, 4)
+            if n_syn >= deg:
+                top_t = targets[:deg]
+            else:
+                _, tidx = torch.topk(weights[:deg].float(), n_syn)
+                top_t = targets[:deg][tidx]
+            for j in range(top_t.shape[0]):
+                tgt = top_t[j].item()
+                if tgt >= 0 and tgt not in core_set:
+                    peripheral_set.add(tgt)
+
+        # Build full node set (core + peripheral, capped at ~400)
+        MAX_NODES = 400
+        extra = list(peripheral_set - core_set)
+        if len(core_set) + len(extra) > MAX_NODES:
+            extra = extra[:MAX_NODES - len(core_set)]
+        all_set = core_set | set(extra)
+
+        synapses = []
+        for idx in core_idxs:
+            i = idx.item()
+            targets = brain.out_targets[i]
+            weights = brain.out_weights[i]
+            deg = (targets >= 0).sum().item()
+            if deg == 0:
+                continue
+            n_syn = min(deg, 4)
+            if n_syn >= deg:
+                top_t = targets[:deg]
+                top_w = weights[:deg]
+            else:
+                top_w, tidx = torch.topk(weights[:deg].float(), n_syn)
+                top_t = targets[:deg][tidx]
+            for j in range(top_t.shape[0]):
+                tgt = top_t[j].item()
+                if tgt >= 0 and tgt in all_set:
+                    synapses.append({
+                        "src": i,
+                        "dst": tgt,
+                        "weight": round(top_w[j].item(), 6),
+                    })
+
+        def region_of(i):
+            if i < num_input:
+                return "input"
+            if i >= N - num_output:
+                return "output"
+            return "hidden"
+
+        neurons = []
+        for i in sorted(all_set):
+            neurons.append({
+                "id": i,
+                "x": round(brain.positions[i, 0].item(), 2),
+                "y": round(brain.positions[i, 1].item(), 2),
+                "z": round(brain.positions[i, 2].item(), 2),
+                "activation": round(brain.activations[i].item(), 6),
+                "block_id": brain.block_ids[i].item(),
+                "region": region_of(i),
+            })
+
+        return {
+            "agent_id": agent.id,
+            "tick": self.tick_count,
+            "neurons": neurons,
+            "synapses": synapses,
+            "num_neurons": len(neurons),
+            "num_edges": len(synapses),
+            "births": self._agent_births.get(agent.id, 0),
+            "deaths": self._agent_deaths.get(agent.id, 0),
+        }
+
+    def _compute_brain_aggregates(self, agent):
+        brain = agent.brain
+        N = brain.N
+        block_size = 100
+        num_blocks = max(1, N // block_size)
+        truncated = num_blocks * block_size
+
+        act = brain.activations[:truncated].reshape(num_blocks, block_size)
+        pos = brain.positions[:truncated].reshape(num_blocks, block_size, 3)
+
+        block_act_mean = act.mean(dim=1)
+        block_act_max = act.max(dim=1).values
+        block_pos = pos.mean(dim=1)
+
+        block_activations = block_act_mean.cpu().tolist()
+        block_max_act = block_act_max.cpu().tolist()
+        block_positions = block_pos.cpu().tolist()
+
+        top_k = min(200, num_blocks)
+        _, top_indices = torch.topk(block_act_mean, top_k)
+
+        connections = []
+        visited_pairs = set()
+        for b_idx in top_indices:
+            b = b_idx.item()
+            start = b * block_size
+            end = min(start + block_size, N)
+            targets = brain.out_targets[start:end]
+            weights = brain.out_weights[start:end]
+            valid = targets >= 0
+            tgt_blocks = targets[valid] // block_size
+            w = weights[valid].float()
+            if tgt_blocks.numel() == 0:
+                continue
+            unique_tgts, inv = torch.unique(tgt_blocks, return_inverse=True)
+            w_sum = torch.zeros(len(unique_tgts), device=brain.device, dtype=torch.float32)
+            w_sum.scatter_add_(0, inv, w)
+            for idx in range(len(unique_tgts)):
+                tgt = unique_tgts[idx].item()
+                if tgt >= num_blocks:
+                    continue
+                pair = (b, tgt) if b < tgt else (tgt, b)
+                if pair in visited_pairs:
+                    continue
+                visited_pairs.add(pair)
+                connections.append([b, tgt, round(w_sum[idx].item(), 4)])
+
+        valid_mask = brain.out_targets >= 0
+        w_mean = brain.out_weights[valid_mask].float().mean().item() if valid_mask.any() else 0.0
+
+        return {
+            "agent_id": agent.id,
+            "tick": self.tick_count,
+            "num_neurons": brain.N,
+            "num_blocks": num_blocks,
+            "num_edges": brain.num_edges,
+            "avg_weight": round(w_mean, 6),
+            "mean_activation": round(brain.activations.mean().item(), 6),
+            "active_pct": round((brain.activations > self.config.lrsg.threshold_theta).sum().item() / brain.N * 100, 2),
+            "births": self._agent_births.get(agent.id, 0),
+            "deaths": self._agent_deaths.get(agent.id, 0),
+            "volatility": round(brain.activations.var().item(), 6),
+            "block_positions": block_positions,
+            "block_activations": block_activations,
+            "block_max_act": block_max_act,
+            "connections": connections,
+        }
+
     def _record_agent_brain_telemetry(self):
         theta = self.config.lrsg.threshold_theta
         for agent in self.agents:
