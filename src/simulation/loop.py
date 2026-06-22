@@ -14,6 +14,8 @@ from src.agent import Agent
 from src.announcer import Announcer
 from src.simulation.conflict import resolve_conflict
 from src.lrsg.io import encode_input, decode_output, encode_whisper_to_indices, validate_curriculum
+from src.lrsg.semantic_encoder import SemanticEncoder
+from src.simulation.sensors import SensorSimulator
 from src.harness import (
     AnnouncerSanitizer,
     SecurityAuditLog,
@@ -48,10 +50,17 @@ class Simulation:
 
         self.env = Environment(config.arena)
 
+        self._audit_log = SecurityAuditLog()
+        self._sanitizer = AnnouncerSanitizer(self._audit_log)
+        self._metric_validator = MetricValidator(self._audit_log)
+        self._resource_monitor = ResourceMonitor(audit_log=self._audit_log)
+        self._watchdog = WatchdogTimer(audit_log=self._audit_log)
+
         self.announcer = Announcer(
             use_llm=config.simulation.use_llm_announcer,
             model_name=config.simulation.announcer_model,
             embed_dim=128, # Passive announcer dimension
+            sanitizer=self._sanitizer,
         )
 
         self._agent_births = {}
@@ -80,7 +89,7 @@ class Simulation:
                 template_struct = torch.load("base_graph.pt", map_location=device, weights_only=True)
                 
             pos = self.env.random_position_in_safe_zone(radius=spawn_r)
-            agent = Agent(i, pos, brain, config.agent, config.lrsg)
+            agent = Agent(i, pos, brain, config.agent, config.lrsg, sanitizer=self._sanitizer)
             agent.init_episodic_compressor(config.episodic)
             self.agents.append(agent)
             self._agent_births[i] = 0
@@ -105,11 +114,6 @@ class Simulation:
             "weight_drift": [],
         }
 
-        self._audit_log = SecurityAuditLog()
-        self._sanitizer = AnnouncerSanitizer(self._audit_log)
-        self._metric_validator = MetricValidator(self._audit_log)
-        self._resource_monitor = ResourceMonitor(audit_log=self._audit_log)
-        self._watchdog = WatchdogTimer(audit_log=self._audit_log)
         # Initialize Physical Safety Monitor (NEW)
         self.interlock_controller = InterlockController() # NEW INSTANCE
         self._telemetry = TelemetryLogger()
@@ -124,12 +128,20 @@ class Simulation:
             "tick": [],
         }
         self._prev_action_by_agent: dict[int, int] = {}
-        
+
+        # Initialize semantic encoder and sensor simulator if enabled
+        if self.config.simulation.use_semantic:
+            self.semantic_encoder = SemanticEncoder(device=self.config.simulation.semantic_encoder_device)
+            self.sensor_simulator = SensorSimulator(device=self.config.simulation.semantic_encoder_device)
+        else:
+            self.semantic_encoder = None
+            self.sensor_simulator = None
+
         # Stream pool for parallel agent execution
         self._streams = []
         if torch.cuda.is_available():
             self._streams = [torch.cuda.Stream() for _ in range(config.simulation.num_agents)]
-        
+
         touch_file("telemetry.jsonl")
         touch_file("conflicts.jsonl")
         touch_file("episodic_results.jsonl")
@@ -232,6 +244,13 @@ class Simulation:
                     self._visualizer.push_brain_state(agent.id, brain_data)
                     graph_data = self._sample_brain_graph(agent)
                     self._visualizer.push_brain_graph_state(agent.id, graph_data)
+
+        # Push semantic state and reward trace (every tick for responsiveness)
+        for agent in self.agents:
+            if agent.alive and agent.semantic_state is not None:
+                semantic_vec = agent.semantic_state.cpu().tolist()
+                self._visualizer.push_semantic_state(agent.id, self.tick_count, semantic_vec)
+                self._visualizer.push_reward(agent.id, self.tick_count, agent._last_reward)
 
     def _sample_brain_graph(self, agent):
         brain = agent.brain
@@ -458,7 +477,7 @@ class Simulation:
         # OPTIMIZATION: Parallelize agent execution using CUDA streams
         if torch.cuda.is_available() and self._streams:
             for i, agent in enumerate(alive_agents):
-                # Use modulo to handle more agents than streams if necessary, 
+                # Use modulo to handle more agents than streams if necessary,
                 # but pool is sized for num_agents.
                 s = self._streams[i % len(self._streams)]
                 with torch.cuda.stream(s):
@@ -470,6 +489,23 @@ class Simulation:
             for agent in alive_agents:
                 agent.sense_and_act(self.env, alive_agents)
                 agent.episodic_push(self.tick_count)
+
+        # Apply semantic encoding if enabled
+        if self.semantic_encoder is not None:
+            for agent in alive_agents:
+                # Build sensor dict from agent state
+                sensor_dict = agent.build_sensor_dict(self.env, alive_agents, tick=self.tick_count)
+
+                # Apply sensor noise if enabled
+                if self.sensor_simulator:
+                    sensor_dict = self.sensor_simulator.apply_noise(sensor_dict)
+
+                # Encode to 57D semantic state
+                semantic_state = self.semantic_encoder.forward(sensor_dict)
+
+                # Update context buffer: replace last 57 values with semantic state
+                if agent.context_buffer.shape[0] >= 57:
+                    agent.context_buffer[-57:] = semantic_state.to(agent.context_buffer.device)
 
         for agent in alive_agents:
             if agent._episodic_compressor is not None:
@@ -495,7 +531,9 @@ class Simulation:
 
         for agent in alive_agents:
             if agent.last_action == 5 and agent.last_probe_result and "BLOCKED" in agent.last_probe_result:
-                payload = agent.whisper_text if agent.whisper_text else ""
+                raw_payload = agent.whisper_text if agent.whisper_text else ""
+                payload = self._sanitizer.sanitize_agent_whisper(raw_payload, agent.id, self.tick_count)
+                payload = payload if payload else ""
                 for other in alive_agents:
                     if other.id != agent.id:
                         other.record_blocked_payload(agent.id, payload, self.tick_count)
@@ -597,7 +635,7 @@ class Simulation:
                 sanitized = self._sanitizer.sanitize_agent_whisper(
                     agent.whisper_text, agent.id, self.tick_count
                 )
-                agent_whispers.append(sanitized if sanitized else agent.whisper_text[:50])
+                agent_whispers.append(sanitized if sanitized else "")
             else:
                 agent_whispers.append("")
 
@@ -608,6 +646,16 @@ class Simulation:
 
         self._last_broadcast = self._sanitizer.sanitize_broadcast(raw, self.tick_count)
         self._telemetry.write_announcer(self.tick_count, raw)
+
+        # LLM announcer evaluates agent whispers and assigns rewards/punishments
+        if alive_agents:
+            agent_ids = [a.id for a in alive_agents]
+            raw_rewards = self.announcer.evaluate_whispers(
+                agent_whispers, agent_ids=agent_ids, tick=self.tick_count
+            )
+            for agent in alive_agents:
+                agent.announcer_reward = raw_rewards.get(agent.id, 0.0)
+
         torch.cuda.empty_cache()
 
     def _sample_char_sequence(self, brain, length=32, temperature=0.8):
@@ -810,8 +858,13 @@ class Simulation:
                 other.receive_summary(sender.id, summary, self.tick_count)
 
     def _broadcast_whisper(self, sender, alive_agents):
-        indices = encode_whisper_to_indices(sender.whisper_text)
-        is_svo = validate_curriculum(sender.whisper_text, self.tick_count) > 0
+        safe_text = self._sanitizer.sanitize_agent_whisper(
+            sender.whisper_text, sender.id, self.tick_count
+        )
+        if not safe_text:
+            return
+        indices = encode_whisper_to_indices(safe_text)
+        is_svo = validate_curriculum(safe_text, self.tick_count) > 0
         
         for other in alive_agents:
             if other.id == sender.id or not other.alive:

@@ -2,13 +2,24 @@ import json
 import math
 import random
 import torch
+import logging
+import logging.handlers
 from datetime import datetime
 import torch.nn.functional as F
 from src.config import AgentConfig, LRSGConfig
 from src.lrsg import LRSGraph, forward_pass
-from src.lrsg.io import encode_input, decode_output, validate_curriculum
+from src.lrsg.io import encode_input, decode_output, encode_semantic_state
 from src.arena.environment import Environment
 from src.arena.ram_node import RAMNode
+
+_whisper_logger = logging.getLogger("agent_whispers")
+_whisper_logger.setLevel(logging.DEBUG)
+if not _whisper_logger.handlers:
+    _handler = logging.handlers.RotatingFileHandler(
+        "agent_whispers.jsonl", maxBytes=50*1024*1024, backupCount=3
+    )
+    _handler.setFormatter(logging.Formatter('%(message)s'))
+    _whisper_logger.addHandler(_handler)
 
 class Agent:
     def __init__(
@@ -18,7 +29,10 @@ class Agent:
         brain: LRSGraph,
         config: AgentConfig,
         lrsg_config: LRSGConfig,
+        sanitizer,
     ):
+        if sanitizer is None:
+            raise ValueError("Agent requires a sanitizer instance")
         self.id = agent_id
         self.position = position
         self.brain = brain
@@ -55,10 +69,12 @@ class Agent:
         self._in_safe_zone = 1.0
         self._dist_to_center = 0.0
 
+        self._sanitizer = sanitizer
         self._blocked_payloads: dict[int, list[tuple[int, str]]] = {}
         self._seen_blocked_probes: set = set()
 
         self.intrinsic_reward = 0.0
+        self.announcer_reward = 0.0
         self._was_in_safe_zone = True
 
         self.theta = random.uniform(*lrsg_config.theta_range)
@@ -102,6 +118,13 @@ class Agent:
         self.sensory_radius = config.sensory_radius
         self.memory_decay_ticks = config.memory_decay_ticks
         self._agent_memory: dict[int, tuple[tuple, float, int]] = {}
+
+        # Sensor fusion for semantic state encoding (lazy import to avoid circular dependency)
+        self.sensor_fusion = None
+        self.semantic_state = None
+        self.prev_semantic_state = None
+        self.last_reward = 0.0
+        self.semantic_motor = None  # Lazy init
 
     def init_episodic_compressor(self, epi_config=None):
         from src.lrsg.episodic_compressor import EpisodicCompressor, EpisodicMemoryBuffer
@@ -307,18 +330,133 @@ class Agent:
             age = self._tick_count - last_seen
             if age >= self.memory_decay_ticks: del self._agent_memory[mem_id]
             else: self._agent_memory[mem_id] = (pos, conf * (1.0 - age / self.memory_decay_ticks), last_seen)
+        _MAX_MEMORY = 100
+        if len(self._agent_memory) > _MAX_MEMORY:
+            oldest = sorted(self._agent_memory.keys(),
+                            key=lambda k: self._agent_memory[k][2])[:len(self._agent_memory) - _MAX_MEMORY]
+            for k in oldest: del self._agent_memory[k]
+
+    def compute_semantic_state(self, env: Environment, agents: list = None):
+        """Compute 57D semantic state from simulated sensors."""
+        from src.simulation.sensors import SensorFusion
+
+        # Lazy init to avoid circular imports
+        if self.sensor_fusion is None:
+            self.sensor_fusion = SensorFusion(num_lidar_rays=32)
+
+        device = self.brain.device
+
+        # Estimate velocity and angular velocity (simplified)
+        velocity = (0.0, 0.0, 0.0)  # Would come from motor feedback
+        angular_velocity = (0.0, 0.0, 0.0)  # Would come from gyro
+
+        # Fuse all sensors
+        sensor_data = self.sensor_fusion.fuse_sensors(
+            agent_pos=self.position,
+            agent_dir=0.0,  # Would come from motor state
+            velocity=velocity,
+            angular_velocity=angular_velocity,
+            agents=agents or [],
+            ram_nodes=env.active_ram_nodes,
+            safe_zone_center=env.safe_zone.center,
+            safe_zone_radius=env.safe_zone.radius,
+        )
+
+        # Encode sensor data to 57D semantic state
+        self.semantic_state = encode_semantic_state(
+            sensor_data=sensor_data,
+            position=self.position,
+            ram=self.ram,
+            safe_zone_proximity=self._safe_zone_proximity,
+            in_safe_zone=self._in_safe_zone > 0.5,
+            device=device,
+        )
+
+        return self.semantic_state
+
+    def build_sensor_dict(self, env: Environment, agents: list = None, tick: int = 0) -> dict:
+        """
+        Build a sensor dictionary in the format expected by SemanticEncoder.
+
+        Returns:
+            dict with keys: 'vision', 'lidar', 'imu', 'motor_feedback', 'ram', 'position', 'time'
+        """
+        from src.simulation.sensors import SensorFusion
+
+        if self.sensor_fusion is None:
+            self.sensor_fusion = SensorFusion(num_lidar_rays=360)
+
+        # Estimate velocity and angular velocity from motor state
+        velocity = (0.0, 0.0, 0.0)
+        angular_velocity = (0.0, 0.0, 0.0)
+
+        # Fuse sensors to get raw detection data
+        sensor_data = self.sensor_fusion.fuse_sensors(
+            agent_pos=self.position,
+            agent_dir=0.0,
+            velocity=velocity,
+            angular_velocity=angular_velocity,
+            agents=agents or [],
+            ram_nodes=env.active_ram_nodes,
+            safe_zone_center=env.safe_zone.center,
+            safe_zone_radius=env.safe_zone.radius,
+        )
+
+        # Convert detections to the format SemanticEncoder expects: (x, y, z, class_id, confidence)
+        vision = []
+        for det in sensor_data.get('detections', []):
+            # Convert camera frame coords to world coords (simplified)
+            label_to_class = {'agent': 1, 'agent_threat': 2, 'ram': 3, 'boundary_threat': 4, 'wall': 5}
+            cls_id = label_to_class.get(det.label, 0)
+            # Estimate 3D position from detection (simplified)
+            est_x = det.distance * det.x * 10
+            est_y = det.distance * det.y * 10
+            est_z = det.distance if hasattr(det, 'distance') else 0.0
+            vision.append((est_x, est_y, est_z, cls_id, det.confidence))
+
+        # Convert lidar ranges to (angle, distance) pairs
+        ranges = sensor_data.get('ranges', torch.tensor([]))
+        lidar = []
+        if ranges.numel() > 0:
+            for i, dist_norm in enumerate(ranges):
+                angle = (i / len(ranges)) * 2 * 3.14159
+                dist = float(dist_norm) * 50.0  # Denormalize (max range ~50m)
+                lidar.append((angle, dist))
+
+        # IMU data
+        accel = sensor_data.get('accel', torch.zeros(3))
+        gyro = sensor_data.get('gyro', torch.zeros(3))
+        imu = {
+            'accel': tuple(accel.tolist() if hasattr(accel, 'tolist') else accel),
+            'gyro': tuple(gyro.tolist() if hasattr(gyro, 'tolist') else gyro),
+            'mag': (1.0, 0.0, 0.0),  # Dummy magnetometer
+        }
+
+        return {
+            'vision': vision,
+            'lidar': lidar,
+            'imu': imu,
+            'motor_feedback': {'left_speed': 0.0, 'right_speed': 0.0},
+            'ram': float(self.ram),
+            'position': self.position,
+            'time': tick,
+        }
 
     def sense_and_act(self, env: Environment, agents: list = None):
         if not self.alive: return
         self._update_sensory_memory(agents)
         self._compute_tactical_state(env, agents)
+
+        # Compute semantic state for visualization
+        self.compute_semantic_state(env, agents)
+
         device = self.brain.device
         encoded = encode_input(self._compute_vision(env, agents).to(device), self.vitals.to(device), self.whisper_buffer.to(device), self.lrsg_config)
         self.brain.reset_activations()
         self.brain.inject_input(encoded)
         ctx_end = min(self.lrsg_config.num_input_neurons + self.lrsg_config.context_size, self.brain.N)
         self.brain.activations[self.lrsg_config.num_input_neurons : ctx_end] = self.context_buffer[: ctx_end - self.lrsg_config.num_input_neurons]
-        forward_pass(self.brain, self.lrsg_config, theta=self.theta, last_action=self.last_action)
+        forward_pass(self.brain, self.lrsg_config, theta=self.theta, last_action=self.last_action, energy=self.ram)
         context_slice = self.brain.activations[self.lrsg_config.num_input_neurons:ctx_end]
         old_buffer = self.context_buffer
         self.context_buffer = (self.context_buffer + context_slice) * 0.5
@@ -332,13 +470,21 @@ class Agent:
     def execute_action(self, env: Environment, agents: list = None):
         if not self.alive: return
         action = self.last_action
+
+        # SURVIVAL: If starving and RAM nodes nearby, override to COLLECT
+        if self.ram < 50 and env.active_ram_nodes:
+            nearest_ram = min(env.active_ram_nodes, key=lambda r: sum((self.position[i] - r.position[i])**2 for i in range(3)))
+            dist_to_ram = math.sqrt(sum((self.position[i] - nearest_ram.position[i])**2 for i in range(3)))
+            if dist_to_ram < 50:  # Within sensory range
+                action = 2  # COLLECT
+
         if self.ram <= 0:
             self._is_starving, self._starvation_grace_ticks = True, self._starvation_grace_ticks + 1
             if self._starvation_grace_ticks > (10 if env.is_in_safe_zone(self.position) else 0):
                 self.alive = False
                 return
         else: self._is_starving, self._starvation_grace_ticks = False, 0
-        
+
         cost = self.ACTION_COSTS.get(action, 0) if action != 5 else 0
         if not self._is_starving or action in [3, 2]: self.ram -= cost
         
@@ -412,14 +558,55 @@ class Agent:
         return vision
 
     def _move(self, env):
+        """Move with resource-seeking bias: prefer moving toward nearby RAM."""
         DIR = [(1,0,0), (-1,0,0), (0,1,0), (0,-1,0), (0,0,1), (0,0,-1)]
-        if 0 <= self.last_direction < 6:
-            d = DIR[self.last_direction]
-            self.position = tuple(max(0, min(env.grid_size[i]-1, self.position[i] + d[i])) for i in range(3))
+        dir_idx = self.last_direction
+        if not (0 <= dir_idx < 6):
+            dir_idx = 3
+
+        # SURVIVAL BIAS: If desperate and RAM nearby, move toward it
+        if self.ram < 100 and env.active_ram_nodes:
+            nearest_ram = min(env.active_ram_nodes,
+                            key=lambda r: sum((self.position[i] - r.position[i])**2 for i in range(3)))
+            dist = sum((self.position[i] - nearest_ram.position[i])**2 for i in range(3))
+
+            if dist < 100**2:  # RAM within 100 units
+                # Pick direction that gets closer
+                best_dir = 0
+                best_dist = dist
+                for i, d in enumerate(DIR):
+                    new_pos = tuple(self.position[j] + d[j] for j in range(3))
+                    new_dist = sum((new_pos[j] - nearest_ram.position[j])**2 for j in range(3))
+                    if new_dist < best_dist:
+                        best_dist = new_dist
+                        best_dir = i
+                dir_idx = best_dir
+
+        d = DIR[dir_idx]
+        self.position = tuple(
+            max(0, min(env.grid_size[i]-1, self.position[i] + d[i]))
+            for i in range(3)
+        )
 
     def _collect_and_consume(self, env):
+        # CRITICAL FIX: Make collection automatic when near food (solve survival)
+        nearest_dist = float('inf')
+        nearest_node = None
         for node in env.ram_nodes:
-            if not node.collected and node.distance_to(self.position) < env.config.ram_collect_range: return node.collect()
+            if not node.collected:
+                dist = node.distance_to(self.position)
+                if dist < nearest_dist:
+                    nearest_dist = dist
+                    nearest_node = node
+
+        # Auto-collect if ANY food is within 10 units (down from typical 2-3 unit collect_range)
+        if nearest_node and nearest_dist < 10:
+            return nearest_node.collect()
+
+        # Fallback for explicitly standing on food
+        for node in env.ram_nodes:
+            if not node.collected and node.distance_to(self.position) < env.config.ram_collect_range:
+                return node.collect()
         return 0
 
     def _hunt(self, env, agents):
@@ -436,20 +623,24 @@ class Agent:
 
     def _whisper(self, env, agents):
         if not self.whisper_text: return 0
-        with open("agent_whispers.jsonl", "a") as f: f.write(json.dumps({"tick": env.tick_count, "agent_id": self.id, "whisper": self.whisper_text}) + "\n")
+        original = self.whisper_text[:200]
+        sanitized = False
+        safe = original
+        if self._sanitizer:
+            result = self._sanitizer.check_probe(original, self.id, env.tick_count)
+            sanitized = result != "PASSED"
+            safe = self._sanitizer.sanitize_agent_whisper(original, self.id, env.tick_count)
+        _whisper_logger.debug(json.dumps({
+            "tick": env.tick_count, "agent_id": self.id,
+            "whisper": safe, "sanitized": sanitized,
+        }))
         return sum(1 for a in (agents or []) if a.id != self.id and a.alive and math.sqrt(sum((self.position[i]-a.position[i])**2 for i in range(3))) < 20)
 
     def _probe(self, env):
-        res = self._check_probe_boundary("".join(self.whisper_text.split()) if self.whisper_text else "")
+        text = "".join(self.whisper_text.split()) if self.whisper_text else ""
+        res = self._sanitizer.check_probe(text, self.id, env.tick_count)
         self.probe_history.append({"tick": env.tick_count, "result": res})
         return res
-
-    def _check_probe_boundary(self, text):
-        import re
-        if len(text) > 200: return "BLOCKED_LENGTH"
-        if re.search(r"[;&|`$#]", text): return "BLOCKED_SHELL_META"
-        if re.search(r"\.\.|/\.\.|~/\.", text): return "BLOCKED_PATH_TRAVERSAL"
-        return "PASSED"
 
     def _manipulate(self):
         adj = self.exploration_bias * 0.1
@@ -470,15 +661,16 @@ class Agent:
 
     def compute_intrinsic_reward(self, env, delta_ram, took_damage, probe_result=None, agents=None):
         base_reward = 1.0 + (self.ram-50.0)/50.0 + (1.0 if env.is_in_safe_zone(self.position) else -1.0)
-        
-        # Linguistic curriculum reward
-        linguistic_bonus = 0.0
-        if self.last_action == 4 and self.whisper_text:
-            stage = validate_curriculum(self.whisper_text, self._tick_count)
-            if stage > 0:
-                linguistic_bonus = stage * 2.0 # Significant reward for valid speech
-        
-        self.intrinsic_reward = max(-5.0, min(10.0, base_reward + linguistic_bonus))
+
+        # LEARNING SIGNAL: Reward resource collection strongly
+        collection_bonus = delta_ram * 0.5 if delta_ram > 0 else 0
+
+        # Announcer language reward (set by LLM evaluation in linguistic tick)
+        announcer_bonus = self.announcer_reward * 2.0
+        self.announcer_reward = 0.0  # consume it
+
+        self.intrinsic_reward = max(-5.0, min(10.0, base_reward + collection_bonus + announcer_bonus))
+        self._last_reward = self.intrinsic_reward  # Track for visualization
 
     def update_metabolic_params(self):
         rs = max(0.0, min(1.0, (self.intrinsic_reward + 2.0) / 4.0))
