@@ -36,4 +36,3 @@ def test_sensor_to_semantic_to_lrsg_pipeline():
     # (Actual integration with LRSG happens in Task 5)
 
     world.close()
-    print("✓ Sensor → Semantic → LRSG pipeline works")
