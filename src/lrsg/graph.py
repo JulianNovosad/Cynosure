@@ -1,6 +1,28 @@
+import io
+import hmac
+import hashlib
 import torch
 import math
 from src.config import LRSGConfig
+
+_STRUCT_SIGNING_KEY: bytes = None
+
+def set_struct_signing_key(key: bytes):
+    global _STRUCT_SIGNING_KEY
+    if len(key) < 16:
+        raise ValueError("Signing key must be at least 16 bytes")
+    _STRUCT_SIGNING_KEY = key
+
+def _sign_bytes(data: bytes) -> str:
+    if _STRUCT_SIGNING_KEY is None:
+        return ""
+    return hmac.new(_STRUCT_SIGNING_KEY, data, hashlib.sha256).hexdigest()
+
+def _verify_sig(raw: bytes, sig: str) -> bool:
+    if _STRUCT_SIGNING_KEY is None:
+        return True
+    expected = hmac.new(_STRUCT_SIGNING_KEY, raw, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, sig)
 
 
 class LRSGraph:
@@ -26,6 +48,9 @@ class LRSGraph:
             (self.N, self.max_deg), dtype=torch.int32, device=device
         )
         self.activations = torch.zeros(self.N, dtype=torch.float32, device=device)
+        self.eligibility_trace = torch.zeros(self.N, dtype=torch.float32, device=device)
+        self.trace_decay = 0.9  # Temporal decay factor for credit assignment
+        self.trace_cap = 50.0   # Numerical safety bound for traces
 
         # Neurobiological State
         self.rolling_avg = torch.zeros(self.N, dtype=torch.float32, device=device)
@@ -36,8 +61,21 @@ class LRSGraph:
         h_start = num_input
         h_end = self.N - num_output
         h_size = h_end - h_start
-        
-        sub_size = min(32, int(0.01 * h_size))
+
+        # Ensure hidden layer exists; if neuron count too small, scale down input/output
+        if h_size <= 0:
+            # Scale down input/output proportionally for small neuron counts
+            scale = max(0.1, (self.N - 100) / (num_input + num_output))
+            num_input = max(128, int(num_input * scale))
+            num_output = max(64, int(num_output * scale))
+            h_start = num_input
+            h_end = self.N - num_output
+            h_size = h_end - h_start
+
+        # Final safety: ensure h_size > 0
+        assert h_size > 0, f"Not enough neurons for LRSG: {self.N} total, {num_input} input + {num_output} output. Need at least {num_input + num_output + 100}"
+
+        sub_size = min(32, max(1, int(0.01 * h_size)))
         
         self.idx_p = torch.arange(h_start, h_start + sub_size, device=device)
         self.idx_a = torch.arange(h_start + sub_size, h_start + 2 * sub_size, device=device)
@@ -165,7 +203,6 @@ class LRSGraph:
             self.W_v = torch.nn.Parameter(struct["W_v"].to(self.device))
 
     def save_structure(self, path: str):
-        """Saves only the static synaptic structure (targets, weights, positions, blocks)."""
         struct = {
             "N": self.N,
             "out_targets": self.out_targets.cpu(),
@@ -181,11 +218,24 @@ class LRSGraph:
             "W_v": self.W_v.cpu(),
             "W_char_pred": self.W_char_pred.cpu(),
         }
-        torch.save(struct, path)
+        buf = io.BytesIO()
+        torch.save(struct, buf)
+        raw = buf.getvalue()
+        sig = _sign_bytes(raw)
+        if sig:
+            struct["_integrity_sig"] = sig
+            buf = io.BytesIO()
+            torch.save(struct, buf)
+        with open(path, "wb") as f:
+            f.write(buf.getvalue())
 
     def load_structure(self, path: str):
-        """Loads static synaptic structure from disk."""
-        struct = torch.load(path, map_location=self.device, weights_only=True)
+        with open(path, "rb") as f:
+            raw = f.read()
+        struct = torch.load(io.BytesIO(raw), map_location=self.device, weights_only=True)
+        sig = struct.pop("_integrity_sig", "")
+        if sig and not _verify_sig(raw, sig):
+            raise ValueError(f"Structure integrity check FAILED for {path}")
         if struct.get("N", struct["out_targets"].shape[0]) != self.N:
             print(f"[Graph] Structure file {path} has mismatched neuron count ({struct.get('N', struct['out_targets'].shape[0])} vs {self.N}), regenerating...")
             self._init_edges()
@@ -552,16 +602,19 @@ class LRSGraph:
             spikes[self.char_to_idx[c_val]] = 1.0
         return spikes
 
+    _PRINTABLE_ASCII = set(range(32, 127))
+
     def _decode_raw_char(self) -> str:
-        """Internal: single-character decode from temporal mean (no word assembly)."""
         mean_acts = torch.mean(self.lph_history, dim=0)
-        if mean_acts.max() < 1e-6:  # Lowered threshold from 0.0
+        if mean_acts.max() < 1e-6:
             return ""
         winner_local = torch.argmax(mean_acts)
         winner_global = self.idx_lph[winner_local]
         char_val = torch.where(self.char_to_idx == winner_global)[0]
         if char_val.numel() > 0:
-            return chr(char_val[0].item())
+            code = char_val[0].item()
+            if code in self._PRINTABLE_ASCII:
+                return chr(code)
         return ""
 
     def decode_lph(self) -> str:
@@ -582,6 +635,8 @@ class LRSGraph:
             return ""
 
         char_code = char_val[0].item()
+        if char_code not in self._PRINTABLE_ASCII and char_code not in self._word_delimiters:
+            return ""
         ch = chr(char_code)
 
         if char_code in self._word_delimiters:
@@ -647,6 +702,9 @@ class LRSGraph:
     def reset_activations(self):
         self.activations.zero_()
 
+    def reset_traces(self):
+        self.eligibility_trace.zero_()
+
     def inject_input(self, input_tensor: torch.Tensor):
         n = min(input_tensor.shape[0], self.config.num_input_neurons)
         self.activations[:n] = input_tensor[:n]
@@ -668,7 +726,6 @@ class LRSGraph:
         return self.num_edges / self.N
 
     def save_state(self, path: str):
-        """Save learnable weights and language state for cross-segment persistence."""
         state = {
             "W_char_pred": self.W_char_pred.detach().clone(),
             "out_weights": self.out_weights.detach().clone(),
@@ -691,12 +748,27 @@ class LRSGraph:
             "W_proj": self.W_proj.detach().clone(),
             "W_fb": self.W_fb.detach().clone(),
             "W_inh": self.W_inh.detach().clone(),
+            "eligibility_trace": self.eligibility_trace.detach().clone(),
+            "trace_decay": self.trace_decay,
         }
-        torch.save(state, path)
+        buf = io.BytesIO()
+        torch.save(state, buf)
+        raw = buf.getvalue()
+        sig = _sign_bytes(raw)
+        if sig:
+            state["_integrity_sig"] = sig
+            buf = io.BytesIO()
+            torch.save(state, buf)
+        with open(path, "wb") as f:
+            f.write(buf.getvalue())
 
     def load_state(self, path: str):
-        """Load learnable weights and language state from a saved checkpoint."""
-        state = torch.load(path, map_location=self.device, weights_only=False)
+        with open(path, "rb") as f:
+            raw = f.read()
+        state = torch.load(io.BytesIO(raw), map_location=self.device, weights_only=True)
+        sig = state.pop("_integrity_sig", "")
+        if sig and not _verify_sig(raw, sig):
+            raise ValueError(f"State integrity check FAILED for {path}")
         self.W_char_pred.data.copy_(state["W_char_pred"])
         self.out_weights.data.copy_(state["out_weights"])
         self.out_targets.data.copy_(state["out_targets"])
@@ -720,3 +792,7 @@ class LRSGraph:
         self.W_proj.data.copy_(state["W_proj"])
         self.W_fb.data.copy_(state["W_fb"])
         self.W_inh.data.copy_(state["W_inh"])
+        if "eligibility_trace" in state:
+            self.eligibility_trace.copy_(state["eligibility_trace"])
+        if "trace_decay" in state:
+            self.trace_decay = state["trace_decay"]
