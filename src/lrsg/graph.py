@@ -119,20 +119,21 @@ class LRSGraph:
         self.p_end = int(self.idx_p[-1].item()) + 1
 
         # PCZ/BG Parameters
-        self.W_v = torch.nn.Parameter(torch.randn(1, device=device).half() * 0.1)
-        self.W_proj = torch.nn.Parameter(torch.randn(self.idx_a.numel(), self.N, device=device).half() * 0.01)
-        self.W_fb = torch.nn.Parameter(torch.randn(self.idx_b.numel(), self.N, device=device).half() * 0.01)
-        self.W_inh = torch.nn.Parameter(torch.randn(self.idx_b.numel(), self.idx_a.numel(), device=device).half() * 0.1)
+        # FIX (22 Jun 2026): Scale up dense weights 2-3x to enable stronger signal propagation
+        self.W_v = torch.nn.Parameter(torch.randn(1, device=device).half() * 0.25)
+        self.W_proj = torch.nn.Parameter(torch.randn(self.idx_a.numel(), self.N, device=device).half() * 0.03)
+        self.W_fb = torch.nn.Parameter(torch.randn(self.idx_b.numel(), self.N, device=device).half() * 0.03)
+        self.W_inh = torch.nn.Parameter(torch.randn(self.idx_b.numel(), self.idx_a.numel(), device=device).half() * 0.25)
 
         # PWM Parameters
         pwm_dim = self.idx_pwm.numel()
         act_dim = 7 # Standard action space
-        self.W_pwm = torch.nn.Parameter(torch.randn(pwm_dim, pwm_dim, device=device).half() * 0.01)
-        self.W_act = torch.nn.Parameter(torch.randn(pwm_dim, act_dim, device=device).half() * 0.01)
-        self.W_dec = torch.nn.Parameter(torch.randn(num_input, pwm_dim, device=device).half() * 0.01)
+        self.W_pwm = torch.nn.Parameter(torch.randn(pwm_dim, pwm_dim, device=device).half() * 0.03)
+        self.W_act = torch.nn.Parameter(torch.randn(pwm_dim, act_dim, device=device).half() * 0.03)
+        self.W_dec = torch.nn.Parameter(torch.randn(num_input, pwm_dim, device=device).half() * 0.03)
 
         # PWM Character Prediction Head: maps PWM state → 256-char distribution
-        self.W_char_pred = torch.nn.Parameter(torch.randn(256, pwm_dim, device=device).half() * 0.005)
+        self.W_char_pred = torch.nn.Parameter(torch.randn(256, pwm_dim, device=device).half() * 0.015)
         self.char_pred_lr = config.char_pred_lr
         self.char_pred_history = torch.zeros(5, dtype=torch.long, device=device)
         self.char_pred_cursor = 0
@@ -326,7 +327,10 @@ class LRSGraph:
             self.out_targets[i_start:i_end, :k_eff] = final_targets.to(torch.int32)
             
             # 4. Weight Initialization
-            sigma = 0.1 / math.sqrt(k_eff)
+            # FIX (22 Jun 2026): Scale up by 5x to enable Hebbian learning
+            # Previous scale (0.1) made updates 100-1000x smaller than weight magnitude
+            # New scale (0.5) enables convergence within 100-1000 episodes
+            sigma = 0.5 / math.sqrt(k_eff)  # CHANGED: 0.1 → 0.5
             weights = torch.randn((curr_chunk, k_eff), device=self.device) * sigma
             self.out_weights[i_start:i_end, :k_eff] = weights.to(dtype=torch.float16)
 
