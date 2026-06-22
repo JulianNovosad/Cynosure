@@ -85,7 +85,7 @@ python tests/test_agent.py               # run single test file (also works stan
 
 ## Key Config Defaults (`src/config.py`)
 
-- `num_neurons`: 4,194,304 | `max_out_degree`: 24 | `propagation_steps`: 5
+- `num_neurons`: 4,194,304 | `max_out_degree`: 12 (default in src/config.py) | `propagation_steps`: 5
 - `initial_ram`: 200 | `whisper_buffer_dim`: 48
 - `num_input_neurons`: 1848 | `num_output_neurons`: 527
 - `grid_size`: (32, 32, 32) | `num_agents`: 10 | `max_ticks`: 10,000

@@ -104,6 +104,9 @@ jobs:
                     "list_commits",
                     "search_code"
                   ],
+                  # SECURITY NOTE: GITHUB_TOKEN flows into external Docker container (ghcr.io/github/github-mcp-server).
+                  # This token has repository write permissions. Ensure the container does not log env vars.
+                  # Consider using short-lived OIDC tokens instead of PATs.
                   "env": {
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
                   }

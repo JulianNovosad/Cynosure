@@ -1,6 +1,23 @@
 import json
 
-telemetry = [json.loads(l) for l in open('telemetry.jsonl')]
+
+def _safe_load_jsonl(path: str, expected_type: str = None):
+    records = []
+    with open(path) as f:
+        for line in f:
+            try:
+                rec = json.loads(line)
+                if not isinstance(rec, dict):
+                    continue
+                if expected_type and rec.get("type") != expected_type:
+                    continue
+                records.append(rec)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+    return records
+
+
+telemetry = _safe_load_jsonl('telemetry.jsonl')
 
 print("=== CYNOSURE SIMULATION REPORT ===")
 print("Ticks: 2000")
@@ -29,14 +46,12 @@ for aid in range(5):
     if ram_series:
         print(f"Agent {aid}: min={min(ram_series):.1f}, max={max(ram_series):.1f}, final={ram_series[-1]:.1f}")
 
-try:
-    conflicts = [json.loads(l) for l in open('conflicts.jsonl')]
+conflicts = _safe_load_jsonl('conflicts.jsonl')
+if conflicts:
     print(f"\n=== CONFLICTS: {len(conflicts)} total ===")
-except: pass
 
-try:
-    trans = [json.loads(l) for l in open('transitions.jsonl')]
+trans = _safe_load_jsonl('transitions.jsonl')
+if trans:
     print(f"\n=== ZONE TRANSITIONS ===")
     print(f"Inside->Outside: {len([t for t in trans if 'outside' in t.get('direction','')])}")
     print(f"Outside->Inside: {len([t for t in trans if 'inside' in t.get('direction','')])}")
-except: pass

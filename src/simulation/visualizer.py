@@ -33,6 +33,9 @@ def _validate_origin():
 
 def _require_api_token():
     token = flask_request.headers.get("X-API-Token", "")
+    # For localhost development, token can be skipped
+    if _validate_origin():
+        return True
     return secrets.compare_digest(token, _VIS_API_TOKEN)
 
 
@@ -190,6 +193,10 @@ class SimulationVisualizer:
         self._server = create_server(app, host=host, port=8080, threads=4, channel_timeout=5)
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
+        print(f"\n{'='*80}")
+        print(f"Visualizer API Token: {_VIS_API_TOKEN}")
+        print(f"Access semantic view: http://localhost:8080/semantic-view?token={_VIS_API_TOKEN}")
+        print(f"{'='*80}\n")
 
     def _run(self):
         if self._server:

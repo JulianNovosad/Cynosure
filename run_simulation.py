@@ -1,3 +1,4 @@
+import argparse
 import math
 import torch
 import os
@@ -88,15 +89,26 @@ def analyze_results():
         print("  CUDA not available")
 
 if __name__ == "__main__":
-    # Clean up logs
-    for f in ["security_audit.log", "agent_whispers.jsonl", "telemetry.jsonl", "conflicts.jsonl", "transitions.jsonl"]:
-        if os.path.exists(f):
-            os.remove(f)
+    parser = argparse.ArgumentParser(description="Cynosure Simulation")
+    parser.add_argument("--num-agents", type=int, choices=range(1, 16), default=2)
+    parser.add_argument("--max-ticks", type=int, default=50)
+    parser.add_argument("--num-neurons", type=int, default=4_194_304)
+    parser.add_argument("--max-out-degree", type=int, default=12)
+    parser.add_argument("--grid-size", type=int, nargs=3, default=[32, 32, 32])
+    parser.add_argument("--headless", action="store_true")
+    parser.add_argument("--use-llm", action="store_true")
+    parser.add_argument("--no-clean", action="store_true", help="Skip log cleanup")
+    args = parser.parse_args()
+
+    if not args.no_clean:
+        for f in ["security_audit.log", "agent_whispers.jsonl", "telemetry.jsonl", "conflicts.jsonl", "transitions.jsonl"]:
+            if os.path.exists(f):
+                os.remove(f)
 
     cfg = Config(
         lrsg=LRSGConfig(
-            num_neurons=4_194_304,
-            max_out_degree=12,
+            num_neurons=args.num_neurons,
+            max_out_degree=args.max_out_degree,
             context_size=256,
             whisper_vocab_size=512,
             whisper_latent_dim=512,
@@ -104,9 +116,14 @@ if __name__ == "__main__":
             whisper_base_reward=0.2,
             manipulate_base_reward=0.1,
         ),
-        arena=ArenaConfig(grid_size=(32, 32, 32)),
+        arena=ArenaConfig(grid_size=tuple(args.grid_size)),
         agent=AgentConfig(),
-        simulation=SimulationConfig(num_agents=2, max_ticks=50, use_llm_announcer=True),
+        simulation=SimulationConfig(
+            num_agents=args.num_agents,
+            max_ticks=args.max_ticks,
+            use_llm_announcer=args.use_llm,
+            headless=args.headless,
+        ),
     )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -1,3 +1,4 @@
+import html
 import re
 from datetime import datetime, timezone
 
@@ -5,7 +6,11 @@ from datetime import datetime, timezone
 SHELL_META = re.compile(r"[;&|`$#]")
 CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 WHITELIST_PATTERN = re.compile(r"^[a-zA-Z0-9 .,!?'\"\-:@/\n\r\t(){}<>\[\]*]+$")
-PATH_TRAVERSAL = re.compile(r"\.\.|/\.\.|~/\.")
+PATH_TRAVERSAL = re.compile(
+    r"(?:^|[/\\])\.\.(?=[/\\]|$)|"
+    r"(?:^|[/\\])\.\.(?=[/\\]|$)|"
+    r"~[/\\]"
+)
 MAX_PAYLOAD_LENGTH = 200
 
 
@@ -72,13 +77,18 @@ class AnnouncerSanitizer:
     def __init__(self, audit_log: SecurityAuditLog = None):
         self.audit_log = audit_log or SecurityAuditLog()
 
-    def sanitize(self, text: str, tick: int = 0, log_escape: bool = True) -> str:
+    def sanitize(self, text: str, tick: int = 0, log_escape: bool = True,
+                 strict: bool = False, escape_html: bool = True) -> str:
         has_shell = SHELL_META.search(text)
         has_control = CONTROL_CHARS.search(text)
         not_whitelisted = not WHITELIST_PATTERN.match(text)
         if (has_shell or has_control or not_whitelisted) and log_escape:
             self.audit_log.log_escape_attempt(tick, text)
+        if strict and (has_shell or not_whitelisted):
+            return ""
         safe = CONTROL_CHARS.sub("?", text) if has_control else text
+        if escape_html:
+            safe = html.escape(safe, quote=True)
         return safe
 
     def check_probe(self, probe_text: str, agent_id: int = -1, tick: int = 0) -> str:
@@ -104,10 +114,11 @@ class AnnouncerSanitizer:
         out = {}
         for key, val in broadcast.items():
             if isinstance(val, str):
-                out[key] = self.sanitize(val, tick, log_escape=False)
+                out[key] = self.sanitize(val, tick, log_escape=False, strict=True)
             elif isinstance(val, list):
                 out[key] = [
-                    self.sanitize(item, tick, log_escape=False) if isinstance(item, str) else item
+                    self.sanitize(item, tick, log_escape=False, strict=True)
+                    if isinstance(item, str) else item
                     for item in val
                 ]
             else:

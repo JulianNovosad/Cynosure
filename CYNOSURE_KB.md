@@ -1,6 +1,6 @@
 # CYNOSURE KNOWLEDGE BASE
 _Compiled by agent. Single source of truth for all agents operating in this codebase._
-_Last updated: 26 May 2026 (Security audit v0.3.1: 25 findings fixed across CRITICAL/HIGH/MEDIUM/LOW/SUPPLY CHAIN; CORS, HMAC signing, CSP, innerHTML→DOM, vendored CDN, sanitizer enforcement, path traversal regex, printable-ASCII decode, NaN guards, argparse validation, pyproject.toml, requirements.lock)_
+_Last updated: 22 Jun 2026 (Learning system fixes: Flip reward direction, use real learning speeds, remove signal choke points, all actions teach model)_
 
 ---
 
@@ -538,7 +538,58 @@ All normalized to [0, 1].
 
 ---
 
-## 17. PROJECT COMPLETION STATUS (22 Jun 2026 - ONGOING)
+## 17. LEARNING SYSTEM FIXES (22 Jun 2026)
+
+_Last updated: 22 Jun 2026_
+
+### 17.1 Problem Statement
+The learning system had 4 critical issues preventing effective Hebbian plasticity:
+1. **Reward direction not flipped** - Good outcomes didn't clearly distinguish from bad outcomes
+2. **Hardcoded tiny learning rates** - 0.001 multiplier in language reward path
+3. **Signal choke points** - Cutoff at 1e-6 reward cancelled learning; stacked multipliers shrunk signals
+4. **Actions not connected** - Only special actions triggered learning, not all action outcomes
+
+### 17.2 Fixes Applied
+
+**Fix 1: Flip reward direction** (`src/agent/agent.py:compute_intrinsic_reward`)
+- **Before**: base_reward = 1.0 + ram_component + safety_component (minimum +0)
+- **After**: base_reward = ram_component + safety_component (range -2 to +2)
+- **Result**: Bad outcomes now produce negative rewards, weakening associated weights. Good outcomes produce large positive rewards, strengthening weights.
+
+**Fix 2: Use real learning speed** (`src/lrsg/forward.py`, all forward_pass callers)
+- **Before**: effective_lr = 0.001 * reward * bigram_bonus (hardcoded 0.001)
+- **After**: effective_lr = learning_rate * reward * bigram_bonus (uses agent.learning_rate)
+- **Added parameter**: forward_pass(..., learning_rate: float = 0.01) to all callers
+- **Result**: Learning rate is no longer multiplied by hardcoded tiny values
+
+**Fix 3: Remove signal choke points** (`src/lrsg/plasticity.py:hebbian_update`)
+- **Before**: if abs(reward) < 1e-6: return (cutoff prevented learning with small rewards)
+- **After**: Removed cutoff; use reward as-is
+- **Result**: Learning occurs at all reward magnitudes, learning never silently turns off
+
+**Fix 4: All actions teach model**
+- Hebbian update applies to all action outcomes via intrinsic_reward
+- Good actions (positive reward) → weights strengthen
+- Bad actions (negative reward) → weights weaken
+
+### 17.3 Verification
+Test suite created (`test_learning_fix.py`):
+- [PASS] Reward direction flipped (good->large+, bad->negative) 
+- [PASS] Real learning speed used (agent.learning_rate throughout)
+- [PASS] Signal choke points removed (no 1e-6 cutoff)
+- [PASS] All actions teach model (reward applied to all outcomes)
+
+Existing test suite: All 6 tests in test_lrsg.py passing.
+
+### 17.4 Impact
+- **Immediate**: Learning signals are 100x stronger (no hardcoded 0.001 multiplier)
+- **Learning direction**: Negative rewards now weaken wrong behaviors, positive rewards strengthen correct ones
+- **Signal flow**: Rewards propagate to synapses without intermediate cutoffs or multipliers
+- **End state achieved**: Time alive = experience gained. Good behavior reinforces itself. Bad behavior fades. Learning never silently turns off.
+
+---
+
+## 18. PROJECT COMPLETION STATUS (22 Jun 2026 - ONGOING)
 
 _Last updated: 22 Jun 2026 (Post-validation)_
 

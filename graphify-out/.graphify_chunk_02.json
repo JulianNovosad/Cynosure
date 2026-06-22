@@ -1,0 +1,525 @@
+{
+  "nodes": [
+    {
+      "id": "config_lrsconfig",
+      "label": "LRSG Configuration Class",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\config.py",
+      "source_location": "lines 5-45"
+    },
+    {
+      "id": "config_arenaconfig",
+      "label": "Arena Configuration Class",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\config.py",
+      "source_location": "lines 47-62"
+    },
+    {
+      "id": "config_agentconfig",
+      "label": "Agent Configuration Class",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\config.py",
+      "source_location": "lines 65-71"
+    },
+    {
+      "id": "config_episodiccompressorconfig",
+      "label": "Episodic Compressor Configuration Class",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\config.py",
+      "source_location": "lines 74-83"
+    },
+    {
+      "id": "config_simulationconfig",
+      "label": "Simulation Configuration Class",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\config.py",
+      "source_location": "lines 86-95"
+    },
+    {
+      "id": "config_config",
+      "label": "Master Config Class",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\config.py",
+      "source_location": "lines 98-104"
+    },
+    {
+      "id": "agent_agent",
+      "label": "Agent Class",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 24-525"
+    },
+    {
+      "id": "agent_init",
+      "label": "Agent Initialization Method",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 25-120"
+    },
+    {
+      "id": "agent_sense_and_act",
+      "label": "Sense and Act Method",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 332-351"
+    },
+    {
+      "id": "agent_execute_action",
+      "label": "Execute Action Method",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 353-411"
+    },
+    {
+      "id": "agent_compute_vision",
+      "label": "Compute Vision Method",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 413-433"
+    },
+    {
+      "id": "agent_move",
+      "label": "Movement Action Handler",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 435-444"
+    },
+    {
+      "id": "agent_collect_and_consume",
+      "label": "Resource Collection Method",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 446-449"
+    },
+    {
+      "id": "agent_hunt",
+      "label": "Hunt Action Handler",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 451-459"
+    },
+    {
+      "id": "agent_whisper",
+      "label": "Whisper Communication Method",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 463-476"
+    },
+    {
+      "id": "agent_probe",
+      "label": "Probe Security Check Method",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 478-482"
+    },
+    {
+      "id": "agent_manipulate",
+      "label": "Parameter Manipulation Method",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 484-488"
+    },
+    {
+      "id": "agent_compute_intrinsic_reward",
+      "label": "Intrinsic Reward Computation",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 501-508"
+    },
+    {
+      "id": "agent_update_metabolic_params",
+      "label": "Metabolic Parameter Update",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 510-524"
+    },
+    {
+      "id": "agent_episodic_train",
+      "label": "Episodic Compressor Training",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 154-173"
+    },
+    {
+      "id": "announcer_announcer",
+      "label": "Announcer Class",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\announcer\\announcer.py",
+      "source_location": "lines 10-268"
+    },
+    {
+      "id": "announcer_load_model",
+      "label": "Model Loading Method",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\announcer\\announcer.py",
+      "source_location": "lines 25-59"
+    },
+    {
+      "id": "announcer_broadcast",
+      "label": "Broadcast Method",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\announcer\\announcer.py",
+      "source_location": "lines 61-99"
+    },
+    {
+      "id": "announcer_evaluate_whispers",
+      "label": "Whisper Evaluation Method",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\src\\announcer\\announcer.py",
+      "source_location": "lines 211-222"
+    },
+    {
+      "id": "experiment_results_learning_v5",
+      "label": "Learning Experiment Results v5",
+      "file_type": "document",
+      "source_file": "C:\\Cynosure\\experiment_results\\learning_experiment_v5.json",
+      "source_location": null
+    },
+    {
+      "id": "experiment_results_sweep_l0_85",
+      "label": "Hyperparameter Sweep Results L0.85",
+      "file_type": "document",
+      "source_file": "C:\\Cynosure\\experiment_results\\sweep_l0.85_e0.002.json",
+      "source_location": null
+    },
+    {
+      "id": "frontend_orbit_controls",
+      "label": "Three.js Orbit Controls Library",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\frontend\\OrbitControls.js",
+      "source_location": null
+    },
+    {
+      "id": "frontend_three_js",
+      "label": "Three.js 3D Graphics Library",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\frontend\\three.min.js",
+      "source_location": null
+    },
+    {
+      "id": "concept_metabolic_plasticity",
+      "label": "Metabolic Plasticity Learning Mechanism",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 510-524"
+    },
+    {
+      "id": "concept_episodic_memory",
+      "label": "Episodic Memory and Compression",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 122-196"
+    },
+    {
+      "id": "concept_intrinsic_reward",
+      "label": "Intrinsic Reward System",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 501-508"
+    },
+    {
+      "id": "concept_security_probe",
+      "label": "Security Probe Mechanism",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 478-482"
+    },
+    {
+      "id": "concept_safe_zone",
+      "label": "Safe Zone Dynamics",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\src\\config.py",
+      "source_location": "lines 49-55"
+    },
+    {
+      "id": "concept_ram_resource",
+      "label": "RAM Resource Economy",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 96-104"
+    },
+    {
+      "id": "concept_action_selection",
+      "label": "Action Selection and Costs",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\src\\agent\\agent.py",
+      "source_location": "lines 96-104"
+    }
+  ],
+  "edges": [
+    {
+      "source": "agent_agent",
+      "target": "config_agentconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_agent",
+      "target": "config_lrsconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_agent",
+      "target": "agent_sense_and_act",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_agent",
+      "target": "agent_execute_action",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_sense_and_act",
+      "target": "agent_compute_vision",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_sense_and_act",
+      "target": "concept_episodic_memory",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85
+    },
+    {
+      "source": "agent_execute_action",
+      "target": "agent_move",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_execute_action",
+      "target": "agent_collect_and_consume",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_execute_action",
+      "target": "agent_whisper",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_execute_action",
+      "target": "agent_probe",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_execute_action",
+      "target": "agent_manipulate",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_execute_action",
+      "target": "agent_hunt",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_execute_action",
+      "target": "concept_ram_resource",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_whisper",
+      "target": "announcer_announcer",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75
+    },
+    {
+      "source": "agent_probe",
+      "target": "concept_security_probe",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.90
+    },
+    {
+      "source": "agent_manipulate",
+      "target": "concept_metabolic_plasticity",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85
+    },
+    {
+      "source": "agent_update_metabolic_params",
+      "target": "concept_metabolic_plasticity",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_compute_intrinsic_reward",
+      "target": "concept_intrinsic_reward",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_episodic_train",
+      "target": "concept_episodic_memory",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "announcer_announcer",
+      "target": "announcer_broadcast",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "announcer_announcer",
+      "target": "announcer_evaluate_whispers",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "announcer_announcer",
+      "target": "announcer_load_model",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_init",
+      "target": "agent_episodic_train",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "config_config",
+      "target": "config_lrsconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "config_config",
+      "target": "config_arenaconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "config_config",
+      "target": "config_agentconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "config_config",
+      "target": "config_simulationconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "config_config",
+      "target": "config_episodiccompressorconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "experiment_results_learning_v5",
+      "target": "agent_agent",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65
+    },
+    {
+      "source": "experiment_results_sweep_l0_85",
+      "target": "config_lrsconfig",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.70
+    },
+    {
+      "source": "frontend_orbit_controls",
+      "target": "frontend_three_js",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.90
+    },
+    {
+      "source": "agent_agent",
+      "target": "concept_action_selection",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "config_arenaconfig",
+      "target": "concept_safe_zone",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_init",
+      "target": "config_lrsconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agent_sense_and_act",
+      "target": "agent_hunt",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.70
+    },
+    {
+      "source": "announcer_broadcast",
+      "target": "announcer_evaluate_whispers",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.80
+    }
+  ],
+  "hyperedges": [
+    {
+      "sources": ["agent_agent", "config_agentconfig", "config_lrsconfig"],
+      "targets": ["concept_metabolic_plasticity", "concept_intrinsic_reward"],
+      "relation": "joint_implementation",
+      "description": "Agent class implements learning mechanisms through configuration and update methods"
+    },
+    {
+      "sources": ["agent_sense_and_act", "agent_execute_action"],
+      "targets": ["concept_action_selection", "concept_ram_resource"],
+      "relation": "coupled_dependencies",
+      "description": "Sensing and action execution jointly manage action selection and resource consumption"
+    },
+    {
+      "sources": ["announcer_announcer", "agent_agent"],
+      "targets": ["agent_whisper", "announcer_broadcast"],
+      "relation": "communication_channel",
+      "description": "Announcer and Agent form bidirectional communication channel for whisper broadcasting"
+    }
+  ],
+  "input_tokens": 4200,
+  "output_tokens": 2100
+}

@@ -149,7 +149,7 @@ def run_calibration(num_ticks=50_000, checkpoint_interval=5_000):
                     ] = agent.context_buffer[: ctx_end - lrsg_cfg.num_input_neurons]
 
                     forward_pass(
-                        agent.brain, lrsg_cfg, theta=agent.theta, last_action=agent.last_action
+                        agent.brain, lrsg_cfg, theta=agent.theta, last_action=agent.last_action, learning_rate=agent.learning_rate
                     )
 
                     new_context = agent.brain.activations[

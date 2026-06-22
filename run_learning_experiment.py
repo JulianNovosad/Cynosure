@@ -98,7 +98,7 @@ def run_episode(agent, env, lrsg_cfg, is_learning, max_ticks, learning_rate):
 
         agent.brain.reset_activations()
         agent.brain.inject_input(encoded)
-        forward_pass(agent.brain, lrsg_cfg, theta=agent.theta, last_action=agent.last_action, energy=agent.ram)
+        forward_pass(agent.brain, lrsg_cfg, theta=agent.theta, last_action=agent.last_action, energy=agent.ram, learning_rate=learning_rate)
 
         decoded = decode_output(agent.brain.read_output(), lrsg_cfg, tick=tick, graph=agent.brain)
         agent.last_action = decoded["action"]

@@ -1,0 +1,800 @@
+{
+  "nodes": [
+    {
+      "id": "workflows_ci",
+      "label": "CI Workflow",
+      "file_type": "code",
+      "source_file": ".github/workflows/ci.yml",
+      "source_location": null
+    },
+    {
+      "id": "workflows_gemini_invoke",
+      "label": "Gemini Invoke Workflow",
+      "file_type": "code",
+      "source_file": ".github/workflows/gemini-invoke.yml",
+      "source_location": null
+    },
+    {
+      "id": "workflows_gemini_dispatch",
+      "label": "Gemini Dispatch Workflow",
+      "file_type": "code",
+      "source_file": ".github/workflows/gemini-dispatch.yml",
+      "source_location": null
+    },
+    {
+      "id": "workflows_gemini_triage",
+      "label": "Gemini Triage Workflow",
+      "file_type": "code",
+      "source_file": ".github/workflows/gemini-triage.yml",
+      "source_location": null
+    },
+    {
+      "id": "workflows_gemini_review",
+      "label": "Gemini Review Workflow",
+      "file_type": "code",
+      "source_file": ".github/workflows/gemini-review.yml",
+      "source_location": null
+    },
+    {
+      "id": "workflows_gemini_plan_execute",
+      "label": "Gemini Plan Execution Workflow",
+      "file_type": "code",
+      "source_file": ".github/workflows/gemini-plan-execute.yml",
+      "source_location": null
+    },
+    {
+      "id": "workflows_gemini_scheduled_triage",
+      "label": "Gemini Scheduled Triage Workflow",
+      "file_type": "code",
+      "source_file": ".github/workflows/gemini-scheduled-triage.yml",
+      "source_location": null
+    },
+    {
+      "id": "docs_semantic_state_taxonomy",
+      "label": "Semantic State Taxonomy",
+      "file_type": "document",
+      "source_file": "docs/semantic_state_taxonomy.md",
+      "source_location": null
+    },
+    {
+      "id": "docs_robot_integration_plan",
+      "label": "Robot Integration Plan",
+      "file_type": "rationale",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "docs_fragment_cynosure",
+      "label": "Fragment 3: Cynosure Military Project",
+      "file_type": "rationale",
+      "source_file": "docs/reference/fragment_03_cynosure.md",
+      "source_location": null
+    },
+    {
+      "id": "docs_fragment_net",
+      "label": "Fragment 1: The Net / Cyberspace",
+      "file_type": "rationale",
+      "source_file": "docs/reference/fragment_01_the_net.md",
+      "source_location": null
+    },
+    {
+      "id": "docs_fragment_pondsmith",
+      "label": "Fragment 2: Pondsmith Net Evolution",
+      "file_type": "rationale",
+      "source_file": "docs/reference/fragment_02_pondsmith_net.md",
+      "source_location": null
+    },
+    {
+      "id": "docs_fragment_ice",
+      "label": "Fragment 4: ICE Security",
+      "file_type": "rationale",
+      "source_file": "docs/reference/fragment_04_ice.md",
+      "source_location": null
+    },
+    {
+      "id": "frontend_index_html",
+      "label": "Brain Visualization Interface",
+      "file_type": "code",
+      "source_file": "frontend/index.html",
+      "source_location": null
+    },
+    {
+      "id": "concept_semantic_state",
+      "label": "Semantic State (57D Vector)",
+      "file_type": "concept",
+      "source_file": "docs/semantic_state_taxonomy.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_lrsg_brain",
+      "label": "LRSG Brain Architecture",
+      "file_type": "concept",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_episodic_compressor",
+      "label": "Episodic Compressor",
+      "file_type": "concept",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_whisper_protocol",
+      "label": "Whisper Communication Protocol",
+      "file_type": "concept",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_auroremkvii",
+      "label": "AuroreMkVII Hardware",
+      "file_type": "concept",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_chimera_robot",
+      "label": "Chimera Remote-Controlled Robot",
+      "file_type": "concept",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_aurorelinkprotocol",
+      "label": "AuroreLink HMAC Protocol",
+      "file_type": "concept",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_spider_and_fly",
+      "label": "Spider and the Fly Scenario",
+      "file_type": "concept",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_yolo_detection",
+      "label": "YOLO Vision Detection",
+      "file_type": "concept",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_hebbian_plasticity",
+      "label": "Hebbian Plasticity Learning",
+      "file_type": "concept",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_net_cyberspace",
+      "label": "The Net Cyberspace",
+      "file_type": "concept",
+      "source_file": "docs/reference/fragment_01_the_net.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_ice_security",
+      "label": "ICE Security (Intrusion Countermeasures)",
+      "file_type": "concept",
+      "source_file": "docs/reference/fragment_04_ice.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_blackwall",
+      "label": "Blackwall ICE",
+      "file_type": "concept",
+      "source_file": "docs/reference/fragment_04_ice.md",
+      "source_location": null
+    },
+    {
+      "id": "concept_rogue_ai",
+      "label": "Rogue AI",
+      "file_type": "concept",
+      "source_file": "docs/reference/fragment_03_cynosure.md",
+      "source_location": null
+    },
+    {
+      "id": "ci_pytest",
+      "label": "Pytest Testing Framework",
+      "file_type": "concept",
+      "source_file": ".github/workflows/ci.yml",
+      "source_location": null
+    },
+    {
+      "id": "ci_pytorch_cpu",
+      "label": "PyTorch CPU Backend",
+      "file_type": "concept",
+      "source_file": ".github/workflows/ci.yml",
+      "source_location": null
+    },
+    {
+      "id": "phase1_vision_integration",
+      "label": "Phase 1: Vision Integration",
+      "file_type": "rationale",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "phase2_actuation_bridge",
+      "label": "Phase 2: Actuation Bridge",
+      "file_type": "rationale",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "phase3_audio_pipeline",
+      "label": "Phase 3: Audio I/O Pipeline",
+      "file_type": "rationale",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "phase4_safety_layer",
+      "label": "Phase 4: Safety Layer Porting",
+      "file_type": "rationale",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "phase5_containment",
+      "label": "Phase 5: Containment & Governance",
+      "file_type": "rationale",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "phase6_sim_to_physical",
+      "label": "Phase 6: Sim-to-Physical Transport",
+      "file_type": "rationale",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "phase7_spider_fly",
+      "label": "Phase 7: Spider and the Fly Integration",
+      "file_type": "rationale",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "src_robot_vision_bridge",
+      "label": "src/robot/vision_bridge.py",
+      "file_type": "code",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "src_robot_vitals_builder",
+      "label": "src/robot/vitals_builder.py",
+      "file_type": "code",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "src_robot_motor_controller",
+      "label": "src/robot/motor_controller.py",
+      "file_type": "code",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "src_robot_humanoid_controller",
+      "label": "src/robot/humanoid_controller.py",
+      "file_type": "code",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "src_robot_safety_behavioral_monitor",
+      "label": "src/robot/safety/behavioral_monitor.py",
+      "file_type": "code",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "src_robot_safety_emergency_stop",
+      "label": "src/robot/safety/emergency_stop.py",
+      "file_type": "code",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "src_robot_chimera_bridge",
+      "label": "src/robot/chimera/chimera_bridge.py",
+      "file_type": "code",
+      "source_file": "docs/ROBOT_INTEGRATION_PLAN.md",
+      "source_location": null
+    },
+    {
+      "id": "domain_existence",
+      "label": "Existence Domain (Semantic State)",
+      "file_type": "concept",
+      "source_file": "docs/semantic_state_taxonomy.md",
+      "source_location": null
+    },
+    {
+      "id": "domain_sensory",
+      "label": "Sensory Domain (Semantic State)",
+      "file_type": "concept",
+      "source_file": "docs/semantic_state_taxonomy.md",
+      "source_location": null
+    },
+    {
+      "id": "domain_cognitive",
+      "label": "Cognitive Domain (Semantic State)",
+      "file_type": "concept",
+      "source_file": "docs/semantic_state_taxonomy.md",
+      "source_location": null
+    },
+    {
+      "id": "domain_strategic",
+      "label": "Strategic Domain (Semantic State)",
+      "file_type": "concept",
+      "source_file": "docs/semantic_state_taxonomy.md",
+      "source_location": null
+    },
+    {
+      "id": "domain_tactical",
+      "label": "Tactical Domain (Semantic State)",
+      "file_type": "concept",
+      "source_file": "docs/semantic_state_taxonomy.md",
+      "source_location": null
+    },
+    {
+      "id": "domain_social",
+      "label": "Social Domain (Semantic State)",
+      "file_type": "concept",
+      "source_file": "docs/semantic_state_taxonomy.md",
+      "source_location": null
+    },
+    {
+      "id": "domain_value",
+      "label": "Value Domain (Semantic State)",
+      "file_type": "concept",
+      "source_file": "docs/semantic_state_taxonomy.md",
+      "source_location": null
+    },
+    {
+      "id": "domain_meta",
+      "label": "Meta Domain (Semantic State)",
+      "file_type": "concept",
+      "source_file": "docs/semantic_state_taxonomy.md",
+      "source_location": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "workflows_gemini_dispatch",
+      "target": "workflows_gemini_invoke",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "workflows_gemini_dispatch",
+      "target": "workflows_gemini_review",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "workflows_gemini_dispatch",
+      "target": "workflows_gemini_triage",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "workflows_gemini_dispatch",
+      "target": "workflows_gemini_plan_execute",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "workflows_ci",
+      "target": "ci_pytest",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "workflows_ci",
+      "target": "ci_pytorch_cpu",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "concept_lrsg_brain",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "concept_auroremkvii",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "concept_chimera_robot",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "concept_aurorelinkprotocol",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "concept_episodic_compressor",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "concept_whisper_protocol",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "concept_hebbian_plasticity",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "concept_yolo_detection",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "phase1_vision_integration",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "phase2_actuation_bridge",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "phase3_audio_pipeline",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "phase4_safety_layer",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "phase5_containment",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "phase6_sim_to_physical",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "phase7_spider_fly",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phase1_vision_integration",
+      "target": "src_robot_vision_bridge",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phase1_vision_integration",
+      "target": "src_robot_vitals_builder",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phase2_actuation_bridge",
+      "target": "src_robot_motor_controller",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phase2_actuation_bridge",
+      "target": "src_robot_humanoid_controller",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phase4_safety_layer",
+      "target": "src_robot_safety_behavioral_monitor",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phase4_safety_layer",
+      "target": "src_robot_safety_emergency_stop",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phase7_spider_fly",
+      "target": "src_robot_chimera_bridge",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_lrsg_brain",
+      "target": "concept_semantic_state",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_lrsg_brain",
+      "target": "concept_episodic_compressor",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_lrsg_brain",
+      "target": "concept_hebbian_plasticity",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_episodic_compressor",
+      "target": "concept_whisper_protocol",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_auroremkvii",
+      "target": "concept_yolo_detection",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_auroremkvii",
+      "target": "concept_aurorelinkprotocol",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_chimera_robot",
+      "target": "concept_aurorelinkprotocol",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_spider_and_fly",
+      "target": "concept_lrsg_brain",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_spider_and_fly",
+      "target": "concept_chimera_robot",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_spider_and_fly",
+      "target": "concept_aurorelinkprotocol",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_semantic_state_taxonomy",
+      "target": "concept_semantic_state",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_semantic_state",
+      "target": "domain_existence",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_semantic_state",
+      "target": "domain_sensory",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_semantic_state",
+      "target": "domain_cognitive",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_semantic_state",
+      "target": "domain_strategic",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_semantic_state",
+      "target": "domain_tactical",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_semantic_state",
+      "target": "domain_social",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_semantic_state",
+      "target": "domain_value",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_semantic_state",
+      "target": "domain_meta",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_fragment_net",
+      "target": "concept_net_cyberspace",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_fragment_ice",
+      "target": "concept_ice_security",
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_ice_security",
+      "target": "concept_blackwall",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_fragment_cynosure",
+      "target": "concept_rogue_ai",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_fragment_cynosure",
+      "target": "concept_blackwall",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "docs_robot_integration_plan",
+      "target": "docs_semantic_state_taxonomy",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85
+    },
+    {
+      "source": "frontend_index_html",
+      "target": "concept_lrsg_brain",
+      "relation": "visualizes",
+      "confidence": "INFERRED",
+      "confidence_score": 0.80
+    },
+    {
+      "source": "frontend_index_html",
+      "target": "concept_semantic_state",
+      "relation": "visualizes",
+      "confidence": "INFERRED",
+      "confidence_score": 0.80
+    },
+    {
+      "source": "phase1_vision_integration",
+      "target": "concept_yolo_detection",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "src_robot_vision_bridge",
+      "target": "concept_yolo_detection",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "src_robot_motor_controller",
+      "target": "concept_lrsg_brain",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "src_robot_chimera_bridge",
+      "target": "concept_aurorelinkprotocol",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phase5_containment",
+      "target": "concept_whisper_protocol",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "phase6_sim_to_physical",
+      "target": "concept_lrsg_brain",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 8500,
+  "output_tokens": 4200
+}

@@ -6,9 +6,11 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 
+
 class Announcer:
-    def __init__(self, use_llm: bool = True, model_name: str = "TinyLlama/TinyLlama-1.1B-Chat-v1.0", embed_dim: int = 128, load_in_4bit: bool = True):
+    def __init__(self, use_llm: bool = True, model_name: str = "TinyLlama/TinyLlama-1.1B-Chat-v1.0", embed_dim: int = 128, load_in_4bit: bool = True, sanitizer=None):
         self.embed_dim = embed_dim
+        self._sanitizer = sanitizer
         self.history = []
         self._history_limit = 50
         self.use_llm = use_llm
@@ -63,7 +65,7 @@ class Announcer:
         tick = arena_summary.get("tick", 0)
 
         agent_whispers = agent_whispers or ["" for _ in range(agents_alive)]
-        self._log_whispers(tick, agent_whispers)
+        self._log_whispers(tick, agent_whispers, sanitizer=self._sanitizer)
 
         if self.use_llm and self.model:
             prompt = self._build_prompt(tick, agents_alive, safe_zone_radius, ram_node_count, agent_whispers)
@@ -96,18 +98,20 @@ class Announcer:
             self.history = self.history[-self._history_limit:]
         return broadcast
 
-    def _log_whispers(self, tick: int, agent_whispers: list):
+    def _log_whispers(self, tick: int, agent_whispers: list, sanitizer=None):
         try:
             with open("agent_whispers.jsonl", "a", encoding="utf-8") as f:
                 for i, w in enumerate(agent_whispers):
                     if w:
+                        safe = (sanitizer.sanitize(w, tick, log_escape=False, strict=True)
+                                if sanitizer else w[:200])
                         record = {
                             "tick": tick,
                             "agent_id": i,
-                            "whisper": w,
+                            "whisper": safe,
                         }
                         f.write(json.dumps(record) + "\n")
-        except Exception:
+        except OSError:
             pass
 
     def _merge_whispers(self, agent_whispers: list, num_agents: int) -> list:
@@ -135,17 +139,16 @@ class Announcer:
         ]
         return self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
-    def _generate(self, prompt: str) -> str:
-        # REMOVED: torch.cuda.empty_cache() - This was causing a 2-4s delay per call
+    def _generate(self, prompt: str, max_new_tokens: int = 64) -> str:
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs, 
-                max_new_tokens=64, # Slightly reduced for speed
+                max_new_tokens=max_new_tokens,
                 temperature=0.7, 
                 do_sample=True,
                 pad_token_id=self.tokenizer.eos_token_id,
-                use_cache=True # Enable KV-caching for 10x speedup
+                use_cache=True
             )
         full = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         return full[len(prompt):].strip()
@@ -190,6 +193,59 @@ class Announcer:
             agent_embeddings = []
         torch.cuda.empty_cache()
         return global_embedding, agent_embeddings
+
+    def _generate_eval(self, prompt: str, max_new_tokens: int = 48) -> str:
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                temperature=0.3,
+                do_sample=True,
+                pad_token_id=self.tokenizer.eos_token_id,
+                use_cache=True,
+            )
+        full = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        return full[len(prompt):].strip()
+
+    def evaluate_whispers(self, agent_whispers: list, agent_ids: list = None, tick: int = 0) -> dict[int, float]:
+        if not self.use_llm or self.model is None:
+            return {aid: 0.0 for aid in (agent_ids or range(len(agent_whispers)))}
+        n = len(agent_whispers)
+        if agent_ids is None:
+            agent_ids = list(range(n))
+        prompt = self._build_eval_prompt(agent_whispers, agent_ids)
+        output_text = self._generate_eval(prompt, max_new_tokens=48)
+        rewards = self._parse_eval_output(output_text, agent_ids)
+        for aid in agent_ids:
+            rewards.setdefault(aid, 0.0)
+        return rewards
+
+    def _build_eval_prompt(self, agent_whispers: list, agent_ids: list) -> str:
+        lines = []
+        for i, aid in enumerate(agent_ids):
+            text = agent_whispers[i] if i < len(agent_whispers) else ""
+            label = f"Agent {aid}" if text else f"Agent {aid} (silent)"
+            text_display = f" \"{text[:80]}\"" if text else ""
+            lines.append(f"{label}:{text_display}")
+        header = "Rate each agent's communication [-1=gibberish, +1=clear English]."
+        return header + "\n" + "\n".join(lines) + "\nScores:"
+
+    def _parse_eval_output(self, text: str, agent_ids: list) -> dict[int, float]:
+        rewards = {}
+        for aid in agent_ids:
+            rewards[aid] = 0.0
+        for aid in agent_ids:
+            m = re.search(rf'Agent\s+{aid}\s*:\s*([-+]?\d+\.?\d*)', text)
+            if m:
+                try:
+                    val = float(m.group(1))
+                    if val > 1.0 or val < -1.0:
+                        val = val / 10.0
+                    rewards[aid] = max(-1.0, min(1.0, val))
+                except ValueError:
+                    pass
+        return rewards
 
     def _fallback_status(self, tick: int, alive: int, radius: float) -> str:
         texts = [

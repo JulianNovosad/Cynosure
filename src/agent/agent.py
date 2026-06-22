@@ -456,7 +456,7 @@ class Agent:
         self.brain.inject_input(encoded)
         ctx_end = min(self.lrsg_config.num_input_neurons + self.lrsg_config.context_size, self.brain.N)
         self.brain.activations[self.lrsg_config.num_input_neurons : ctx_end] = self.context_buffer[: ctx_end - self.lrsg_config.num_input_neurons]
-        forward_pass(self.brain, self.lrsg_config, theta=self.theta, last_action=self.last_action, energy=self.ram)
+        forward_pass(self.brain, self.lrsg_config, theta=self.theta, last_action=self.last_action, energy=self.ram, learning_rate=self.learning_rate)
         context_slice = self.brain.activations[self.lrsg_config.num_input_neurons:ctx_end]
         old_buffer = self.context_buffer
         self.context_buffer = (self.context_buffer + context_slice) * 0.5
@@ -660,10 +660,14 @@ class Agent:
         with open("transitions.jsonl", "a") as f: f.write(json.dumps({"tick": env.tick_count, "agent_id": self.id, "direction": direction, "ram": round(self.ram, 2)}) + "\n")
 
     def compute_intrinsic_reward(self, env, delta_ram, took_damage, probe_result=None, agents=None):
-        base_reward = 1.0 + (self.ram-50.0)/50.0 + (1.0 if env.is_in_safe_zone(self.position) else -1.0)
+        # Flip reward direction: good outcomes = larger positive, bad outcomes = smaller/negative
+        # Base: survival + resource health + location safety
+        ram_component = (self.ram - 50.0) / 50.0  # -1 when ram=0, 0 when ram=50, 1 when ram=100
+        safety_component = 1.0 if env.is_in_safe_zone(self.position) else -1.0
+        base_reward = ram_component + safety_component  # Ranges from -2 to +2 (no forced +1)
 
-        # LEARNING SIGNAL: Reward resource collection strongly
-        collection_bonus = delta_ram * 0.5 if delta_ram > 0 else 0
+        # Collection reward: good outcome produces large positive signal
+        collection_bonus = delta_ram * 1.0 if delta_ram > 0 else delta_ram * 0.5  # Negative delta gets -0.5x penalty
 
         # Announcer language reward (set by LLM evaluation in linguistic tick)
         announcer_bonus = self.announcer_reward * 2.0

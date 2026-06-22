@@ -1,0 +1,975 @@
+{
+  "nodes": [
+    {
+      "id": "root_analyze_py",
+      "label": "analyze.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\analyze.py",
+      "source_location": null
+    },
+    {
+      "id": "root_analyze2_py",
+      "label": "analyze2.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\analyze2.py",
+      "source_location": null
+    },
+    {
+      "id": "root_analyze_actions_py",
+      "label": "analyze_actions.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\analyze_actions.py",
+      "source_location": null
+    },
+    {
+      "id": "root_analyze_curriculum_py",
+      "label": "analyze_curriculum.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\analyze_curriculum.py",
+      "source_location": null
+    },
+    {
+      "id": "root_analyze_learning_experiment_py",
+      "label": "analyze_learning_experiment.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\analyze_learning_experiment.py",
+      "source_location": null
+    },
+    {
+      "id": "root_analyze_run_py",
+      "label": "analyze_run.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\analyze_run.py",
+      "source_location": null
+    },
+    {
+      "id": "root_analyze_sweep_py",
+      "label": "analyze_sweep.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\analyze_sweep.py",
+      "source_location": null
+    },
+    {
+      "id": "root_analyze_telemetry_py",
+      "label": "analyze_telemetry.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\analyze_telemetry.py",
+      "source_location": null
+    },
+    {
+      "id": "root_analyze_v5_v6_py",
+      "label": "analyze_v5_v6.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\analyze_v5_v6.py",
+      "source_location": null
+    },
+    {
+      "id": "root_analyze_whispers_py",
+      "label": "analyze_whispers.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\analyze_whispers.py",
+      "source_location": null
+    },
+    {
+      "id": "root_audit_run_py",
+      "label": "audit_run.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\audit_run.py",
+      "source_location": null
+    },
+    {
+      "id": "root_check_plasticity_py",
+      "label": "check_plasticity.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\check_plasticity.py",
+      "source_location": null
+    },
+    {
+      "id": "root_check_ram_deaths_py",
+      "label": "check_ram_deaths.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\check_ram_deaths.py",
+      "source_location": null
+    },
+    {
+      "id": "root_check_reward_py",
+      "label": "check_reward.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\check_reward.py",
+      "source_location": null
+    },
+    {
+      "id": "root_compile_summary_py",
+      "label": "compile_summary.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\compile_summary.py",
+      "source_location": null
+    },
+    {
+      "id": "root_count_actions_py",
+      "label": "count_actions.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\count_actions.py",
+      "source_location": null
+    },
+    {
+      "id": "root_daily_health_check_py",
+      "label": "daily_health_check.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\daily_health_check.py",
+      "source_location": null
+    },
+    {
+      "id": "root_experiment_runner_py",
+      "label": "experiment_runner.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": null
+    },
+    {
+      "id": "root_full_report_py",
+      "label": "full_report.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\full_report.py",
+      "source_location": null
+    },
+    {
+      "id": "root_run_all_segments_py",
+      "label": "run_all_segments.py",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\run_all_segments.py",
+      "source_location": null
+    },
+    {
+      "id": "root_telemetry_jsonl",
+      "label": "telemetry.jsonl",
+      "file_type": "code",
+      "source_file": "telemetry.jsonl",
+      "source_location": null
+    },
+    {
+      "id": "root_analyze_actions_function",
+      "label": "analyze_actions() function",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\analyze_actions.py",
+      "source_location": "line 4"
+    },
+    {
+      "id": "root_action_names",
+      "label": "ACTION_NAMES list",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze_actions.py",
+      "source_location": "line 5-6"
+    },
+    {
+      "id": "root_experiment_runner_class",
+      "label": "Simulation class initialization",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": "line 31 onwards"
+    },
+    {
+      "id": "root_experiment1_function",
+      "label": "run_experiment_1() function",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": "line 166"
+    },
+    {
+      "id": "root_experiment2_function",
+      "label": "run_experiment_2() function",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": "line 226"
+    },
+    {
+      "id": "root_experiment3_function",
+      "label": "run_experiment_3() function",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": "line 280"
+    },
+    {
+      "id": "src_lrsg_io_validate_curriculum",
+      "label": "validate_curriculum()",
+      "file_type": "code",
+      "source_file": "src/lrsg/io.py",
+      "source_location": null
+    },
+    {
+      "id": "src_config_config",
+      "label": "Config class",
+      "file_type": "code",
+      "source_file": "src/config.py",
+      "source_location": null
+    },
+    {
+      "id": "src_config_lrsgconfig",
+      "label": "LRSGConfig",
+      "file_type": "code",
+      "source_file": "src/config.py",
+      "source_location": null
+    },
+    {
+      "id": "src_config_arenaconfig",
+      "label": "ArenaConfig",
+      "file_type": "code",
+      "source_file": "src/config.py",
+      "source_location": null
+    },
+    {
+      "id": "src_config_agentconfig",
+      "label": "AgentConfig",
+      "file_type": "code",
+      "source_file": "src/config.py",
+      "source_location": null
+    },
+    {
+      "id": "src_config_simulationconfig",
+      "label": "SimulationConfig",
+      "file_type": "code",
+      "source_file": "src/config.py",
+      "source_location": null
+    },
+    {
+      "id": "src_simulation_loop_simulation",
+      "label": "Simulation class",
+      "file_type": "code",
+      "source_file": "src/simulation/loop.py",
+      "source_location": null
+    },
+    {
+      "id": "root_telemetry_format",
+      "label": "telemetry.jsonl format",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze.py",
+      "source_location": null
+    },
+    {
+      "id": "root_survival_metric",
+      "label": "Survival metric",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze.py",
+      "source_location": null
+    },
+    {
+      "id": "root_action_entropy_metric",
+      "label": "Action entropy metric",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze.py",
+      "source_location": null
+    },
+    {
+      "id": "root_learning_curve_analysis",
+      "label": "Learning curve analysis",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze_learning_experiment.py",
+      "source_location": null
+    },
+    {
+      "id": "root_episode_collection_rate",
+      "label": "Episode collection rate",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze_learning_experiment.py",
+      "source_location": null
+    },
+    {
+      "id": "root_ticks_to_collect",
+      "label": "ticks_to_collect metric",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze_learning_experiment.py",
+      "source_location": null
+    },
+    {
+      "id": "root_hypothesis_learning_signal",
+      "label": "LRSG learning signal hypothesis",
+      "file_type": "rationale",
+      "source_file": "C:\\Cynosure\\analyze_learning_experiment.py",
+      "source_location": null
+    },
+    {
+      "id": "root_learning_failure_verdict",
+      "label": "Learning failure verdict",
+      "file_type": "rationale",
+      "source_file": "C:\\Cynosure\\analyze_learning_experiment.py",
+      "source_location": "line 174-177"
+    },
+    {
+      "id": "root_hyperparameter_sweep",
+      "label": "Hyperparameter sweep analysis",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze_sweep.py",
+      "source_location": null
+    },
+    {
+      "id": "root_learning_slope",
+      "label": "Learning slope metric",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze_sweep.py",
+      "source_location": null
+    },
+    {
+      "id": "root_v5_v6_comparison",
+      "label": "v5 vs v6 algorithm comparison",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze_v5_v6.py",
+      "source_location": null
+    },
+    {
+      "id": "root_positive_only_fix",
+      "label": "Positive-only fix",
+      "file_type": "rationale",
+      "source_file": "C:\\Cynosure\\analyze_v5_v6.py",
+      "source_location": null
+    },
+    {
+      "id": "root_cohens_d_effect_size",
+      "label": "Cohen's d effect size",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze_v5_v6.py",
+      "source_location": null
+    },
+    {
+      "id": "src_lrsg_plasticity_metabolic",
+      "label": "metabolic_maintenance()",
+      "file_type": "code",
+      "source_file": "src/lrsg/plasticity.py",
+      "source_location": null
+    },
+    {
+      "id": "root_effective_rank_audit",
+      "label": "Effective rank of weight matrix",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\audit_run.py",
+      "source_location": null
+    },
+    {
+      "id": "root_rank_retention_threshold",
+      "label": "Rank retention 85% threshold",
+      "file_type": "rationale",
+      "source_file": "C:\\Cynosure\\audit_run.py",
+      "source_location": "line 84-88"
+    },
+    {
+      "id": "root_pwm_trajectory",
+      "label": "PWM trajectory (activation history)",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\audit_run.py",
+      "source_location": null
+    },
+    {
+      "id": "root_homeostatic_competition",
+      "label": "Homeostatic competition mechanism",
+      "file_type": "rationale",
+      "source_file": "C:\\Cynosure\\audit_run.py",
+      "source_location": "line 97-100"
+    },
+    {
+      "id": "root_scaling_isolation_mask",
+      "label": "Scaling isolation mask (young synapses)",
+      "file_type": "rationale",
+      "source_file": "C:\\Cynosure\\audit_run.py",
+      "source_location": null
+    },
+    {
+      "id": "root_plasticity_check",
+      "label": "Plasticity metrics (graph complexity, rewire rate, modularity)",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\check_plasticity.py",
+      "source_location": null
+    },
+    {
+      "id": "root_ram_deaths_audit",
+      "label": "RAM and death event tracking",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\check_ram_deaths.py",
+      "source_location": null
+    },
+    {
+      "id": "root_predation_reward_event",
+      "label": "PredationReward event",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\check_ram_deaths.py",
+      "source_location": null
+    },
+    {
+      "id": "root_language_reward_calibration",
+      "label": "Language reward calibration",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\check_reward.py",
+      "source_location": null
+    },
+    {
+      "id": "root_character_prediction_loss",
+      "label": "Character prediction loss (A0, A1)",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\check_reward.py",
+      "source_location": null
+    },
+    {
+      "id": "root_calibration_segment",
+      "label": "Calibration segment (20K tick blocks)",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\compile_summary.py",
+      "source_location": null
+    },
+    {
+      "id": "root_word_frequency_analysis",
+      "label": "Word frequency analysis (top_a0, top_a1)",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\compile_summary.py",
+      "source_location": null
+    },
+    {
+      "id": "root_daily_health_check_function",
+      "label": "check_project_status() function",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\daily_health_check.py",
+      "source_location": "line 10"
+    },
+    {
+      "id": "root_security_audit_log",
+      "label": "SecurityAuditLog",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\daily_health_check.py",
+      "source_location": null
+    },
+    {
+      "id": "root_progress_md",
+      "label": "PROGRESS.md",
+      "file_type": "document",
+      "source_file": "PROGRESS.md",
+      "source_location": null
+    },
+    {
+      "id": "root_thesis_figures",
+      "label": "Thesis figures (Fig 1-8)",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": "line 349 onwards"
+    },
+    {
+      "id": "root_survival_rate_ablation",
+      "label": "M1 Survival Rate (agent count ablation)",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": null
+    },
+    {
+      "id": "root_ram_efficiency",
+      "label": "M2 RAM Efficiency",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": null
+    },
+    {
+      "id": "root_territory_control",
+      "label": "M3 Territory Control",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": null
+    },
+    {
+      "id": "root_action_entropy",
+      "label": "M4 Action Entropy",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": null
+    },
+    {
+      "id": "root_graph_complexity",
+      "label": "M5 Graph Complexity",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": null
+    },
+    {
+      "id": "root_rewire_rate",
+      "label": "M6 Rewire Rate",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": null
+    },
+    {
+      "id": "root_modularity",
+      "label": "M7 Modularity",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": null
+    },
+    {
+      "id": "root_strategy_divergence",
+      "label": "M8 Strategy Divergence",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": null
+    },
+    {
+      "id": "root_episodic_compressor",
+      "label": "EpisodicCompressorConfig",
+      "file_type": "code",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": "line 53"
+    },
+    {
+      "id": "root_conflict_event",
+      "label": "Conflict event",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\experiment_runner.py",
+      "source_location": null
+    },
+    {
+      "id": "root_agent_whispers_log",
+      "label": "agent_whispers.jsonl",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\full_report.py",
+      "source_location": null
+    },
+    {
+      "id": "root_curriculum_stage",
+      "label": "Linguistic curriculum stage",
+      "file_type": "concept",
+      "source_file": "C:\\Cynosure\\analyze_curriculum.py",
+      "source_location": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "root_analyze_actions_py",
+      "target": "root_action_names",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_curriculum_py",
+      "target": "src_lrsg_io_validate_curriculum",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_curriculum_py",
+      "target": "root_curriculum_stage",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85
+    },
+    {
+      "source": "root_analyze_learning_experiment_py",
+      "target": "root_learning_curve_analysis",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_learning_experiment_py",
+      "target": "root_episode_collection_rate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_learning_experiment_py",
+      "target": "root_ticks_to_collect",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_learning_experiment_py",
+      "target": "root_learning_failure_verdict",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_run_py",
+      "target": "root_telemetry_format",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_sweep_py",
+      "target": "root_hyperparameter_sweep",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_sweep_py",
+      "target": "root_learning_slope",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_telemetry_py",
+      "target": "root_survival_metric",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_telemetry_py",
+      "target": "root_plasticity_check",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_v5_v6_py",
+      "target": "root_v5_v6_comparison",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_v5_v6_py",
+      "target": "root_cohens_d_effect_size",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_v5_v6_py",
+      "target": "root_positive_only_fix",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8
+    },
+    {
+      "source": "root_audit_run_py",
+      "target": "root_effective_rank_audit",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_audit_run_py",
+      "target": "root_rank_retention_threshold",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_audit_run_py",
+      "target": "root_pwm_trajectory",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_audit_run_py",
+      "target": "root_homeostatic_competition",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_audit_run_py",
+      "target": "root_scaling_isolation_mask",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_audit_run_py",
+      "target": "src_lrsg_plasticity_metabolic",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75
+    },
+    {
+      "source": "root_check_plasticity_py",
+      "target": "root_plasticity_check",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_check_ram_deaths_py",
+      "target": "root_ram_deaths_audit",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_check_ram_deaths_py",
+      "target": "root_predation_reward_event",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_check_reward_py",
+      "target": "root_language_reward_calibration",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_check_reward_py",
+      "target": "root_character_prediction_loss",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_compile_summary_py",
+      "target": "root_calibration_segment",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_compile_summary_py",
+      "target": "root_word_frequency_analysis",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_count_actions_py",
+      "target": "root_telemetry_format",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_daily_health_check_py",
+      "target": "root_security_audit_log",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_daily_health_check_py",
+      "target": "root_progress_md",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_experiment_runner_py",
+      "target": "src_config_config",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_experiment_runner_py",
+      "target": "src_config_lrsgconfig",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_experiment_runner_py",
+      "target": "src_config_arenaconfig",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_experiment_runner_py",
+      "target": "src_config_agentconfig",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_experiment_runner_py",
+      "target": "src_config_simulationconfig",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_experiment_runner_py",
+      "target": "src_simulation_loop_simulation",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_experiment1_function",
+      "target": "root_survival_rate_ablation",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_experiment2_function",
+      "target": "src_simulation_loop_simulation",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85
+    },
+    {
+      "source": "root_experiment3_function",
+      "target": "src_simulation_loop_simulation",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85
+    },
+    {
+      "source": "root_experiment_runner_py",
+      "target": "root_thesis_figures",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_thesis_figures",
+      "target": "root_survival_rate_ablation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_thesis_figures",
+      "target": "root_ram_efficiency",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_thesis_figures",
+      "target": "root_territory_control",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_thesis_figures",
+      "target": "root_action_entropy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_thesis_figures",
+      "target": "root_graph_complexity",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_thesis_figures",
+      "target": "root_rewire_rate",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_thesis_figures",
+      "target": "root_modularity",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_thesis_figures",
+      "target": "root_strategy_divergence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_experiment_runner_py",
+      "target": "root_episodic_compressor",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_experiment_runner_py",
+      "target": "root_conflict_event",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8
+    },
+    {
+      "source": "root_full_report_py",
+      "target": "root_agent_whispers_log",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_run_all_segments_py",
+      "target": "root_calibration_segment",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_run_all_segments_py",
+      "target": "root_character_prediction_loss",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_run_all_segments_py",
+      "target": "root_language_reward_calibration",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_run_all_segments_py",
+      "target": "root_word_frequency_analysis",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_py",
+      "target": "root_telemetry_format",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze_py",
+      "target": "root_survival_metric",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze2_py",
+      "target": "root_telemetry_format",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_analyze2_py",
+      "target": "root_action_entropy_metric",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "root_hypothesis_learning_signal",
+      "target": "src_config_lrsgconfig",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7
+    },
+    {
+      "source": "root_analyze_whispers_py",
+      "target": "root_curriculum_stage",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 28500,
+  "output_tokens": 3200
+}

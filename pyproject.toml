@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "cynosure"
+version = "0.3.0"
+description = "Multi-agent cognitive simulation with LRSG brains"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.5.0,<3",
+    "numpy>=1.22,<2",
+    "waitress>=3.0.2,<4",
+    "transformers>=4.47.0,<5",
+    "bitsandbytes>=0.43,<1",
+    "psutil>=5.9,<6",
+    "networkx>=2.8,<3",
+    "flask>=3.0,<4",
+]
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+markers = [
+    "cuda: marks tests that require CUDA/Triton (deselected on CPU-only CI)",
+]

@@ -1,8 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pytest *)",
-      "Bash(pip install *)"
+      "Bash(pytest tests/)",
+      "Bash(python tests/test_*.py)",
+      "Bash(pip install -r requirements.txt)",
+      "Bash(pip install psutil networkx transformers bitsandbytes)"
     ],
     "additionalDirectories": [
       "C:\\Users\\jumas\\.claude"

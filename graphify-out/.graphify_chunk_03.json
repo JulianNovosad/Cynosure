@@ -1,0 +1,604 @@
+{
+  "nodes": [
+    {
+      "id": "arena_environment_class",
+      "label": "Environment",
+      "file_type": "code",
+      "source_file": "src/arena/environment.py",
+      "source_location": "class Environment"
+    },
+    {
+      "id": "arena_safezone_class",
+      "label": "SafeZone",
+      "file_type": "code",
+      "source_file": "src/arena/safe_zone.py",
+      "source_location": "class SafeZone"
+    },
+    {
+      "id": "arena_ramnode_class",
+      "label": "RAMNode",
+      "file_type": "code",
+      "source_file": "src/arena/ram_node.py",
+      "source_location": "class RAMNode"
+    },
+    {
+      "id": "harness_checkpoint_class",
+      "label": "Checkpointer",
+      "file_type": "code",
+      "source_file": "src/harness/checkpoint.py",
+      "source_location": "class Checkpointer"
+    },
+    {
+      "id": "harness_resourcemonitor_class",
+      "label": "ResourceMonitor",
+      "file_type": "code",
+      "source_file": "src/harness/resources.py",
+      "source_location": "class ResourceMonitor"
+    },
+    {
+      "id": "harness_watchdogtimer_class",
+      "label": "WatchdogTimer",
+      "file_type": "code",
+      "source_file": "src/harness/resources.py",
+      "source_location": "class WatchdogTimer"
+    },
+    {
+      "id": "harness_metricvalidator_class",
+      "label": "MetricValidator",
+      "file_type": "code",
+      "source_file": "src/harness/schema.py",
+      "source_location": "class MetricValidator"
+    },
+    {
+      "id": "harness_securityauditlog_class",
+      "label": "SecurityAuditLog",
+      "file_type": "code",
+      "source_file": "src/harness/security.py",
+      "source_location": "class SecurityAuditLog"
+    },
+    {
+      "id": "harness_announcersanitizer_class",
+      "label": "AnnouncerSanitizer",
+      "file_type": "code",
+      "source_file": "src/harness/security.py",
+      "source_location": "class AnnouncerSanitizer"
+    },
+    {
+      "id": "harness_telemetrylogger_class",
+      "label": "TelemetryLogger",
+      "file_type": "code",
+      "source_file": "src/harness/telemetry.py",
+      "source_location": "class TelemetryLogger"
+    },
+    {
+      "id": "harness_dashboard_class",
+      "label": "Dashboard",
+      "file_type": "code",
+      "source_file": "src/harness/telemetry.py",
+      "source_location": "class Dashboard"
+    },
+    {
+      "id": "lrsg_episodiccompressor_class",
+      "label": "EpisodicCompressor",
+      "file_type": "code",
+      "source_file": "src/lrsg/episodic_compressor.py",
+      "source_location": "class EpisodicCompressor"
+    },
+    {
+      "id": "lrsg_episodicmemorybuffer_class",
+      "label": "EpisodicMemoryBuffer",
+      "file_type": "code",
+      "source_file": "src/lrsg/episodic_compressor.py",
+      "source_location": "class EpisodicMemoryBuffer"
+    },
+    {
+      "id": "lrsg_graph_class",
+      "label": "LRSGraph",
+      "file_type": "code",
+      "source_file": "src/lrsg/graph.py",
+      "source_location": "class LRSGraph"
+    },
+    {
+      "id": "lrsg_forward_apply_lph_fatigue",
+      "label": "apply_lph_fatigue",
+      "file_type": "code",
+      "source_file": "src/lrsg/forward.py",
+      "source_location": "function"
+    },
+    {
+      "id": "lrsg_forward_forward_pass",
+      "label": "forward_pass",
+      "file_type": "code",
+      "source_file": "src/lrsg/forward.py",
+      "source_location": "function"
+    },
+    {
+      "id": "lrsg_forward_pwm_character_prediction",
+      "label": "pwm_character_prediction",
+      "file_type": "code",
+      "source_file": "src/lrsg/forward.py",
+      "source_location": "function"
+    },
+    {
+      "id": "lrsg_forward_apply_language_hebbian_reward",
+      "label": "apply_language_hebbian_reward",
+      "file_type": "code",
+      "source_file": "src/lrsg/forward.py",
+      "source_location": "function"
+    },
+    {
+      "id": "lrsg_io_encode_input",
+      "label": "encode_input",
+      "file_type": "code",
+      "source_file": "src/lrsg/io.py",
+      "source_location": "function"
+    },
+    {
+      "id": "lrsg_io_decode_output",
+      "label": "decode_output",
+      "file_type": "code",
+      "source_file": "src/lrsg/io.py",
+      "source_location": "function"
+    },
+    {
+      "id": "lrsg_io_decode_whisper",
+      "label": "decode_whisper",
+      "file_type": "code",
+      "source_file": "src/lrsg/io.py",
+      "source_location": "function"
+    },
+    {
+      "id": "lrsg_io_validate_curriculum",
+      "label": "validate_curriculum",
+      "file_type": "code",
+      "source_file": "src/lrsg/io.py",
+      "source_location": "function"
+    },
+    {
+      "id": "lrsg_plasticity_structural_neurogenesis",
+      "label": "update_structural_neurogenesis",
+      "file_type": "code",
+      "source_file": "src/lrsg/plasticity.py",
+      "source_location": "function"
+    },
+    {
+      "id": "lrsg_plasticity_metabolic_maintenance",
+      "label": "metabolic_maintenance",
+      "file_type": "code",
+      "source_file": "src/lrsg/plasticity.py",
+      "source_location": "function"
+    },
+    {
+      "id": "lrsg_plasticity_hebbian_update",
+      "label": "hebbian_update",
+      "file_type": "code",
+      "source_file": "src/lrsg/plasticity.py",
+      "source_location": "function"
+    },
+    {
+      "id": "lrsg_plasticity_structural_plasticity",
+      "label": "structural_plasticity",
+      "file_type": "code",
+      "source_file": "src/lrsg/plasticity.py",
+      "source_location": "function"
+    },
+    {
+      "id": "triton_propagation_kernel",
+      "label": "propagation_kernel",
+      "file_type": "code",
+      "source_file": "src/lrsg/triton_kernels.py",
+      "source_location": "triton.jit kernel"
+    },
+    {
+      "id": "robot_motorcontroller_class",
+      "label": "MotorController",
+      "file_type": "code",
+      "source_file": "src/robot/motor_controller.py",
+      "source_location": "class MotorController"
+    },
+    {
+      "id": "robot_motorcontroller_map_action",
+      "label": "map_action_to_motors",
+      "file_type": "code",
+      "source_file": "src/robot/motor_controller.py",
+      "source_location": "function"
+    },
+    {
+      "id": "robot_visionbridge_encode_input",
+      "label": "encode_input (vision bridge)",
+      "file_type": "code",
+      "source_file": "src/robot/vision_bridge.py",
+      "source_location": "function"
+    },
+    {
+      "id": "robot_vitalsbuilder_encode_vitals",
+      "label": "encode_vitals",
+      "file_type": "code",
+      "source_file": "src/robot/vitals_builder.py",
+      "source_location": "function"
+    },
+    {
+      "id": "concept_safe_zone_damage",
+      "label": "Safe Zone Damage Model",
+      "file_type": "concept",
+      "source_file": "src/arena/safe_zone.py",
+      "source_location": "damage_at_point, weight_corruption_at_point"
+    },
+    {
+      "id": "concept_lrsg_language_processing",
+      "label": "Language Processing Hub (LPH)",
+      "file_type": "concept",
+      "source_file": "src/lrsg/forward.py",
+      "source_location": "LPH decoding and character prediction"
+    },
+    {
+      "id": "concept_pwm_predictive_world_model",
+      "label": "Predictive World Model (PWM)",
+      "file_type": "concept",
+      "source_file": "src/lrsg/forward.py",
+      "source_location": "PWM transition logic"
+    },
+    {
+      "id": "concept_active_inference",
+      "label": "Active Inference Framework",
+      "file_type": "concept",
+      "source_file": "src/lrsg/forward.py",
+      "source_location": "Action-based PWM update and prediction error"
+    },
+    {
+      "id": "concept_eligibility_trace",
+      "label": "Eligibility Trace (Temporal Credit Assignment)",
+      "file_type": "concept",
+      "source_file": "src/lrsg/plasticity.py",
+      "source_location": "hebbian_update, trace_decay, trace_cap"
+    },
+    {
+      "id": "concept_homeostatic_scaling",
+      "label": "Homeostatic Synaptic Scaling",
+      "file_type": "concept",
+      "source_file": "src/lrsg/plasticity.py",
+      "source_location": "metabolic_maintenance, rolling_avg, delta_s"
+    },
+    {
+      "id": "concept_columnar_sparsity",
+      "label": "Columnar Sparsity Pruning",
+      "file_type": "concept",
+      "source_file": "src/lrsg/plasticity.py",
+      "source_location": "metabolic_maintenance spatial constraints"
+    },
+    {
+      "id": "concept_neurogenesis",
+      "label": "Structural Neurogenesis (Birth/Death)",
+      "file_type": "concept",
+      "source_file": "src/lrsg/plasticity.py",
+      "source_location": "update_structural_neurogenesis, structural_plasticity"
+    },
+    {
+      "id": "concept_bgm_gating",
+      "label": "Basal Ganglia Motor Gating",
+      "file_type": "concept",
+      "source_file": "src/lrsg/forward.py",
+      "source_location": "W_v, W_proj, W_fb, W_inh, gate_out"
+    },
+    {
+      "id": "concept_energy_modulation",
+      "label": "Energy-Based Action Modulation",
+      "file_type": "concept",
+      "source_file": "src/lrsg/forward.py",
+      "source_location": "Vitals gating at low energy levels"
+    },
+    {
+      "id": "concept_bigram_coherence",
+      "label": "Bigram Coherence Bonus",
+      "file_type": "concept",
+      "source_file": "src/lrsg/forward.py",
+      "source_location": "compute_bigram_coherence_bonus, language reward"
+    },
+    {
+      "id": "config_lrsconfig",
+      "label": "LRSGConfig",
+      "file_type": "code",
+      "source_file": "src/config.py",
+      "source_location": "configuration dataclass"
+    },
+    {
+      "id": "config_arenaconfig",
+      "label": "ArenaConfig",
+      "file_type": "code",
+      "source_file": "src/config.py",
+      "source_location": "configuration dataclass"
+    }
+  ],
+  "edges": [
+    {
+      "source": "arena_environment_class",
+      "target": "arena_safezone_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "arena_environment_class",
+      "target": "arena_ramnode_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "arena_environment_class",
+      "target": "config_arenaconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "harness_checkpoint_class",
+      "target": "lrsg_graph_class",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8
+    },
+    {
+      "source": "harness_resourcemonitor_class",
+      "target": "harness_securityauditlog_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "harness_watchdogtimer_class",
+      "target": "harness_securityauditlog_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "harness_metricvalidator_class",
+      "target": "harness_securityauditlog_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "harness_announcersanitizer_class",
+      "target": "harness_securityauditlog_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "harness_telemetrylogger_class",
+      "target": "harness_securityauditlog_class",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.6
+    },
+    {
+      "source": "harness_dashboard_class",
+      "target": "harness_securityauditlog_class",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_episodiccompressor_class",
+      "target": "config_lrsconfig",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7
+    },
+    {
+      "source": "lrsg_graph_class",
+      "target": "config_lrsconfig",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_forward_forward_pass",
+      "target": "lrsg_graph_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_forward_forward_pass",
+      "target": "config_lrsconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_forward_apply_lph_fatigue",
+      "target": "lrsg_graph_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_forward_pwm_character_prediction",
+      "target": "lrsg_graph_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_forward_apply_language_hebbian_reward",
+      "target": "lrsg_graph_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_forward_forward_pass",
+      "target": "triton_propagation_kernel",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_forward_forward_pass",
+      "target": "concept_pwm_predictive_world_model",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_forward_forward_pass",
+      "target": "concept_bgm_gating",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_forward_forward_pass",
+      "target": "concept_energy_modulation",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_forward_forward_pass",
+      "target": "concept_language_processing",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_io_decode_output",
+      "target": "lrsg_io_decode_whisper",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_io_decode_output",
+      "target": "config_lrsconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_plasticity_structural_neurogenesis",
+      "target": "lrsg_graph_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_plasticity_metabolic_maintenance",
+      "target": "lrsg_graph_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_plasticity_metabolic_maintenance",
+      "target": "config_lrsconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_plasticity_metabolic_maintenance",
+      "target": "concept_homeostatic_scaling",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_plasticity_metabolic_maintenance",
+      "target": "concept_columnar_sparsity",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_plasticity_hebbian_update",
+      "target": "lrsg_graph_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_plasticity_hebbian_update",
+      "target": "concept_eligibility_trace",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_plasticity_structural_plasticity",
+      "target": "lrsg_graph_class",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_plasticity_structural_plasticity",
+      "target": "lrsg_plasticity_structural_neurogenesis",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_plasticity_structural_plasticity",
+      "target": "config_lrsconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_plasticity_structural_plasticity",
+      "target": "concept_neurogenesis",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "robot_motorcontroller_class",
+      "target": "robot_motorcontroller_map_action",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_io_encode_input",
+      "target": "config_lrsconfig",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "concept_lrsg_language_processing",
+      "target": "concept_pwm_predictive_world_model",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75
+    },
+    {
+      "source": "concept_bigram_coherence",
+      "target": "concept_lrsg_language_processing",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "arena_safezone_class",
+      "target": "concept_safe_zone_damage",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "lrsg_forward_forward_pass",
+      "target": "concept_active_inference",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 8500,
+  "output_tokens": 2100
+}

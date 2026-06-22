@@ -1,0 +1,590 @@
+{
+  "nodes": [
+    {
+      "id": "robot_safety_interlock_controller",
+      "label": "InterlockController",
+      "file_type": "code",
+      "source_file": "src/robot/safety/interlock_controller.hpp",
+      "source_location": null
+    },
+    {
+      "id": "robot_safety_interlock_state",
+      "label": "InterlockState enum",
+      "file_type": "code",
+      "source_file": "src/robot/safety/interlock_controller.hpp",
+      "source_location": null
+    },
+    {
+      "id": "robot_safety_interlock_status",
+      "label": "InterlockStatus struct",
+      "file_type": "code",
+      "source_file": "src/robot/safety/interlock_controller.hpp",
+      "source_location": null
+    },
+    {
+      "id": "simulation_conflict",
+      "label": "Conflict Resolution Module",
+      "file_type": "code",
+      "source_file": "src/simulation/conflict.py",
+      "source_location": null
+    },
+    {
+      "id": "simulation_loop",
+      "label": "Simulation Main Loop",
+      "file_type": "code",
+      "source_file": "src/simulation/loop.py",
+      "source_location": null
+    },
+    {
+      "id": "simulation_visualizer",
+      "label": "SimulationVisualizer Flask App",
+      "file_type": "code",
+      "source_file": "src/simulation/visualizer.py",
+      "source_location": null
+    },
+    {
+      "id": "simulation_init",
+      "label": "Simulation Package Init",
+      "file_type": "code",
+      "source_file": "src/simulation/__init__.py",
+      "source_location": null
+    },
+    {
+      "id": "test_agent_creation",
+      "label": "test_agent_creation",
+      "file_type": "code",
+      "source_file": "tests/test_agent.py",
+      "source_location": null
+    },
+    {
+      "id": "test_simulation_initialization",
+      "label": "test_simulation_initialization",
+      "file_type": "code",
+      "source_file": "tests/test_simulation.py",
+      "source_location": null
+    },
+    {
+      "id": "test_simulation_tick",
+      "label": "test_simulation_tick",
+      "file_type": "code",
+      "source_file": "tests/test_simulation.py",
+      "source_location": null
+    },
+    {
+      "id": "test_simulation_run",
+      "label": "test_simulation_run",
+      "file_type": "code",
+      "source_file": "tests/test_simulation.py",
+      "source_location": null
+    },
+    {
+      "id": "smoke_test",
+      "label": "Smoke Test",
+      "file_type": "code",
+      "source_file": "tests/smoke_test.py",
+      "source_location": null
+    },
+    {
+      "id": "agents_md",
+      "label": "Agent Guide Documentation",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": null
+    },
+    {
+      "id": "cynosure_kb",
+      "label": "Cynosure Knowledge Base",
+      "file_type": "document",
+      "source_file": "CYNOSURE_KB.md",
+      "source_location": null
+    },
+    {
+      "id": "project_blueprint",
+      "label": "Project Cynosure Blueprint",
+      "file_type": "document",
+      "source_file": "PROJECT_CYNOSURE_BLUEPRINT.md",
+      "source_location": null
+    },
+    {
+      "id": "readme",
+      "label": "README",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null
+    },
+    {
+      "id": "conflict_action_attack",
+      "label": "_conflict_attack_attack",
+      "file_type": "code",
+      "source_file": "src/simulation/conflict.py",
+      "source_location": null
+    },
+    {
+      "id": "conflict_action_hunt",
+      "label": "_conflict_attack_hunt",
+      "file_type": "code",
+      "source_file": "src/simulation/conflict.py",
+      "source_location": null
+    },
+    {
+      "id": "conflict_action_move",
+      "label": "_conflict_attack_move",
+      "file_type": "code",
+      "source_file": "src/simulation/conflict.py",
+      "source_location": null
+    },
+    {
+      "id": "conflict_hunt_hunt",
+      "label": "_conflict_hunt_hunt",
+      "file_type": "code",
+      "source_file": "src/simulation/conflict.py",
+      "source_location": null
+    },
+    {
+      "id": "conflict_hunt_attack",
+      "label": "_conflict_hunt_attack",
+      "file_type": "code",
+      "source_file": "src/simulation/conflict.py",
+      "source_location": null
+    },
+    {
+      "id": "conflict_hunt_move",
+      "label": "_conflict_hunt_move",
+      "file_type": "code",
+      "source_file": "src/simulation/conflict.py",
+      "source_location": null
+    },
+    {
+      "id": "conflict_resolve_conflict",
+      "label": "resolve_conflict",
+      "file_type": "code",
+      "source_file": "src/simulation/conflict.py",
+      "source_location": null
+    },
+    {
+      "id": "loop_tick",
+      "label": "Simulation.tick",
+      "file_type": "code",
+      "source_file": "src/simulation/loop.py",
+      "source_location": null
+    },
+    {
+      "id": "loop_physics_tick",
+      "label": "_physics_tick",
+      "file_type": "code",
+      "source_file": "src/simulation/loop.py",
+      "source_location": null
+    },
+    {
+      "id": "loop_linguistic_tick",
+      "label": "_linguistic_tick",
+      "file_type": "code",
+      "source_file": "src/simulation/loop.py",
+      "source_location": null
+    },
+    {
+      "id": "loop_record_metrics",
+      "label": "_record_metrics",
+      "file_type": "code",
+      "source_file": "src/simulation/loop.py",
+      "source_location": null
+    },
+    {
+      "id": "loop_visualizer_push",
+      "label": "_push_visualizer_state",
+      "file_type": "code",
+      "source_file": "src/simulation/loop.py",
+      "source_location": null
+    },
+    {
+      "id": "visualizer_flask_app",
+      "label": "Flask Application",
+      "file_type": "code",
+      "source_file": "src/simulation/visualizer.py",
+      "source_location": null
+    },
+    {
+      "id": "visualizer_state_route",
+      "label": "/state GET endpoint",
+      "file_type": "code",
+      "source_file": "src/simulation/visualizer.py",
+      "source_location": null
+    },
+    {
+      "id": "visualizer_brain_route",
+      "label": "/brain/<int:agent_id> GET endpoint",
+      "file_type": "code",
+      "source_file": "src/simulation/visualizer.py",
+      "source_location": null
+    },
+    {
+      "id": "interlock_init",
+      "label": "InterlockController.init()",
+      "file_type": "code",
+      "source_file": "src/robot/safety/interlock_controller.cpp",
+      "source_location": null
+    },
+    {
+      "id": "interlock_watchdog_feed",
+      "label": "InterlockController.watchdog_feed()",
+      "file_type": "code",
+      "source_file": "src/robot/safety/interlock_controller.cpp",
+      "source_location": null
+    },
+    {
+      "id": "interlock_get_status",
+      "label": "InterlockController.get_status()",
+      "file_type": "code",
+      "source_file": "src/robot/safety/interlock_controller.cpp",
+      "source_location": null
+    },
+    {
+      "id": "interlock_force_state",
+      "label": "InterlockController.force_state()",
+      "file_type": "code",
+      "source_file": "src/robot/safety/interlock_controller.cpp",
+      "source_location": null
+    },
+    {
+      "id": "interlock_read_physical_input",
+      "label": "InterlockController.read_physical_input()",
+      "file_type": "code",
+      "source_file": "src/robot/safety/interlock_controller.cpp",
+      "source_location": null
+    },
+    {
+      "id": "interlock_run_monitoring_cycle",
+      "label": "InterlockController.run_monitoring_cycle()",
+      "file_type": "code",
+      "source_file": "src/robot/safety/interlock_controller.cpp",
+      "source_location": null
+    },
+    {
+      "id": "safety_concept",
+      "label": "Safety and Containment",
+      "file_type": "concept",
+      "source_file": "AGENTS.md",
+      "source_location": null
+    },
+    {
+      "id": "conflict_resolution_concept",
+      "label": "Conflict Resolution Matrix",
+      "file_type": "concept",
+      "source_file": "CYNOSURE_KB.md",
+      "source_location": null
+    },
+    {
+      "id": "simulation_economy",
+      "label": "Simulation Economy",
+      "file_type": "concept",
+      "source_file": "AGENTS.md",
+      "source_location": null
+    },
+    {
+      "id": "episodic_memory_concept",
+      "label": "Episodic Memory System",
+      "file_type": "concept",
+      "source_file": "CYNOSURE_KB.md",
+      "source_location": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "simulation_loop",
+      "target": "simulation_conflict",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "simulation_loop",
+      "target": "simulation_visualizer",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "simulation_loop",
+      "target": "robot_safety_interlock_controller",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "simulation_init",
+      "target": "simulation_loop",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "simulation_init",
+      "target": "simulation_conflict",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "loop_physics_tick",
+      "target": "simulation_conflict",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "loop_tick",
+      "target": "loop_physics_tick",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "loop_tick",
+      "target": "loop_linguistic_tick",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "loop_tick",
+      "target": "loop_record_metrics",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "loop_tick",
+      "target": "loop_visualizer_push",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "loop_visualizer_push",
+      "target": "simulation_visualizer",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "conflict_resolve_conflict",
+      "target": "conflict_action_attack",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "conflict_resolve_conflict",
+      "target": "conflict_action_hunt",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "conflict_resolve_conflict",
+      "target": "conflict_action_move",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "conflict_resolve_conflict",
+      "target": "conflict_hunt_hunt",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "conflict_resolve_conflict",
+      "target": "conflict_hunt_attack",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "conflict_resolve_conflict",
+      "target": "conflict_hunt_move",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "smoke_test",
+      "target": "simulation_loop",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "test_simulation_initialization",
+      "target": "simulation_loop",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "test_simulation_tick",
+      "target": "simulation_loop",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "test_simulation_run",
+      "target": "simulation_loop",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "test_agent_creation",
+      "target": "simulation_loop",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75
+    },
+    {
+      "source": "agents_md",
+      "target": "cynosure_kb",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agents_md",
+      "target": "simulation_economy",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "agents_md",
+      "target": "safety_concept",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "project_blueprint",
+      "target": "interlock_init",
+      "relation": "cites",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8
+    },
+    {
+      "source": "project_blueprint",
+      "target": "safety_concept",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "cynosure_kb",
+      "target": "conflict_resolution_concept",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "cynosure_kb",
+      "target": "episodic_memory_concept",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "simulation_loop",
+      "target": "robot_safety_interlock_controller",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85
+    },
+    {
+      "source": "loop_physics_tick",
+      "target": "robot_safety_interlock_controller",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75
+    },
+    {
+      "source": "visualizer_flask_app",
+      "target": "visualizer_state_route",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "visualizer_flask_app",
+      "target": "visualizer_brain_route",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "interlock_init",
+      "target": "robot_safety_interlock_state",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "interlock_get_status",
+      "target": "robot_safety_interlock_status",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "interlock_force_state",
+      "target": "robot_safety_interlock_state",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "interlock_run_monitoring_cycle",
+      "target": "interlock_read_physical_input",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "conflict_action_attack",
+      "target": "simulation_economy",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8
+    },
+    {
+      "source": "conflict_action_hunt",
+      "target": "simulation_economy",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8
+    },
+    {
+      "source": "loop_record_metrics",
+      "target": "episodic_memory_concept",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75
+    },
+    {
+      "source": "agents_md",
+      "target": "project_blueprint",
+      "relation": "cites",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7
+    },
+    {
+      "source": "readme",
+      "target": "cynosure_kb",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 45000,
+  "output_tokens": 2400
+}

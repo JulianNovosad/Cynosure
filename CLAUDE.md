@@ -6,6 +6,10 @@ A unified knowledge base for all agents operating in this codebase is maintained
 
 **`CYNOSURE_KB.md`** (project root)
 
+**Semantic State Taxonomy** (design reference):
+
+**`docs/semantic_state_taxonomy.md`** — Defines the 57D semantic state space for Cynosure AI interpretability. Used to map sensors → internal states → motor outputs. Foundational to the I/O abstraction layer design.
+
 Before taking any action in this codebase, search CYNOSURE_KB.md for relevant context on:
 - System architecture and component roles
 - Script purposes and execution entrypoints

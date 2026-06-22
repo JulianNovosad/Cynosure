@@ -2,10 +2,16 @@ import json
 import os
 import threading
 import time
-from pathlib import Path
+
+_MAX_LOG_BYTES = 100 * 1024 * 1024
 
 
-import time
+def _rotate_if_needed(path: str):
+    try:
+        if os.path.getsize(path) > _MAX_LOG_BYTES:
+            os.rename(path, path + ".1")
+    except (FileNotFoundError, OSError):
+        pass
 
 
 def touch_file(path: str):
@@ -22,6 +28,7 @@ def _write_with_retry(path: str, record: dict, max_retries: int = 20, delay: flo
     line = json.dumps(record) + "\n"
     for attempt in range(max_retries):
         try:
+            _rotate_if_needed(path)
             with open(path, "a", encoding="utf-8") as f:
                 f.write(line)
             return

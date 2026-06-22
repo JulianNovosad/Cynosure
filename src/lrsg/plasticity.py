@@ -229,8 +229,12 @@ def hebbian_update(
         theta = config.threshold_theta
     device = graph.device
 
-    both_fired = graph.activations > theta
-    active_indices = torch.where(both_fired)[0]
+    # Use eligibility trace to find pre-synaptic neurons that fired recently
+    # This enables temporal credit assignment across multiple ticks.
+    trace_threshold = theta * 0.1
+    pre_mask = graph.eligibility_trace > trace_threshold
+    active_indices = torch.where(pre_mask)[0]
+    
     if active_indices.numel() == 0:
         return
 
@@ -239,13 +243,14 @@ def hebbian_update(
     valid = post >= 0
 
     pre_expanded = pre.expand_as(post)
-    pre_act = graph.activations[pre_expanded]
+    # pre_act uses the trace magnitude to represent recent activity level
+    pre_act = graph.eligibility_trace[pre_expanded]
 
-    post_clamped = graph.activations.clamp(min=0)
+    # post_act uses eligibility trace of target neurons (temporal credit for post side too)
     post_act = torch.zeros_like(post, dtype=torch.float32, device=device)
-    post_act[valid] = post_clamped[post[valid]]
+    post_act[valid] = graph.eligibility_trace[post[valid]]
 
-    coactive = valid & (pre_act > theta) & (post_act > theta)
+    coactive = valid & (pre_act > trace_threshold) & (post_act > trace_threshold)
     if not coactive.any():
         return
 
@@ -253,20 +258,25 @@ def hebbian_update(
     # graph.out_weights.nan_to_num_(...)
     # graph.out_weights.clamp_(...)
 
-    if abs(reward) < 1e-6:
-        return
+    # Remove signal choke point: use real reward magnitude, not cutoff that cancels learning
+    # Reward is the direction and magnitude of the learning signal
+    pre_final = pre_act[coactive].clamp(max=graph.trace_cap)
+    post_final = post_act[coactive].clamp(max=graph.trace_cap)
 
-    pre_final = pre_act[coactive]
-    post_final = post_act[coactive]
-    weights = graph.out_weights[active_indices][coactive].float()
-    learning_rate_eff = learning_rate * reward
-
-    delta_w = learning_rate_eff * pre_final * post_final
+    # We need to map back the coactive indices correctly to [N, max_deg]
+    # batch_idx is the index into active_indices, slot_idx is the target slot
     batch_idx, slot_idx = torch.where(coactive)
+    global_src_indices = active_indices[batch_idx]
+
+    weights = graph.out_weights[global_src_indices, slot_idx].float()
+    # Use real learning speed: learning_rate directly, reward as magnitude + direction
+    # Don't multiply learning_rate by reward; reward shapes the update sign and strength
+    delta_w = learning_rate * reward * pre_final * post_final
+
     new_weights = weights + delta_w
     new_weights = torch.clamp(new_weights, min=-10.0, max=10.0)
     new_weights.nan_to_num_(nan=0.0, posinf=0.0, neginf=0.0)
-    graph.out_weights[active_indices[batch_idx], slot_idx] = new_weights.to(graph.out_weights.dtype)
+    graph.out_weights[global_src_indices, slot_idx] = new_weights.to(graph.out_weights.dtype)
 
 
 def structural_plasticity(

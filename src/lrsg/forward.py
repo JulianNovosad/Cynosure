@@ -89,11 +89,9 @@ def trace_lph_activation(graph: LRSGraph):
     graph._trace_cursor += 1
 
 
-def apply_language_hebbian_reward(graph: LRSGraph, reward: torch.Tensor, bigram_bonus: float):
-    if abs(reward) < 1e-6:
-        return
-
-    effective_lr = 0.001 * reward * bigram_bonus
+def apply_language_hebbian_reward(graph: LRSGraph, reward: torch.Tensor, bigram_bonus: float, learning_rate: float = 0.01):
+    # Remove signal choke point: use real learning speed, reward shapes update direction/magnitude
+    effective_lr = learning_rate * reward * bigram_bonus
 
     trace_len = min(20, graph._trace_cursor)
     if trace_len < 2:
@@ -203,16 +201,10 @@ def _fused_propagation_step(activations, out_targets, out_weights, frontier, the
     
     return activations, new_frontier
 
-def forward_pass(graph: LRSGraph, config: LRSGConfig, theta: float = None, last_action: int = None):
+def forward_pass(graph: LRSGraph, config: LRSGConfig, theta: float = None, last_action: int = None, energy: float = 200.0, learning_rate: float = 0.01):
     T = config.propagation_steps
     if theta is None:
         theta = config.threshold_theta
-
-    # REMOVED O(N) sanity checks from hot path for speed.
-    # Logic should ensure stability without per-tick O(N) cleaning.
-    # graph.activations.nan_to_num_(...) 
-    # graph.out_weights.nan_to_num_(...)
-    # graph.out_weights.clamp_(...)
 
     # ... (PWM and scaling logic remains same)
     # 1. PREDICTIVE WORLD MODEL (PWM) TRANSITION & ACTIVE INFERENCE
@@ -265,9 +257,10 @@ def forward_pass(graph: LRSGraph, config: LRSGConfig, theta: float = None, last_
             use_triton=True,
         )
         if frontier.numel() == 0: break
+        if frontier.numel() > 0 and torch.isnan(graph.activations[frontier[:min(100, frontier.numel())]]).any():
+            graph.activations.nan_to_num_(nan=0.0)
+            break
     
-    # ... (Rest of maintenance remains same)
-
     # Apply BG gate to output activations
     if x_b.numel() > 0:
         gate_out = torch.sigmoid(torch.nn.functional.interpolate(x_b.view(1, 1, -1), size=graph.output_slice.stop - graph.output_slice.start, mode='linear').view(-1))
@@ -275,6 +268,20 @@ def forward_pass(graph: LRSGraph, config: LRSGConfig, theta: float = None, last_
 
     # Final global clamp
     graph.activations.clamp_(min=0.0, max=100.0)
+
+    # 4. Energy-based action modulation (Vitals Gating)
+    if energy < 50.0:
+        # Suppress COLLECT (index 2)
+        graph.activations[graph.output_slice.start + 2] *= (energy / 50.0)
+        # Priority boost for predatory actions (0: ATTACK, 1: HUNT)
+        boost = 2.0 - (energy / 50.0)
+        graph.activations[graph.output_slice.start + 0] *= boost
+        graph.activations[graph.output_slice.start + 1] *= boost
+
+    # Update eligibility trace (temporal integration of activity)
+    # E(t) = lambda * E(t-1) + x(t)
+    graph.eligibility_trace.mul_(graph.trace_decay).add_(graph.activations)
+    graph.eligibility_trace.clamp_(max=graph.trace_cap) # Prevent runaway accumulation
 
     # 3. POST-PROPAGATION: CHARACTER PREDICTION + HEBBIAN REWARD
     if not config.disable_language:
@@ -297,7 +304,7 @@ def forward_pass(graph: LRSGraph, config: LRSGConfig, theta: float = None, last_
 
             char_surprise = 1.0 - char_probs[char_code]
             reward_signal = 0.1 + 0.9 * char_surprise
-            apply_language_hebbian_reward(graph, reward_signal, bigram_bonus)
+            apply_language_hebbian_reward(graph, reward_signal, bigram_bonus, learning_rate=learning_rate)
 
             graph._prev_char_code = char_code
 

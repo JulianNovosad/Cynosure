@@ -69,6 +69,10 @@ if _HAS_TRITON:
             weights_f = weights_h.to(tl.float32)
             contribs = src_acts * weights_f
 
+            contribs = tl.where(contribs != contribs, 0.0, contribs)
+            contribs = tl.where(contribs == float('inf'), 0.0, contribs)
+            contribs = tl.where(contribs == float('-inf'), 0.0, contribs)
+
             is_pcz = (tgts >= p_start) & (tgts < p_end)
             is_excitatory = weights_f > 0.0
             apply_pcz = is_pcz & is_excitatory & valid
@@ -124,7 +128,7 @@ def propagation_step(
 
     act_before = activations[frontier].clone()
 
-    if _HAS_TRITON and use_triton:
+    if _HAS_TRITON and use_triton and activations.is_cuda:
         n_frontier = frontier.shape[0]
         BLOCK_SIZE = 128
         grid = (triton.cdiv(n_frontier, BLOCK_SIZE),)
@@ -140,7 +144,7 @@ def propagation_step(
     else:
         _python_fallback(activations, out_targets, out_weights, frontier, gamma_t, p_start, p_end)
 
-    fused_activations_clamp_nan(activations, min_val=0.0, max_val=1e4, use_triton=use_triton)
+    fused_activations_clamp_nan(activations, min_val=0.0, max_val=1e4, use_triton=(use_triton and activations.is_cuda))
 
     crossed_now = activations[frontier] > theta
     crossed_before = act_before > theta

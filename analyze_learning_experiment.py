@@ -47,10 +47,13 @@ def load_data(path="experiment_results/learning_experiment.json"):
 
 
 def main():
-    path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "experiment_results", "learning_experiment.json"
-    )
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+    else:
+        path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "experiment_results", "learning_experiment.json"
+        )
     if not os.path.exists(path):
         print(f"Error: {path} not found. Run run_learning_experiment.py first.")
         sys.exit(1)

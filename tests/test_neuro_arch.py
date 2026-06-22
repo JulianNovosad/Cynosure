@@ -11,6 +11,7 @@ def test_neuro_architectures():
     print("Initializing scaled LRSG for testing...")
     config = LRSGConfig(
         num_neurons=500,  # Small N for fast CPU/GPU test
+        max_out_degree=500,
         num_input_neurons=50,
         num_output_neurons=10,
         propagation_steps=5

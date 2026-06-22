@@ -369,6 +369,8 @@ def _make_figures():
 
     exp3_details = []
     for fname in sorted(os.listdir(OUT_DIR)):
+        if not isinstance(fname, str) or "/" in fname or "\\" in fname:
+            continue
         if fname.startswith("exp3_s") and fname.endswith("_detailed.json"):
             with open(os.path.join(OUT_DIR, fname)) as f:
                 exp3_details.append(json.load(f)["detailed"])
@@ -428,6 +430,8 @@ def _make_figures():
     # Fig 3: AE vs BCR
     all_ae, all_bcr = [], []
     for fname in os.listdir(OUT_DIR):
+        if not isinstance(fname, str) or "/" in fname or "\\" in fname:
+            continue
         if fname.endswith("_detailed.json"):
             with open(os.path.join(OUT_DIR, fname)) as f:
                 det = json.load(f)["detailed"]

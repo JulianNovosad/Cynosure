@@ -1,0 +1,74 @@
+[
+  {
+    "seed": 0,
+    "condition": "learning",
+    "episodes": [
+      {
+        "episode": 1,
+        "ticks_to_collect": 100,
+        "collected": false,
+        "final_distance": 3.840572873934304
+      },
+      {
+        "episode": 2,
+        "ticks_to_collect": 100,
+        "collected": false,
+        "final_distance": 4.330127018922194
+      },
+      {
+        "episode": 3,
+        "ticks_to_collect": 100,
+        "collected": false,
+        "final_distance": 3.8026306683663087
+      },
+      {
+        "episode": 4,
+        "ticks_to_collect": 100,
+        "collected": false,
+        "final_distance": 4.55521678957215
+      },
+      {
+        "episode": 5,
+        "ticks_to_collect": 100,
+        "collected": false,
+        "final_distance": 5.172040216394301
+      }
+    ]
+  },
+  {
+    "seed": 0,
+    "condition": "baseline",
+    "episodes": [
+      {
+        "episode": 1,
+        "ticks_to_collect": 100,
+        "collected": false,
+        "final_distance": 4.330127018922194
+      },
+      {
+        "episode": 2,
+        "ticks_to_collect": 100,
+        "collected": false,
+        "final_distance": 4.523273151159457
+      },
+      {
+        "episode": 3,
+        "ticks_to_collect": 100,
+        "collected": false,
+        "final_distance": 5.545268253204709
+      },
+      {
+        "episode": 4,
+        "ticks_to_collect": 100,
+        "collected": false,
+        "final_distance": 2.598076211353316
+      },
+      {
+        "episode": 5,
+        "ticks_to_collect": 100,
+        "collected": false,
+        "final_distance": 5.545268253204709
+      }
+    ]
+  }
+]

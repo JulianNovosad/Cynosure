@@ -1,0 +1,52 @@
+[
+  {
+    "seed": 0,
+    "ticks": 500,
+    "use_physics": true,
+    "use_semantic": true,
+    "collection_rate": 0.01,
+    "final_ram": 66.25,
+    "total_collections": 10,
+    "num_agents": 2
+  },
+  {
+    "seed": 1,
+    "ticks": 500,
+    "use_physics": true,
+    "use_semantic": true,
+    "collection_rate": 0.017,
+    "final_ram": 55.25,
+    "total_collections": 17,
+    "num_agents": 2
+  },
+  {
+    "seed": 2,
+    "ticks": 500,
+    "use_physics": true,
+    "use_semantic": true,
+    "collection_rate": 0.01,
+    "final_ram": 58.0,
+    "total_collections": 10,
+    "num_agents": 2
+  },
+  {
+    "seed": 3,
+    "ticks": 500,
+    "use_physics": true,
+    "use_semantic": true,
+    "collection_rate": 0.011,
+    "final_ram": 66.0,
+    "total_collections": 11,
+    "num_agents": 2
+  },
+  {
+    "seed": 4,
+    "ticks": 500,
+    "use_physics": true,
+    "use_semantic": true,
+    "collection_rate": 0.011,
+    "final_ram": 32.75,
+    "total_collections": 11,
+    "num_agents": 2
+  }
+]

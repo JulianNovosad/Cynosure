@@ -71,10 +71,29 @@ body{background:#000;color:#a0d8e8;font-family:'Share Tech Mono',monospace;overf
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
+<script src="OrbitControls.js" integrity="sha384-wagZhIFgY4hD+7awjQjR4e2E294y6J2HSnd8eTNc15ZubTeQeVRZwhQJ+W6hnBsf" crossorigin="anonymous"></script>
 <script>
-const AGENT_COLORS = [
+function sanitizeText(str) {
+  if (typeof str !== 'string') return String(str);
+  return str.replace(/[&<>"']/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    if (m === '"') return '&quot;';
+    if (m === "'") return '&#39;';
+    return m;
+  });
+}
+function el(tag, attrs, children) {
+  const e = document.createElement(tag);
+  if (attrs) { for (const [k,v] of Object.entries(attrs)) { e.setAttribute(k, v); } }
+  if (children) { for (const c of children) { e.appendChild(c); } }
+  return e;
+}
+function txt(v) { return document.createTextNode(String(v)); }
+
+    const AGENT_COLORS = [
   0x00ffff, 0xff00ff, 0x00ff88, 0xff8800, 0x8800ff,
   0xff0044, 0x44ff00, 0x0088ff, 0xff4488, 0x88ff44,
   0x44ffff, 0xffff44, 0xff4444, 0x44ff88, 0x8844ff,
@@ -489,28 +508,33 @@ async function fetchState() {
     if (data.tick === lastTick) return;
     lastTick = data.tick;
 
-    document.getElementById('tick-display').innerHTML =
-      `<span>CYNOSURE // TICK</span>${data.tick}`;
+    document.getElementById('tick-display').textContent = '';
+    const tickSpan = el('span', {}, [txt('CYNOSURE // TICK')]);
+    document.getElementById('tick-display').appendChild(tickSpan);
+    document.getElementById('tick-display').appendChild(txt(String(data.tick)));
     if (data.announcer) document.getElementById('announcer-box').textContent = data.announcer;
 
     clearStreamLines();
 
     const agentList = document.getElementById('agent-list');
-    let agentHTML = '';
+    agentList.textContent = '';
     if (data.agents) {
       data.agents.forEach(a => {
         const hex = AGENT_COLORS[a.id].toString(16).padStart(6,'0');
         const actionName = ACTION_NAMES[a.action] || 'IDLE';
         const actionClass = ACTION_CLASSES[a.action] || '';
         const isAlive = a.alive;
-        agentHTML += `<div class="agent-row" data-agent-id="${a.id}" style="cursor:pointer" onclick="window.open('/brain-view?agent=${a.id}','_blank')">
-          <span class="dot" style="color:#${hex};background:#${hex}"></span>
-          <span class="name">AI${a.id}</span>
-          <span class="ram">RAM:${Math.round(a.ram)}</span>
-          <span class="action ${actionClass}">${actionName}</span>
-          <span class="status ${isAlive?'alive':'dead'}">${isAlive?'\u25cf':'\u2715'}</span>
-          <span style="margin-left:3px;font-size:7px;color:#4a8a9a;opacity:0.5">[BRAIN]</span>
-        </div>`;
+
+        const row = el('div', {'class':'agent-row','data-agent-id':a.id,'style':'cursor:pointer'}, [
+          el('span', {'class':'dot','style':`color:#${hex};background:#${hex}`}),
+          el('span', {'class':'name'}, [txt('AI'+a.id)]),
+          el('span', {'class':'ram'}, [txt('RAM:'+Math.round(a.ram))]),
+          el('span', {'class':'action '+actionClass}, [txt(actionName)]),
+          el('span', {'class':'status '+(isAlive?'alive':'dead')}, [txt(isAlive?'\u25cf':'\u2715')]),
+          el('span', {'style':'margin-left:3px;font-size:7px;color:#4a8a9a;opacity:0.5'}, [txt('[BRAIN]')]),
+        ]);
+        row.addEventListener('click', function() { window.open('/brain-view?agent='+a.id,'_blank'); });
+        agentList.appendChild(row);
 
         const am = agentMeshes[a.id];
         const label = labelSprites[a.id];
@@ -611,12 +635,16 @@ async function fetchState() {
     updateRAMNodes(data.ram_nodes || []);
 
     if (data.metrics) {
-      let mHTML = '';
+      const metricsList = document.getElementById('metrics-list');
+      metricsList.textContent = '';
       for (const [k, v] of Object.entries(data.metrics)) {
         const val = typeof v === 'number' ? v.toFixed(4) : v;
-        mHTML += `<div class="metric-row"><span class="label">${k}</span><span class="val">${val}</span></div>`;
+        const row = el('div', {'class':'metric-row'}, [
+          el('span', {'class':'label'}, [txt(k)]),
+          el('span', {'class':'val'}, [txt(val)]),
+        ]);
+        metricsList.appendChild(row);
       }
-      document.getElementById('metrics-list').innerHTML = mHTML;
     }
   } catch(e) {}
   finally {
