@@ -93,6 +93,9 @@ class SimulationConfig:
     announcer_model: str = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
     headless: bool = False
     use_announcer: bool = False
+    use_semantic: bool = True
+    use_physics: bool = False
+    semantic_encoder_device: str = 'cpu'
 
 
 @dataclass
