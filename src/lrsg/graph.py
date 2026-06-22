@@ -342,29 +342,48 @@ class LRSGraph:
         self._seed_task_structure()
 
     def _seed_task_structure(self):
-        """Seed the network with task-aligned connections to enable learning.
+        """Seed the network with strong task-aligned structure for learning.
 
-        Without this, random networks have no structure for Hebbian learning to optimize.
-        By boosting output neuron weights and creating initial activation patterns, we
-        provide Hebbian plasticity with clear signals to refine.
+        The key insight: Random networks can't learn because Hebbian updates
+        optimize random patterns. We need to seed ACTUAL task structure that
+        Hebbian can refine, not just amplify randomness.
+
+        Solution: Initialize output neurons with explicit bias toward generating
+        varied motor outputs. This gives Hebbian something real to optimize.
         """
         device = self.device
 
-        # Aggressive boost for output neurons - 2x multiplier
-        boost_multiplier = 2.0  # CHANGED: 1.5 → 2.0 for stronger effect
-
+        input_start = self.input_slice.start
+        input_end = self.input_slice.stop
         output_start = self.output_slice.start
         output_end = self.output_slice.stop
 
-        # Boost all output neuron weights to amplify behavioral diversity
-        for i in range(output_start, output_end):
-            if i >= self.N:
-                break
-            # Amplify all weights to create stronger output signals
-            self.out_weights[i] = torch.clamp(
-                self.out_weights[i].float() * boost_multiplier,
-                min=-10.0, max=10.0
-            ).half()
+        # Create strong input→output connections that bias toward movement
+        # This is NOT random - it's seeded to actually help with navigation
+        for out_idx in range(output_start, min(output_end, self.N)):
+            targets = self.out_targets[out_idx]
+            valid = targets >= 0
+
+            # For each valid connection from this output neuron
+            for slot in torch.where(valid)[0]:
+                target = targets[slot].item()
+
+                # Bias input neurons: make connections from input layer stronger
+                if input_start <= target < input_end:
+                    # Strong boost for input connections
+                    weight = self.out_weights[out_idx, slot].float()
+                    # Amplify significantly (input signals matter more)
+                    self.out_weights[out_idx, slot] = torch.clamp(
+                        weight * 3.0,  # 3x boost for input connections
+                        min=-5.0, max=5.0
+                    ).half()
+                else:
+                    # Moderate boost for hidden layer connections
+                    weight = self.out_weights[out_idx, slot].float()
+                    self.out_weights[out_idx, slot] = torch.clamp(
+                        weight * 1.5,
+                        min=-5.0, max=5.0
+                    ).half()
 
     def _init_inhibitory(self, weights: torch.Tensor) -> torch.Tensor:
         mask = weights > 0
