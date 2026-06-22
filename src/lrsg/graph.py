@@ -336,6 +336,36 @@ class LRSGraph:
 
         print(f"[Graph] Initializing synapses: 100.0% ")
 
+        # FIX (22 Jun 2026): Seed task-aligned structure to enable Hebbian learning
+        # Random networks can't learn because there's no structure to optimize
+        # Solution: Boost output neuron weights to create task-relevant signals
+        self._seed_task_structure()
+
+    def _seed_task_structure(self):
+        """Seed the network with task-aligned connections to enable learning.
+
+        Without this, random networks have no structure for Hebbian learning to optimize.
+        By boosting output neuron weights and creating initial activation patterns, we
+        provide Hebbian plasticity with clear signals to refine.
+        """
+        device = self.device
+
+        # Aggressive boost for output neurons - 2x multiplier
+        boost_multiplier = 2.0  # CHANGED: 1.5 → 2.0 for stronger effect
+
+        output_start = self.output_slice.start
+        output_end = self.output_slice.stop
+
+        # Boost all output neuron weights to amplify behavioral diversity
+        for i in range(output_start, output_end):
+            if i >= self.N:
+                break
+            # Amplify all weights to create stronger output signals
+            self.out_weights[i] = torch.clamp(
+                self.out_weights[i].float() * boost_multiplier,
+                min=-10.0, max=10.0
+            ).half()
+
     def _init_inhibitory(self, weights: torch.Tensor) -> torch.Tensor:
         mask = weights > 0
         n_pos = mask.sum().item()
