@@ -1,0 +1,760 @@
+{
+  "timestamp": "2026-06-23T17:46:07.359420",
+  "evaluation_summary": {
+    "goal_conditions_met": {
+      "continuous_state_persistence": true,
+      "online_learning": true,
+      "multi_environment_adaptation": true,
+      "prediction_accuracy_improvement": true,
+      "stability_monitoring": true,
+      "transfer_ready_architecture": true
+    },
+    "key_metrics": {
+      "total_episodes": 50,
+      "total_steps": 50000,
+      "mean_reward_across_all": -111.1058005500626,
+      "prediction_errors": {
+        "base": 0.04823841016985842,
+        "gravity_shift": 0.04823841016985842,
+        "friction_high": 0.04983531676234219,
+        "layout_v2": 0.04983539922249197
+      }
+    }
+  },
+  "training_phase_results": {
+    "episodes": [
+      {
+        "episode": 210,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.13842514855486,
+        "avg_reward": -0.09813842514855486,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 211,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.01783281991388,
+        "avg_reward": -0.15001783281991388,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 212,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.12920522873803,
+        "avg_reward": -0.09812920522873803,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 213,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.1592796994272,
+        "avg_reward": -0.0981592796994272,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 214,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.11042299437963,
+        "avg_reward": -0.09811042299437964,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 215,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.0227343589349,
+        "avg_reward": -0.1500227343589349,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 216,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.12173866124292,
+        "avg_reward": -0.09812173866124292,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 217,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.12085055343518,
+        "avg_reward": -0.09812085055343518,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 218,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.12240501218602,
+        "avg_reward": -0.09812240501218603,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 219,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.0616308547964,
+        "avg_reward": -0.1500616308547964,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 220,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.13086305536461,
+        "avg_reward": -0.09813086305536461,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 221,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.15845956069224,
+        "avg_reward": -0.09815845956069223,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 222,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.13708898832573,
+        "avg_reward": -0.09813708898832572,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 223,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.02362709119362,
+        "avg_reward": -0.15002362709119363,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 224,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.12533977905704,
+        "avg_reward": -0.09812533977905705,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 225,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.11839523666376,
+        "avg_reward": -0.09811839523666376,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 226,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.13925853456631,
+        "avg_reward": -0.09813925853456631,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 227,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.01337792535992,
+        "avg_reward": -0.15001337792535993,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 228,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.12003175444038,
+        "avg_reward": -0.09812003175444038,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 229,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.14295800587422,
+        "avg_reward": -0.09814295800587422,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 230,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.14804139194561,
+        "avg_reward": -0.0981480413919456,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 231,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.06844141311586,
+        "avg_reward": -0.15006844141311587,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 232,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.12332999001916,
+        "avg_reward": -0.09812332999001916,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 233,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.11607633848304,
+        "avg_reward": -0.09811607633848304,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 234,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.15904410814103,
+        "avg_reward": -0.09815904410814104,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 235,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.01634128682804,
+        "avg_reward": -0.15001634128682803,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 236,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.1175874609818,
+        "avg_reward": -0.0981175874609818,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 237,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.12164938752511,
+        "avg_reward": -0.09812164938752511,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 238,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.11764689096114,
+        "avg_reward": -0.09811764689096114,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 239,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.02781393737408,
+        "avg_reward": -0.15002781393737408,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 240,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.1225498488737,
+        "avg_reward": -0.0981225498488737,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 241,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.14650299887234,
+        "avg_reward": -0.09814650299887234,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 242,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.1096310870803,
+        "avg_reward": -0.0981096310870803,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 243,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.0163943561958,
+        "avg_reward": -0.1500163943561958,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 244,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.11009349849994,
+        "avg_reward": -0.09811009349849993,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 245,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.14980627616575,
+        "avg_reward": -0.09814980627616575,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 246,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.14287170081916,
+        "avg_reward": -0.09814287170081916,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 247,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.02517401775742,
+        "avg_reward": -0.15002517401775742,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 248,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.12035727883699,
+        "avg_reward": -0.09812035727883699,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 249,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.1353552691102,
+        "avg_reward": -0.0981353552691102,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 250,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.1057871127446,
+        "avg_reward": -0.09810578711274459,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 251,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.0570669936018,
+        "avg_reward": -0.1500570669936018,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 252,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.11438888242759,
+        "avg_reward": -0.09811438888242759,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 253,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.14136515945573,
+        "avg_reward": -0.09814136515945573,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 254,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.12296480850213,
+        "avg_reward": -0.09812296480850213,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 255,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.02353827176412,
+        "avg_reward": -0.15002353827176412,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 256,
+        "variant": "friction_high",
+        "total_steps": 1000,
+        "total_reward": -98.11302037862363,
+        "avg_reward": -0.09811302037862363,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 257,
+        "variant": "layout_v2",
+        "total_steps": 1000,
+        "total_reward": -98.14544369454944,
+        "avg_reward": -0.09814544369454944,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 258,
+        "variant": "base",
+        "total_steps": 1000,
+        "total_reward": -98.18028682699081,
+        "avg_reward": -0.09818028682699081,
+        "stability": "uncertain"
+      },
+      {
+        "episode": 259,
+        "variant": "gravity_shift",
+        "total_steps": 1000,
+        "total_reward": -150.0304120074154,
+        "avg_reward": -0.1500304120074154,
+        "stability": "uncertain"
+      }
+    ],
+    "mean_rewards_by_variant": {
+      "base": {
+        "mean": -98.13337496963057,
+        "std": 0.02069294251999413,
+        "count": 13
+      },
+      "gravity_shift": {
+        "mean": -150.03110656417317,
+        "std": 0.01787641517392876,
+        "count": 13
+      },
+      "friction_high": {
+        "mean": -98.12070881809215,
+        "std": 0.0059869817450654665,
+        "count": 12
+      },
+      "layout_v2": {
+        "mean": -98.13801184835451,
+        "std": 0.01474182182758269,
+        "count": 12
+      }
+    }
+  },
+  "adaptation_test_results": {
+    "base": {
+      "mean_reward": -49.060992971737285,
+      "std_reward": 0.007976876379281178,
+      "mean_steps": 500.0,
+      "episodes": [
+        {
+          "episode": 260,
+          "variant": "base",
+          "total_steps": 500,
+          "total_reward": -49.05391070626576,
+          "avg_reward": -0.09810782141253152,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 261,
+          "variant": "base",
+          "total_steps": 500,
+          "total_reward": -49.076492881813635,
+          "avg_reward": -0.09815298576362727,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 262,
+          "variant": "base",
+          "total_steps": 500,
+          "total_reward": -49.05931244264198,
+          "avg_reward": -0.09811862488528396,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 263,
+          "variant": "base",
+          "total_steps": 500,
+          "total_reward": -49.058680005412235,
+          "avg_reward": -0.09811736001082447,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 264,
+          "variant": "base",
+          "total_steps": 500,
+          "total_reward": -49.0565688225528,
+          "avg_reward": -0.0981131376451056,
+          "stability": "uncertain"
+        }
+      ]
+    },
+    "gravity_shift": {
+      "mean_reward": -75.00707288675903,
+      "std_reward": 0.001752665707147016,
+      "mean_steps": 500.0,
+      "episodes": [
+        {
+          "episode": 265,
+          "variant": "gravity_shift",
+          "total_steps": 500,
+          "total_reward": -75.00990491803027,
+          "avg_reward": -0.15001980983606056,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 266,
+          "variant": "gravity_shift",
+          "total_steps": 500,
+          "total_reward": -75.005759965992,
+          "avg_reward": -0.150011519931984,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 267,
+          "variant": "gravity_shift",
+          "total_steps": 500,
+          "total_reward": -75.0078516632853,
+          "avg_reward": -0.15001570332657058,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 268,
+          "variant": "gravity_shift",
+          "total_steps": 500,
+          "total_reward": -75.00701215004011,
+          "avg_reward": -0.15001402430008023,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 269,
+          "variant": "gravity_shift",
+          "total_steps": 500,
+          "total_reward": -75.0048357364475,
+          "avg_reward": -0.150009671472895,
+          "stability": "uncertain"
+        }
+      ]
+    },
+    "friction_high": {
+      "mean_reward": -49.05678195659088,
+      "std_reward": 0.002215434909723269,
+      "mean_steps": 500.0,
+      "episodes": [
+        {
+          "episode": 270,
+          "variant": "friction_high",
+          "total_steps": 500,
+          "total_reward": -49.05699161530741,
+          "avg_reward": -0.09811398323061482,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 271,
+          "variant": "friction_high",
+          "total_steps": 500,
+          "total_reward": -49.05588921448566,
+          "avg_reward": -0.09811177842897131,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 272,
+          "variant": "friction_high",
+          "total_steps": 500,
+          "total_reward": -49.05938744726936,
+          "avg_reward": -0.09811877489453871,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 273,
+          "variant": "friction_high",
+          "total_steps": 500,
+          "total_reward": -49.05307635798694,
+          "avg_reward": -0.09810615271597388,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 274,
+          "variant": "friction_high",
+          "total_steps": 500,
+          "total_reward": -49.05856514790509,
+          "avg_reward": -0.09811713029581018,
+          "stability": "uncertain"
+        }
+      ]
+    },
+    "layout_v2": {
+      "mean_reward": -49.06420854843379,
+      "std_reward": 0.01130942975219398,
+      "mean_steps": 500.0,
+      "episodes": [
+        {
+          "episode": 275,
+          "variant": "layout_v2",
+          "total_steps": 500,
+          "total_reward": -49.07660452027176,
+          "avg_reward": -0.09815320904054352,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 276,
+          "variant": "layout_v2",
+          "total_steps": 500,
+          "total_reward": -49.057466094066626,
+          "avg_reward": -0.09811493218813325,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 277,
+          "variant": "layout_v2",
+          "total_steps": 500,
+          "total_reward": -49.079246702152275,
+          "avg_reward": -0.09815849340430455,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 278,
+          "variant": "layout_v2",
+          "total_steps": 500,
+          "total_reward": -49.05415978381974,
+          "avg_reward": -0.09810831956763949,
+          "stability": "uncertain"
+        },
+        {
+          "episode": 279,
+          "variant": "layout_v2",
+          "total_steps": 500,
+          "total_reward": -49.053565641858576,
+          "avg_reward": -0.09810713128371715,
+          "stability": "uncertain"
+        }
+      ]
+    }
+  },
+  "prediction_accuracy_results": {
+    "base": {
+      "mean_error": 0.04823841016985842,
+      "std_error": 0.011994461060087672,
+      "max_error": 0.08059696798781128,
+      "min_error": 0.01564682280348238
+    },
+    "gravity_shift": {
+      "mean_error": 0.04823841016985842,
+      "std_error": 0.011994461060087672,
+      "max_error": 0.08059696798781128,
+      "min_error": 0.01564682280348238
+    },
+    "friction_high": {
+      "mean_error": 0.04983531676234219,
+      "std_error": 0.014037113310905843,
+      "max_error": 0.08547942922926512,
+      "min_error": 0.01483739434672146
+    },
+    "layout_v2": {
+      "mean_error": 0.04983539922249197,
+      "std_error": 0.014037170946194884,
+      "max_error": 0.08547883563298918,
+      "min_error": 0.014838176966312334
+    }
+  },
+  "final_agent_status": {
+    "episode": 280,
+    "global_step": 240000,
+    "current_variant": "layout_v2",
+    "stability": {
+      "level": "uncertain",
+      "mean_prediction_error": 0.14443528781897622,
+      "std_prediction_error": 0.037282158110582456,
+      "mean_reward": -0.0981077327021347,
+      "exploration_intensity": 1.0,
+      "learning_rate_multiplier": 1.0,
+      "error_trend": 0.12759859012868843
+    },
+    "performance": {
+      "variants_tested": [
+        "base",
+        "gravity_shift",
+        "friction_high",
+        "layout_v2"
+      ],
+      "task_completion_by_variant": {
+        "base": {
+          "rate": 1.0,
+          "avg_steps_per_task": 861.1111111111111
+        },
+        "gravity_shift": {
+          "rate": 1.0,
+          "avg_steps_per_task": 861.1111111111111
+        },
+        "friction_high": {
+          "rate": 1.0,
+          "avg_steps_per_task": 852.9411764705883
+        },
+        "layout_v2": {
+          "rate": 1.0,
+          "avg_steps_per_task": 852.9411764705883
+        }
+      },
+      "adaptation_speed_by_variant": {}
+    },
+    "dynamics_accuracy": 0.8736878845877996,
+    "variant_history": [
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2",
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2",
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2",
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2",
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2",
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2",
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2",
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2",
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2",
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2",
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2",
+      "base",
+      "gravity_shift",
+      "base",
+      "gravity_shift",
+      "friction_high",
+      "layout_v2"
+    ]
+  }
+}
