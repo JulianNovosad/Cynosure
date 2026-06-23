@@ -72,6 +72,28 @@ class AgentConfig:
 
 
 @dataclass
+class LocomotionConfig:
+    """Configuration for differential-drive locomotion."""
+    wheelbase: float = 0.15  # Distance between wheels (meters)
+    wheel_radius: float = 0.05  # Wheel radius (meters)
+    max_motor_speed: float = 1.0  # Max motor command magnitude
+    friction_coeff: float = 0.8  # Friction scaling
+    max_linear_velocity: float = 0.04  # Max forward speed (m/s)
+    max_angular_velocity: float = 2.0  # Max turning speed (rad/s)
+
+
+@dataclass
+class EmbodiedConfig:
+    """Configuration for embodied simulation environment."""
+    grid_size: int = 10  # Grid dimensions (meters)
+    num_obstacles: int = 3  # Obstacles per episode
+    episode_length: int = 300  # Ticks per episode
+    physics_freq: int = 240  # Hz
+    lidar_rays: int = 8  # Number of LiDAR rays
+    goal_reach_threshold: float = 0.3  # Distance to goal to count as reached
+
+
+@dataclass
 class EpisodicCompressorConfig:
     input_dim: int = 10
     hidden_dim: int = 50
