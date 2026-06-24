@@ -1,0 +1,129 @@
+/* Cyberpunk aesthetic for Embodied Learning dashboard */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #0a0e27;
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    text-shadow: 0 0 10px #00ff00;
+    border-bottom: 2px solid #00ff00;
+    padding-bottom: 10px;
+}
+
+h2 {
+    font-size: 1.3em;
+    margin-bottom: 15px;
+    text-shadow: 0 0 5px #00ff00;
+    border-bottom: 1px solid #00ff00;
+    padding-bottom: 8px;
+}
+
+.dashboard {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.world-panel {
+    flex: 60%;
+    border: 2px solid #00ff00;
+    padding: 20px;
+    background-color: rgba(0, 255, 0, 0.02);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+    border-radius: 4px;
+}
+
+.metrics-panel {
+    flex: 40%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.metrics-section {
+    border: 2px solid #00ff00;
+    padding: 20px;
+    background-color: rgba(0, 255, 0, 0.02);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+    border-radius: 4px;
+}
+
+canvas {
+    background-color: #0a0e27;
+    border: 1px solid #00ff00;
+    width: 100%;
+    max-width: 100%;
+    display: block;
+    margin: 10px 0;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+}
+
+.metric-row:last-child {
+    border-bottom: none;
+}
+
+.label {
+    font-weight: bold;
+    color: #00ff00;
+}
+
+.value {
+    color: #00ff00;
+    font-weight: bold;
+    text-align: right;
+}
+
+.semantic-state {
+    font-size: 0.9em;
+    line-height: 2;
+}
+
+.semantic-state .label {
+    display: inline-block;
+    width: 100px;
+}
+
+.semantic-state .value {
+    display: inline-block;
+    width: 80px;
+    text-align: right;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 1024px) {
+    .dashboard {
+        flex-direction: column;
+    }
+
+    .world-panel {
+        flex: 100%;
+    }
+
+    .metrics-panel {
+        flex: 100%;
+    }
+}

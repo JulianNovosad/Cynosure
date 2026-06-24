@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embodied Learning Battleground</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Embodied Learning Battleground</h1>
+
+        <div class="dashboard">
+            <!-- Left side: World visualization -->
+            <div class="world-panel">
+                <h2>World State</h2>
+                <canvas id="worldCanvas" width="500" height="500"></canvas>
+            </div>
+
+            <!-- Right side: Metrics panel -->
+            <div class="metrics-panel">
+                <div class="metrics-section">
+                    <h2>Metrics</h2>
+                    <div class="metric-row">
+                        <span class="label">Episode:</span>
+                        <span class="value" id="episodeValue">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="label">Tick:</span>
+                        <span class="value" id="tickValue">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="label">Current Reward:</span>
+                        <span class="value" id="currentRewardValue">0.00</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="label">Accumulated Reward:</span>
+                        <span class="value" id="accumulatedRewardValue">0.00</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="label">Enemies Visible:</span>
+                        <span class="value" id="enemiesCount">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="label">Threat Level:</span>
+                        <span class="value" id="threatLevel">0.00</span>
+                    </div>
+                </div>
+
+                <div class="metrics-section">
+                    <h2>Learning Curve</h2>
+                    <canvas id="learningCanvas" width="400" height="150"></canvas>
+                </div>
+
+                <div class="metrics-section">
+                    <h2>Semantic State (Sample)</h2>
+                    <div id="semanticState" class="semantic-state">
+                        <span class="label">Navigation:</span>
+                        <span class="value" id="nav">0.00</span>
+                        <br>
+                        <span class="label">Threat:</span>
+                        <span class="value" id="threat">0.00</span>
+                        <br>
+                        <span class="label">Energy:</span>
+                        <span class="value" id="energy">0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
