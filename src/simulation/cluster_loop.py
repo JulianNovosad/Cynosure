@@ -104,11 +104,37 @@ class ClusterSimulation:
         n_obstacles: int = 3,
         tick_rate_hz: float = 30.0,
         seed: Optional[int] = None,
+        exploration_sigma: float = 0.5,
+        exploration_decay: float = 0.99,
+        min_exploration_sigma: float = 0.05,
+        trace_decay: Optional[float] = None,
     ) -> None:
         self.scheduler = scheduler
         self.grid_size = grid_size
         self.tick_rate_hz = tick_rate_hz
         self._rng = np.random.default_rng(seed)
+
+        # Override eligibility-trace decay on all registered clusters. The
+        # cluster.py default (0.95, ~20-tick memory) is far shorter than a
+        # navigation episode (MAX_STEPS=500) — by the time a goal is reached
+        # (or an episode ends), traces from early-episode actions have fully
+        # decayed, so per-tick reward application can only ever credit the
+        # last ~20-40 ticks. A longer decay widens that credit-assignment
+        # window. See CYNOSURE_KB.md §20.3.
+        if trace_decay is not None:
+            for cluster in scheduler._cluster_store.values():
+                cluster.trace_decay = trace_decay
+
+        # Additive Gaussian action noise, decayed per episode. Without this,
+        # an untrained (near-linear, low-gain) cluster output is highly
+        # correlated tick-to-tick and the agent can wander in a fixed
+        # direction indefinitely without ever sampling the variety of
+        # actions Hebbian learning needs to find a rewarding one — see
+        # CYNOSURE_KB.md §20.2 / §17.11 item 1 (same failure mode fixed on
+        # the LRSG path with epsilon-greedy discrete-action exploration).
+        self.exploration_sigma = exploration_sigma
+        self.exploration_decay = exploration_decay
+        self.min_exploration_sigma = min_exploration_sigma
 
         # Encoder is frozen (same weights in sim and hardware)
         self._encoder = SimEncoder(seed=42)
@@ -196,12 +222,24 @@ class ClusterSimulation:
             reward = self._compute_reward(prev_dist, curr_dist, reached)
             total_reward += reward
 
-            action = self.scheduler.step(packet, reward=reward)
+            # No per-tick reward here: Hebbian update is applied once at
+            # episode end (below) against accumulated eligibility traces,
+            # not per-tick against a noisy instantaneous shaped reward.
+            # See CYNOSURE_KB.md §20.3.
+            action = self.scheduler.step(packet, reward=None)
+            if self.exploration_sigma > 0:
+                noise = self._rng.normal(0.0, self.exploration_sigma, size=action.motor_vector.shape)
+                noisy = np.clip(action.motor_vector.astype(np.float32) + noise, -1.0, 1.0)
+                action.motor_vector = noisy.astype(np.float16)
             self._apply_action(action)
 
             prev_dist = curr_dist
 
             if reached:
+                self.scheduler.broadcast_reward(total_reward)
+                self.exploration_sigma = max(
+                    self.min_exploration_sigma, self.exploration_sigma * self.exploration_decay
+                )
                 return EpisodeResult(
                     episode=self._episode,
                     steps=step + 1,
@@ -210,6 +248,10 @@ class ClusterSimulation:
                     final_distance=curr_dist,
                 )
 
+        self.scheduler.broadcast_reward(total_reward)
+        self.exploration_sigma = max(
+            self.min_exploration_sigma, self.exploration_sigma * self.exploration_decay
+        )
         final_dist = float(np.linalg.norm(self._agent_pos[:2] - self._goal_pos[:2]))
         return EpisodeResult(
             episode=self._episode,
