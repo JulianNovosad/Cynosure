@@ -56,7 +56,7 @@ class EmbodiedAgent:
         self.env = BattlegroundEnvironment(
             grid_size=embodied_config.grid_size,
             num_obstacles=embodied_config.num_obstacles,
-            num_enemies=3,
+            num_enemies=embodied_config.num_enemies,
             seed=None  # Randomized each episode
         )
 
@@ -76,6 +76,9 @@ class EmbodiedAgent:
         self._agent_accumulated_reward = 0.0
         self._prev_accumulated_reward = 0.0
 
+        # Exploration (epsilon-greedy, decayed per episode)
+        self.epsilon = embodied_config.exploration_epsilon
+
         # Reset for first episode
         self._reset_episode()
 
@@ -92,9 +95,22 @@ class EmbodiedAgent:
         self.tick_count = 0
         self.episode_rewards = []
         self._last_action = None
+        self._collision_streak = 0
         # Reset combat reward tracking
         self._agent_accumulated_reward = 0.0
         self._prev_accumulated_reward = 0.0
+
+    def _collision_clearance(self, pos_2d: Tuple[float, float]) -> float:
+        """Signed distance to the nearest obstacle/boundary (negative = overlapping)."""
+        x, y = pos_2d
+        grid_size = self.env.grid_size
+        agent_radius = 0.01 * grid_size  # kept consistent with the check_collision call below
+        clearance = min(x - agent_radius, grid_size - agent_radius - x,
+                         y - agent_radius, grid_size - agent_radius - y)
+        for ox, oy, orad in self.env.obstacles:
+            dist = np.linalg.norm(np.array([x - ox, y - oy]))
+            clearance = min(clearance, dist - (agent_radius + orad))
+        return clearance
 
     def _build_observation(self) -> np.ndarray:
         """
@@ -164,12 +180,20 @@ class EmbodiedAgent:
         obs = self._build_observation()
 
         # LRSG action selection (5 actions: 0=FWD, 1=LEFT, 2=RIGHT, 3=IDLE, 4=ATTACK)
-        obs_tensor = torch.tensor(obs, dtype=torch.float32, device=self.device)
-        self.lrsg.reset_activations()
-        self.lrsg.inject_input(obs_tensor)        # writes obs[0:64] into neurons 0–63
-        forward_pass(self.lrsg, self.lrsg_config, last_action=self._last_action, energy=200.0)
-        output_acts = self.lrsg.read_output()     # shape [num_output_neurons]
-        action = int(torch.argmax(output_acts[:5]).item())  # 5 actions now
+        # torch.no_grad() prevents PyTorch from building computation graphs through W_proj/W_fb/etc.
+        # (Hebbian learning uses .data in-place ops, not autograd, so this is safe.)
+        with torch.no_grad():
+            obs_tensor = torch.tensor(obs, dtype=torch.float32, device=self.device)
+            self.lrsg.reset_activations()
+            self.lrsg.inject_input(obs_tensor)        # writes obs[0:64] into neurons 0–63
+            forward_pass(self.lrsg, self.lrsg_config, last_action=self._last_action, energy=200.0)
+            output_acts = self.lrsg.read_output()     # shape [num_output_neurons]
+        # Epsilon-greedy: without exploration, an untrained/fixed policy repeats
+        # the same action forever and Hebbian plasticity never sees varied outcomes.
+        if np.random.random() < self.epsilon:
+            action = np.random.randint(0, 5)
+        else:
+            action = int(torch.argmax(output_acts[:5]).item())  # 5 actions now
         self._last_action = action
 
         # Map discrete action to motor commands
@@ -206,10 +230,13 @@ class EmbodiedAgent:
         self.agent_yaw += dyaw
 
         # Collision check (check_collision expects 2D position)
-        is_collision = self.env.check_collision((new_pos[0], new_pos[1]), radius=0.1)
+        is_collision = self.env.check_collision((new_pos[0], new_pos[1]), radius=0.01 * self.env.grid_size)
 
-        # Only update position if no collision
+        # Update position if no collision, or if the move increases clearance
+        # (lets the agent back away from an obstacle/wall instead of freezing in place).
         if not is_collision:
+            self.agent_pos = new_pos
+        elif self._collision_clearance((new_pos[0], new_pos[1])) > self._collision_clearance((old_pos[0], old_pos[1])):
             self.agent_pos = new_pos
 
         # Tick enemies: update behaviors based on agent proximity
@@ -255,8 +282,13 @@ class EmbodiedAgent:
         self.prev_distance = curr_distance
         self.tick_count += 1
 
-        # Episode termination
-        episode_done = self.tick_count >= self.emb_config.episode_length or is_goal_reached
+        # Episode termination: a short collision grace period bounds how much
+        # -5/tick penalty a single contact can accumulate (previously either froze
+        # forever or ended on first touch, both of which starved hebbian_update of
+        # a usable signal), while still giving the agent a few ticks to back away.
+        self._collision_streak = self._collision_streak + 1 if is_collision else 0
+        collision_timeout = self._collision_streak >= self.emb_config.collision_grace_ticks
+        episode_done = self.tick_count >= self.emb_config.episode_length or is_goal_reached or collision_timeout
 
         if episode_done:
             accumulated_reward = float(sum(self.episode_rewards))
@@ -264,6 +296,10 @@ class EmbodiedAgent:
                 hebbian_update(self.lrsg, self.lrsg_config,
                                reward=accumulated_reward, learning_rate=0.01)
             self.lrsg.eligibility_trace.zero_()   # clear trace between episodes
+            self.epsilon = max(
+                self.emb_config.min_exploration_epsilon,
+                self.epsilon * self.emb_config.exploration_decay,
+            )
             self._reset_episode()
 
         return {
@@ -271,6 +307,7 @@ class EmbodiedAgent:
             'distance_to_goal': float(curr_distance),
             'is_collision': bool(is_collision),
             'is_goal_reached': bool(is_goal_reached),
+            'episode_done': bool(episode_done),
             'action': int(action),
             'num_enemies': len(self.env.get_enemies()),
         }

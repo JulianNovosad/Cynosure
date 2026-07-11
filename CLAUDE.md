@@ -10,6 +10,8 @@ A unified knowledge base for all agents operating in this codebase is maintained
 
 **`docs/semantic_state_taxonomy.md`** — Defines the 57D semantic state space for Cynosure AI interpretability. Used to map sensors → internal states → motor outputs. Foundational to the I/O abstraction layer design.
 
+**`docs/PERFORMANCE_GUIDE.md`** — Comprehensive guide to model execution speed, bottleneck analysis, and all optimizations in place. Covers LRSG forward pass, VRAM management, Tensor Core optimization, D2H batching, Triton kernels, and current performance metrics (10-40 TPS achieved).
+
 Before taking any action in this codebase, search CYNOSURE_KB.md for relevant context on:
 - System architecture and component roles
 - Script purposes and execution entrypoints
@@ -95,3 +97,86 @@ The most relevant operational code paths are:
 *   **Environment State:** `src/arena/`
 *   **Simulation Core:** `src/simulation/`, `run_experiment.py`
 *   **Learning Logic:** `src/lrsg/`
+
+## Directory Structure (STRICT ORGANIZATION REQUIREMENT)
+
+As of commit c5dff48, the project has been reorganized into a strict hierarchical structure. **This organization MUST be maintained.** All new code, data, and documentation must follow this structure:
+
+```
+C:\Cynosure\
+├── calibration/                    # Calibration data files
+│   ├── calibration_words_a0.json
+│   └── calibration_words_a1.json
+├── docs/                           # All documentation and analysis reports
+│   ├── CHANGELOG.md
+│   ├── MODEL_FIX_SUMMARY.md
+│   ├── LEARNING_FIX_ANALYSIS.md
+│   ├── LEARNING_SYSTEM_ROOT_CAUSE_ANALYSIS.md
+│   ├── NUMERICAL_VALIDATION_REPORT.md
+│   ├── PROJECT_COMPLETION_REPORT.md
+│   ├── SYSTEM_SPECIFICATION.md
+│   ├── VALIDATION_IN_PROGRESS.md
+│   ├── spec.md
+│   └── semantic_state_taxonomy.md
+├── experiment_results/             # Output from experiment runs
+│   ├── evaluation_report.json
+│   ├── learning_v6_validation.json
+│   └── (experiment results here)
+├── plans/                          # Planning and architecture docs
+│   ├── DEPLOYMENT_CHECKLIST.md
+│   ├── GOAL_VALIDATION.md
+│   ├── INTEGRATION_CHECKPOINT_SUMMARY.md
+│   ├── INTEGRATION_EXECUTION_PLAN.md
+│   ├── INTEGRATION_INDEX.md
+│   ├── INTEGRATION_VALIDATION_STATUS.md
+│   ├── PROJECT_CYNOSURE_BLUEPRINT.md
+│   └── SPECIFICATION_VERIFICATION.md
+├── src/
+│   ├── agent/                      # Core agent logic
+│   ├── analysis/                   # Data analysis scripts (all analyze*.py files)
+│   ├── announcer/
+│   ├── arena/                      # Environment simulation
+│   ├── experiments/                # Experiment runners (all run_*.py files)
+│   ├── harness/                    # System harness utilities
+│   ├── lrsg/                       # Learning/state structure
+│   ├── metrics/
+│   ├── robotics_agent/             # Robotics-specific agent implementation
+│   ├── robot/
+│   ├── simulation/                 # Simulation core
+│   └── tools/                      # Utility tools (audit, health checks, etc.)
+├── state/                          # State persistence files
+│   ├── agent_state.pkl
+│   ├── checkpoint.json
+│   ├── dynamics_model.pkl
+│   └── memory.json
+├── tests/                          # Test suite
+│   ├── test_capability_validation.py
+│   ├── test_learning_demonstration.py
+│   ├── test_learning_final.py
+│   ├── test_learning_fix.py
+│   ├── test_regression_suite.py
+│   ├── test_semantic_learning.py
+│   └── test_semantic_learning_v2.py
+├── frontend/                       # Web UI files
+├── CLAUDE.md                       # (this file) Project guidelines
+├── CYNOSURE_KB.md                  # Unified knowledge base
+├── README.md
+├── requirements.txt
+├── pyproject.toml
+└── run.py                          # Root-level entry point
+```
+
+### Key Organization Rules:
+
+1. **No loose scripts in root.** All experiment runners go in `src/experiments/`; all analysis scripts in `src/analysis/`; all utility tools in `src/tools/`.
+2. **Documentation hierarchy:** Core design docs in `docs/`; planning/architecture in `plans/`; knowledge base in CYNOSURE_KB.md.
+3. **Data is segregated:** Raw calibration data in `calibration/`; experiment outputs in `experiment_results/`; agent state in `state/`.
+4. **Tests are centralized:** All test files in `tests/`.
+5. **When adding new files:**
+   - New analysis script? Add to `src/analysis/` and import from `src.analysis`.
+   - New experiment runner? Add to `src/experiments/` with appropriate naming.
+   - New documentation? Add to `docs/` (or `plans/` if architectural).
+   - New utility? Add to `src/tools/`.
+   - Output data? Write to `experiment_results/` or `state/` as appropriate.
+
+Deviating from this structure degrades discoverability and creates maintenance debt.

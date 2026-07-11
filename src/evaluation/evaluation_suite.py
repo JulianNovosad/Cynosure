@@ -214,6 +214,81 @@ class EvaluationSuite:
             "late_success_rate": late_success_rate,
         }
 
+    def eval_embodied_navigation(self, embodied_agent, num_episodes: int = 10) -> Dict:
+        """
+        Evaluate embodied agent navigation and learning.
+
+        Measures:
+        - success_rate: Fraction of episodes reaching goal [0, 1]
+        - avg_steps_to_goal: Average steps taken to reach goal
+        - learning_improvement: Improvement from early to late episodes
+        - early_success_rate: Success rate in first half of episodes [0, 1]
+        - late_success_rate: Success rate in second half of episodes [0, 1]
+
+        Args:
+            embodied_agent: EmbodiedAgent to evaluate (has step() method)
+            num_episodes: Number of episodes to run
+
+        Returns:
+            Dictionary with navigation metrics
+        """
+        successes = 0
+        steps_to_goals = []
+        early_successes = 0
+        late_successes = 0
+
+        for episode in range(num_episodes):
+            # Reset for new episode (handled internally by embodied_agent)
+            steps = 0
+            reached_goal = False
+
+            # Run episode until terminal or max 300 steps
+            while steps < 300:
+                result = embodied_agent.step()
+                steps += 1
+
+                # Check if goal reached
+                if result.get('is_goal_reached', False):
+                    reached_goal = True
+                    break
+
+                # Check if episode auto-reset (tick_count == 0 after step means reset happened)
+                if embodied_agent.tick_count == 0:
+                    break
+
+            # Track results
+            if reached_goal:
+                successes += 1
+                steps_to_goals.append(steps)
+
+                # Track early vs late
+                if episode < num_episodes // 2:
+                    early_successes += 1
+                else:
+                    late_successes += 1
+            else:
+                steps_to_goals.append(300)  # Max steps if failed
+
+        # Calculate metrics
+        success_rate = successes / max(1, num_episodes)
+        avg_steps_to_goal = sum(steps_to_goals) / max(1, len(steps_to_goals))
+
+        early_episodes = max(1, num_episodes // 2)
+        late_episodes = max(1, num_episodes - early_episodes)
+        early_success_rate = early_successes / early_episodes
+        late_success_rate = late_successes / late_episodes
+
+        # Learning improvement: positive if late > early
+        learning_improvement = late_success_rate - early_success_rate
+
+        return {
+            "success_rate": success_rate,
+            "avg_steps_to_goal": avg_steps_to_goal,
+            "learning_improvement": learning_improvement,
+            "early_success_rate": early_success_rate,
+            "late_success_rate": late_success_rate,
+        }
+
     def eval_transfer_readiness(self) -> Dict:
         """
         Evaluate agent transfer readiness.

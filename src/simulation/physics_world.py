@@ -223,7 +223,7 @@ class PhysicsWorld:
             ])
             ray_end = np.array(pos) + ray_dir * 10  # 10m range
 
-            result = p.rayTestClosest(pos, ray_end, physicsClientId=self.client)
+            result = p.rayTest(pos, ray_end, physicsClientId=self.client)[0]
             if result[0] != -1:  # Hit something
                 hit_obj = result[0]
                 hit_pos = result[3]
@@ -241,7 +241,7 @@ class PhysicsWorld:
             ray_dir = np.array([np.cos(angle), np.sin(angle), 0])
             ray_end = np.array(pos) + ray_dir * 50  # 50m range
 
-            result = p.rayTestClosest(pos, ray_end, physicsClientId=self.client)
+            result = p.rayTest(pos, ray_end, physicsClientId=self.client)[0]
             if result[0] != -1:
                 hit_pos = result[3]
                 dist = np.linalg.norm(np.array(hit_pos) - np.array(pos))

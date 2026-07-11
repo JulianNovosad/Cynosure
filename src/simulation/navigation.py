@@ -60,12 +60,14 @@ class NavigationEnvironment:
         Ensures no overlap between obstacles by checking distance.
         """
         self.obstacles = []
-        min_distance_between_centers = 2.0
-        obstacle_radius = 0.3
+        # Fractions of grid_size, calibrated to match the original fixed-meter
+        # values (2.0m, 0.3m, 0.5m) at the original default grid_size of 10.
+        min_distance_between_centers = 0.2 * self.grid_size
+        obstacle_radius = 0.03 * self.grid_size
 
         while len(self.obstacles) < self.num_obstacles:
             # Generate random position within grid bounds (with margin)
-            margin = obstacle_radius + 0.5
+            margin = obstacle_radius + 0.05 * self.grid_size
             x = np.random.uniform(margin, self.grid_size - margin)
             y = np.random.uniform(margin, self.grid_size - margin)
 
@@ -90,20 +92,33 @@ class NavigationEnvironment:
         Returns:
             Tuple of (start_position, goal_position) where each is (x, y, z)
         """
-        # Place start position
-        start_x = np.random.uniform(0.5, self.grid_size - 0.5)
-        start_y = np.random.uniform(0.5, self.grid_size - 0.5)
+        margin = 0.05 * self.grid_size
+        min_start_goal_distance = 0.2 * self.grid_size
+        agent_radius = 0.01 * self.grid_size
+
+        def clear_of_obstacles(x: float, y: float) -> bool:
+            for ox, oy, orad in self.obstacles:
+                if np.sqrt((x - ox) ** 2 + (y - oy) ** 2) < agent_radius + orad:
+                    return False
+            return True
+
+        # Place start position, avoiding obstacles
+        start_valid = False
+        while not start_valid:
+            start_x = np.random.uniform(margin, self.grid_size - margin)
+            start_y = np.random.uniform(margin, self.grid_size - margin)
+            start_valid = clear_of_obstacles(start_x, start_y)
         start_z = 0.1  # Slightly above ground
 
-        # Place goal position at least 2.0 m away from start
+        # Place goal position at least min_start_goal_distance away from start, avoiding obstacles
         goal_valid = False
         while not goal_valid:
-            goal_x = np.random.uniform(0.5, self.grid_size - 0.5)
-            goal_y = np.random.uniform(0.5, self.grid_size - 0.5)
+            goal_x = np.random.uniform(margin, self.grid_size - margin)
+            goal_y = np.random.uniform(margin, self.grid_size - margin)
             goal_z = 0.1
 
             distance = np.sqrt((goal_x - start_x) ** 2 + (goal_y - start_y) ** 2)
-            if distance > 2.0:
+            if distance > min_start_goal_distance and clear_of_obstacles(goal_x, goal_y):
                 goal_valid = True
 
         self.agent_start = (start_x, start_y, start_z)

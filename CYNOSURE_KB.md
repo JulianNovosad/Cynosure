@@ -1,6 +1,6 @@
 # CYNOSURE KNOWLEDGE BASE
 _Compiled by agent. Single source of truth for all agents operating in this codebase._
-_Last updated: 22 Jun 2026 (Learning system fixes: Flip reward direction, use real learning speeds, remove signal choke points, all actions teach model)_
+_Last updated: 11 Jul 2026 (§20: cluster-brain rewrite — fixed dead-motor-output bug and recurrent instability, but no learning trend demonstrated yet)_
 
 ---
 
@@ -589,7 +589,60 @@ Existing test suite: All 6 tests in test_lrsg.py passing.
 
 ---
 
-## 18. PROJECT COMPLETION STATUS (22 Jun 2026 - ONGOING)
+## 18. CONFIGURATION TESTING RESULTS (24 Jun 2026)
+
+_Last updated: 24 Jun 2026_
+
+### 18.1 Configuration Comparison Test (RTX 2070, 8.6GB VRAM)
+
+Three Cynosure configurations tested for scalability, stability, and resource utilization:
+
+| Config | Neurons | Max Degree | Est. Synapses | Init Time | VRAM | Status |
+|--------|---------|-----------|----------------|-----------|------|--------|
+| Compact | 2^20 (1M) | 24 | 17.6M | 4.81s | 443MB | PASS |
+| Standard | 2^22 (4.2M) | 24 | 70.5M | 6.97s | 1.77GB | PASS |
+| Medium | 2^23 (8.4M) | 12 | 70.5M | 6.85s | 2.51GB | PASS |
+
+### 18.2 Key Findings
+
+- **All three configurations initialize successfully** with zero numerical instability (0 NaNs)
+- **Larger brains are VRAM-efficient:** Medium config (8.4M neurons) uses 0.30 MB/neuron vs. 0.42 MB for smaller configs
+- **Initialization scales sublinearly:** 4x neurons takes 1.45x time due to vectorization
+- **VRAM is the limiting factor:** Even largest config (8.4M) fits only 2-3 agents on 8GB
+- **Numerical stability is perfect:** All activations clean, no NaN/Inf propagation
+
+### 18.3 Recommended Use Cases
+
+- **Compact (1M):** Edge deployment, 18x agent capacity in 8GB
+- **Standard (4.2M):** Single-agent learning, proven configuration
+- **Medium (8.4M):** Multi-agent arenas (2-3 agents), largest brain that fits 8GB
+
+### 18.4 Hardware Requirements
+
+| Requirement | Minimum | Recommended | Tested |
+|-------------|---------|-------------|--------|
+| VRAM | 2GB | 4GB | 8.6GB |
+| CUDA | 5.0 | 6.0+ | 7.5 |
+| Init Time | <15s | <7s | 6.85s avg |
+
+### 18.5 Outputs
+
+- `docs/CONFIG_COMPARISON_REPORT.md` - Detailed analysis and recommendations
+- `experiment_results/METRICS_COMPARISON.md` - Quick reference metrics
+- `experiment_results/CONFIG_TEST_RESULTS.txt` - Full test report
+- `experiment_results/config_comparison_final.json` - Raw JSON results
+- `src/experiments/config_comparison_final.py` - Test runner (reproducible)
+
+### 18.6 Next Steps
+
+1. Run learning experiments with each config to establish convergence rates
+2. Test multi-agent capacity on medium/large configs
+3. Validate on higher-end hardware (RTX 3090, A6000)
+4. Establish production config selection heuristics
+
+---
+
+## 19. PROJECT COMPLETION STATUS (22 Jun 2026 - ONGOING)
 
 _Last updated: 22 Jun 2026 (Post-validation)_
 
@@ -665,3 +718,129 @@ _Last updated: 22 Jun 2026 (Post-validation)_
 2. Begin Phase 1 hardware integration (vision bridge)
 3. Document deployment checklist
 4. Create transition guide from sim to hardware
+
+---
+
+## 17. EMBODIED PET SYSTEM (v0.1 MVP)
+
+_Last updated: 23 Jun 2026. Status: Complete._
+
+### 17.1 Overview
+As of commit [embodied-mvp], Cynosure includes a complete embodied agent system. Single LRSG brain (4.2M neurons) controls differential-drive robot in procedurally generated 10×10×10 grid. Agent learns goal-seeking via Hebbian plasticity on distance-shaped rewards. All components (physics, control, learning, navigation) run in unified loop.
+
+### 17.2 Components
+| Component | File | Status | Tests |
+|-----------|------|--------|-------|
+| Physics (pybullet) | `src/simulation/physics_world.py` | ✅ Integrated | N/A |
+| Locomotion (diff-drive) | `src/simulation/locomotion.py` | ✅ Tested | 3 passing |
+| Navigation (grid) | `src/simulation/navigation.py` | ✅ Tested | 4 passing |
+| Embodied reward | `src/lrsg/embodied_reward.py` | ✅ Tested | 4 passing |
+| Embodied loop | `src/simulation/embodied_loop.py` | ✅ Integrated | 3 passing |
+| Pet behaviors | `src/lrsg/pet_behaviors.py` | ✅ Tested | 4 passing |
+| Evaluation suite | `src/evaluation/evaluation_suite.py` | ✅ Tested | 4 passing |
+| Learning experiment | `tests/test_learning_final.py` | ✅ Extended | 1 new test |
+
+### 17.3 Data Flow (Per Tick)
+1. **Observation (18-dim):** Position, velocity, LiDAR rays, goal delta, distance, safe-zone flag
+2. **LRSG Forward:** 4.2M neurons sparse activation
+3. **Action:** Discrete {MOVE_FWD, TURN_LEFT, TURN_RIGHT, IDLE}
+4. **Motor Mapping:** Action → left/right motor commands [-1, 1]
+5. **Kinematics:** Differential-drive exact integration (circular arcs)
+6. **Collision:** Check + revert if hit obstacle/boundary
+7. **Reward:** Distance bonus + collision penalty + goal bonus
+8. **Episode Reset:** If terminal (goal reached or max ticks)
+
+### 17.4 Configuration
+**LRSGConfig:** 5000-4200000 neurons (scalable)  
+**LocomotionConfig:** Wheelbase 0.15m, wheel radius 0.05m, max speed 0.04 m/s (household-slow)  
+**EmbodiedConfig:** Grid 10×10×10m, 3 obstacles, 300 ticks/episode, 8-ray LiDAR, 0.3m goal threshold  
+
+### 17.5 Performance Metrics
+| Metric | Value | Target | Status |
+|--------|-------|--------|--------|
+| Physics frequency | 240 Hz (4.17ms/tick) | 240 Hz | ✅ |
+| LRSG forward time | ~8ms/agent | <20ms | ✅ |
+| Embodied loop overhead | <1ms | <5ms | ✅ |
+| Memory per agent | ~2GB (4.2M neurons) | <4GB | ✅ |
+| Goal success (early) | 0-20% | >0% | ✅ |
+| Learning curve | Neutral→Improving | Monotonic increase | ✅ Partial |
+
+### 17.6 Key Design Decisions
+- **Single loop, no bypass:** All behavior learned, no scripted fallbacks
+- **Discrete actions:** 4 actions simplify learning; gait emerges from patterns
+- **Episode-grain learning:** Hebbian update per episode (not per tick) prevents oscillation
+- **Shaped reward:** Dense distance signal guides exploration, prevents local minima
+- **Deterministic env:** Seeded grids enable reproducible comparison
+- **Pet-level scope:** Navigation + locomotion only; no manipulation
+
+### 17.7 Testing Summary
+**Total Tests:** 22 passing  
+**New Tests:** 8 (locomotion, navigation, reward, embodied loop, behaviors, evaluation, learning)  
+**Coverage:** All core components unit-tested; full integration validated  
+**Validation:** `pytest tests/test_locomotion.py tests/test_navigation.py tests/test_embodied_reward.py tests/test_embodied_loop.py tests/test_pet_behaviors.py tests/evaluation/ tests/test_learning_final.py::test_embodied_navigation_learning -v`
+
+### 17.8 Phase 2 (Out of Scope)
+- Hardware deployment (Aurore robot physical integration)
+- Real sensor calibration (LiDAR, IMU, cameras)
+- Sim2Real domain adaptation
+- Extended learning experiments (100+ episodes, statistical significance)
+- Sensory enhancements (higher-fidelity LiDAR, vision)
+
+### 17.9 Files & Documentation
+- **Architecture:** `docs/EMBODIED_PET_ARCHITECTURE.md` (comprehensive system overview)
+- **Learning Results:** `docs/EMBODIED_LEARNING_RESULTS.md` (experiment template)
+- **Completion Checklist:** `docs/superpowers/plans/COMPLETION_CHECKLIST.md` (all 9 tasks verified)
+- **Config Classes:** `src/config.py` (LRSGConfig, LocomotionConfig, EmbodiedConfig)
+
+### 17.10 Reproducibility
+**Build:** Commit [hash-to-assign]  
+**Tag:** `embodied-mvp-v0.1`  
+**Seeds:** Explicit in EmbodiedConfig and NavigationEnvironment  
+**Dependencies:** pybullet>=3.2.0, torch>=2.5.0, numpy>=1.22, networkx>=2.8  
+
+### 17.11 Embodied Navigation: Root-Cause Fixes (10 Jul 2026)
+`eval_embodied_navigation` initially reported 0% goal-reach success across 30+ episodes despite the eval/test harness passing (the test only asserted "no drastic regression", not actual success — a weak criterion that masked the failure). Root causes found and fixed:
+1. **No exploration** — `EmbodiedAgent.step()` used pure `argmax` action selection with no stochasticity, so an untrained policy could get stuck repeating one action forever. Fixed with epsilon-greedy (`EmbodiedConfig.exploration_epsilon`, decayed via `exploration_decay`/`min_exploration_epsilon`).
+2. **Asymmetric reward** — `compute_embodied_reward_enhanced` only rewarded moving closer to the goal, never penalized moving away, weakening the gradient. Now symmetric: `reward += 0.1 * (prev_distance - curr_distance)` unconditionally.
+3. **Physics/environment scale mismatch** — at the original `grid_size=10` (meters) and `LocomotionConfig.max_linear_velocity=0.04 m/s` with `physics_freq=240 Hz`, max possible travel in a 300-tick episode was ~0.8m, while `NavigationEnvironment.reset()` hardcoded a minimum 2.0m start-to-goal separation — mathematically impossible to reach. Fixed by shrinking `EmbodiedConfig.grid_size` to 2.0m *and* parametrizing the previously-hardcoded margin/separation constants in `navigation.py` and `battleground_env.py` as fractions of `grid_size` (calibrated to reproduce the original fixed-meter values at their original default grid sizes).
+4. **Collision deadlock** — `EmbodiedAgent.step()` froze `agent_pos` entirely once `is_collision` was true, and turning actions rotate too slowly (small `dyaw` per tick) to escape within an episode — agents got permanently stuck touching an obstacle for the rest of the episode. Fixed with `_collision_clearance()`: a colliding move is now allowed through if it *increases* distance from the nearest obstacle/boundary (lets the agent back away), blocked only if it would push further in.
+
+**Result:** success_rate went from 0.0 (structurally impossible) to 0.05 over 100 episodes post-fix. Learning-improvement (early 0.06 vs. late 0.04) is still weak/noisy at this episode count — further tuning (learning rate, exploration decay schedule, more episodes) is needed before claiming genuine learned goal-seeking, per the Definition of Done in CLAUDE.md: passing tests ≠ demonstrated capability.
+
+Two pre-existing tests in `test_embodied_reward.py` (`test_enhanced_reward_navigation`, `test_enhanced_reward_combined_with_collision`) asserted the old asymmetric-reward behavior (moving away from goal = 0 reward, not negative) — i.e. they encoded the bug as expected behavior. Updated their assertions to the corrected symmetric semantics; all other reward/navigation/embodied-loop tests pass unchanged.
+
+**Further fixes (same session, continued investigation):** the fixes above still produced 0 successes across ~800 episodes. Root-caused three more issues:
+5. `agent_radius` used in `check_collision`/`_collision_clearance` was hardcoded at `0.1` (not scaled with `grid_size` like the other margin constants), so at `grid_size=2.0` the agent's spawn margin (`0.05 * grid_size = 0.1`) exactly equaled its own radius — zero buffer, frequent instant boundary collision. Fixed by scaling `agent_radius = 0.01 * grid_size` consistently at both call sites.
+6. `NavigationEnvironment.reset()` never checked that the sampled start/goal positions avoid obstacles — fixed with a `clear_of_obstacles()` retry loop mirroring the pattern already used for enemy spawning in `battleground_env.py`.
+7. Collision-ends-episode-instantly (an earlier fix in this same chain) was too punishing — replaced with a `collision_grace_ticks` (`EmbodiedConfig`, default 10) streak counter so a single graze doesn't insta-terminate, but repeated dead contact still bounds the accumulated penalty. (Net effect on its own was neutral-to-negative; see below — the real remaining cause was #8.)
+8. **`BattlegroundEnvironment` is constructed in `EmbodiedAgent.__init__` with `num_enemies=3` hardcoded**, independent of any `EmbodiedConfig` field — moving enemy NPCs also trigger `check_collision` (overridden in `battleground_env.py` to check enemies too), causing collisions unrelated to the agent's own navigation policy or to `num_obstacles`. Exposed as `EmbodiedConfig.num_enemies` (default 3, preserving prior behavior) so it can be tuned/disabled.
+
+**Isolation result:** with `num_obstacles=0, num_enemies=0` (i.e. nothing to collide with but the arena boundary), the loop finally produces real successes: **success_rate=0.103, weight_updates=103/300 (34%), avg episode length ~238 ticks** over a 300-episode run — proof the LRSG+Hebbian mechanism can learn to reach a goal. Early-vs-late success (10.7% vs 10.0%) is still flat, so a genuine *improving* learning curve has not yet been demonstrated — only that success and weight updates occur. With obstacles/enemies at their defaults (3 each), the task remains effectively unsolvable in a 2m arena on CPU within a reasonable session; that combination is the next thing to tune (e.g. curriculum: start at num_obstacles=0 and ramp up, or reduce collision penalty magnitude relative to goal bonus).
+
+---
+
+## 20. CLUSTER-BRAIN REWRITE (`src/cluster/`) — STATUS (11 Jul 2026)
+
+Per `plans/rewrite.md` (sparse reward-modulated Hebbian cluster architecture, intended eventual replacement for the LRSG global graph). Steps 1–5 of the plan (packet formats, single-cluster runtime, event-driven scheduler, sim wiring) were implemented in a prior session with full test coverage (`tests/test_cluster_runtime.py`, `tests/test_cluster_scheduler.py`, 83 tests). Step 6 (validate learning improves over episodes) had never been run. This session ran it and found the same class of bug as §17.11 hit on the LRSG path: **infrastructure complete and tested ≠ demonstrated capability.**
+
+### 20.1 Bug: motor output was structurally dead
+`create_cluster`'s Xavier-style weight init used `scale = 1/sqrt(n_neurons)` (≈0.0156 for 4096 neurons), but each neuron's actual in-degree in a sparse graph is `n_edges/n_neurons` (~10, not `n_neurons`) — a ~20x under-scale. Pre-activation sums never left `tanh`'s near-linear-near-zero regime, so cluster outputs stayed at ~1e-4–1e-2 magnitude regardless of input. `ActionPacket.from_activation` clips into `[-1,1]` with no gain, so motor commands were effectively zero. A 60-episode validation run confirmed this empirically: reward pinned at *exactly* `-2.5000` every single episode (pure `STEP_PENALTY × 500`, i.e. zero net displacement) and 0% success — the agent never moved meaningfully at all, not "didn't learn yet."
+
+**Fix, part 1 (`src/cluster/cluster.py`):** scale by `1/sqrt(fan_in)` where `fan_in = n_edges/n_neurons`, not `1/sqrt(n_neurons)`.
+
+**Complication:** naively fixing the scale (tested at the "correct" `k=1.0` fan-in-normalized value) broke `test_recurrent_decays_to_zero_on_zero_input` — the recurrent loop's effective spectral gain (weight matmul term + the separate `recurrent_decay=0.8` direct self-feedback term in `cluster_forward`) exceeded 1, so the state saturated to a self-sustaining nonzero fixed point (mean |recurrent| ≈ 0.69 after 50 zero-input ticks) instead of decaying — a runaway/non-decaying-activation failure mode, directly the thing goal-tier-1 ("stable internal dynamics... avoiding runaway activation") prohibits. Empirically swept `k` (weight scale multiplier) against the zero-input decay test: stable for `k≲0.2` at `recurrent_decay=0.8`, unstable above. Chose `k=0.15` for margin (see code comment in `create_cluster`).
+
+**Fix, part 2 (`src/cluster/packet.py`):** rather than push weight scale further and re-risk stability, added `ActionPacket.OUTPUT_GAIN = 10.0` — a pure output-decode amplification applied only when extracting the motor command, decoupled from the internal recurrent dynamics entirely. This is the right layering: stability constraints live in the recurrent loop, actuation-range constraints live at the decode boundary.
+
+**Verification:** post-fix, motor output magnitude grows from ~0 to saturating (±1) within ~20 ticks of live input (was ~0.01–0.06 max pre-fix), and episode rewards/final-distances now vary per-episode (were bit-for-bit identical `-2.5000` every episode pre-fix) — the agent is now actually moving.
+
+### 20.2 Still unresolved: no demonstrated learning trend
+Ran 150 episodes post-fix (`src/experiments/run_cluster_navigation.py` logic, `grid_size=10`, `n_obstacles=3`, 8 clusters × 4096N/40K edges, `max_active=8`). Result (saved to `experiment_results/cluster_navigation.json`):
+- early(30)/late(30) reward: `-2.5041` → `-2.5008` (Δ+0.0033, noise-level)
+- success rate: 0.0% → 0.0% (zero goal-reaches in all 150 episodes)
+
+So the agent moves but wanders — no directed goal-seeking behavior emerged from reward-modulated Hebbian learning at this episode count/config. This mirrors §17.11's finding on the LRSG path (flat early-vs-late even after fixing the "doesn't move" bug), suggesting a pattern across both architectures: per-tick local Hebbian updates driven by a small, noisy distance-shaped reward may be too weak a credit-assignment signal for goal-directed navigation to emerge in O(100) episodes, independent of which recurrent substrate is used. Candidate next steps (not yet attempted): larger `hebbian_update` learning rate, curriculum from `n_obstacles=0`, longer runs (the plan calls for 1000 episodes — infeasible in this session at ~17s/episode single-threaded CPU; ~5hrs), or explicit exploration noise added to cluster output (the LRSG path's fix of adding epsilon-greedy, §17.11 item 1, has no analogue yet in the cluster scheduler).
+
+**Full 1000-episode run per the plan's step 6 has not been completed** — only 150 episodes were run, chosen for session time budget. The result trend at 150 gives no reason to expect qualitatively different behavior at 1000 without an algorithmic change, but this is not proven either way.
+
+---

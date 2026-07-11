@@ -91,7 +91,8 @@ class TestEmbodiedRewardEnhanced:
             is_goal_reached=False,
             combat_result=None
         )
-        assert reward_away == 0.0, f"Moving away should give zero (no positive reward), got {reward_away}"
+        # Expected: 0.1 * -2.0 = -0.2 (symmetric: moving away is penalized, matching the docstring above)
+        assert np.isclose(reward_away, -0.2), f"Expected -0.2, got {reward_away}"
 
     def test_enhanced_reward_collision(self):
         """Test that collision applies -5.0 penalty."""
@@ -229,11 +230,11 @@ class TestEmbodiedRewardEnhanced:
             is_goal_reached=False,
             combat_result=combat_result
         )
-        # Navigation: 0.1 * 0.0 = 0.0 (distance changed from 5.0 to 6.0, no positive reward)
+        # Navigation: 0.1 * (5.0 - 6.0) = -0.1 (distance increased from 5.0 to 6.0)
         # Collision: -5.0
         # Combat: 5.0
-        # Total: 0.0 - 5.0 + 5.0 = 0.0
-        assert np.isclose(reward, 0.0), f"Collision + combat should combine, got {reward}"
+        # Total: -0.1 - 5.0 + 5.0 = -0.1
+        assert np.isclose(reward, -0.1), f"Collision + combat should combine, got {reward}"
 
     def test_enhanced_reward_no_combat(self):
         """Test that function handles None combat_result gracefully."""

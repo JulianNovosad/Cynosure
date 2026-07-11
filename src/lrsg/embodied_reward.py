@@ -65,8 +65,8 @@ def compute_embodied_reward_enhanced(
     Compute enhanced reward signal for goal-seeking navigation with combat and survival.
 
     Reward components (additive):
-    1. Navigation reward: Moving closer to goal gives reward proportional to distance reduction
-       - If distance_reduction > 0: reward += 0.1 * distance_reduction
+    1. Navigation reward: reward += 0.1 * (prev_distance - curr_distance)
+       - Positive when moving closer to goal, negative when moving away
     2. Collision penalty: If collision, reward -= 5.0
     3. Goal bonus: If goal reached, reward += 100.0
     4. Combat reward: If combat_result provided, reward += combat_result["reward"]
@@ -89,11 +89,10 @@ def compute_embodied_reward_enhanced(
     """
     reward = 0.0
 
-    # 1. Navigation reward: reward for moving closer to goal
+    # 1. Navigation reward: reward for moving closer to goal, penalize moving away
     curr_distance = np.linalg.norm(np.array(agent_pos) - np.array(goal_pos))
     distance_reduction = prev_distance - curr_distance
-    if distance_reduction > 0:
-        reward += 0.1 * distance_reduction
+    reward += 0.1 * distance_reduction
 
     # 2. Collision penalty: penalize collisions
     if is_collision:

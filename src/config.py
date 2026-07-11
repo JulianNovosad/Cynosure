@@ -85,12 +85,17 @@ class LocomotionConfig:
 @dataclass
 class EmbodiedConfig:
     """Configuration for embodied simulation environment."""
-    grid_size: int = 10  # Grid dimensions (meters)
+    grid_size: float = 2.0  # Grid dimensions (meters) — sized to be reachable within episode_length at max_linear_velocity
     num_obstacles: int = 3  # Obstacles per episode
+    num_enemies: int = 3  # Enemies per episode (also collidable)
     episode_length: int = 300  # Ticks per episode
     physics_freq: int = 240  # Hz
     lidar_rays: int = 8  # Number of LiDAR rays
     goal_reach_threshold: float = 0.3  # Distance to goal to count as reached
+    exploration_epsilon: float = 0.3  # Probability of random action (exploration)
+    exploration_decay: float = 0.995  # Per-episode multiplicative decay of epsilon
+    min_exploration_epsilon: float = 0.05  # Floor for exploration_epsilon
+    collision_grace_ticks: int = 10  # Consecutive colliding ticks tolerated before ending the episode
 
 
 @dataclass

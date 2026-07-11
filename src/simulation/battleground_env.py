@@ -100,9 +100,11 @@ class BattlegroundEnvironment(NavigationEnvironment):
         Returns:
             Tuple (x, y) of a valid spawn position
         """
-        margin = 0.5
-        obstacle_radius = 0.3
-        agent_radius = 0.1
+        # Fractions of grid_size, calibrated to match the original fixed-meter
+        # values (0.5m, 0.3m, 0.1m) at the original default grid_size of 20.
+        margin = 0.025 * self.grid_size
+        obstacle_radius = 0.015 * self.grid_size
+        agent_radius = 0.005 * self.grid_size
 
         max_attempts = 100
         for _ in range(max_attempts):

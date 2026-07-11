@@ -456,7 +456,8 @@ class Agent:
         self.brain.inject_input(encoded)
         ctx_end = min(self.lrsg_config.num_input_neurons + self.lrsg_config.context_size, self.brain.N)
         self.brain.activations[self.lrsg_config.num_input_neurons : ctx_end] = self.context_buffer[: ctx_end - self.lrsg_config.num_input_neurons]
-        forward_pass(self.brain, self.lrsg_config, theta=self.theta, last_action=self.last_action, energy=self.ram, learning_rate=self.learning_rate)
+        with torch.no_grad():
+            forward_pass(self.brain, self.lrsg_config, theta=self.theta, last_action=self.last_action, energy=self.ram, learning_rate=self.learning_rate)
         context_slice = self.brain.activations[self.lrsg_config.num_input_neurons:ctx_end]
         old_buffer = self.context_buffer
         self.context_buffer = (self.context_buffer + context_slice) * 0.5
