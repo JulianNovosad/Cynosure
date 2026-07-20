@@ -29,7 +29,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install numpy waitress
+          pip install -e .
           pip install pytest
 
       - name: Run tests (CPU-only, exclude CUDA-dependent)

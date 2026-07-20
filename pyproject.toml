@@ -19,6 +19,7 @@ dependencies = [
     "networkx>=2.8,<3",
     "flask>=3.0,<4",
     "pybullet>=3.2.0,<4",
+    "spacy>=3.7,<4",
 ]
 
 [tool.setuptools.packages.find]
