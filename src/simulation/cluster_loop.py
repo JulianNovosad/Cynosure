@@ -108,6 +108,8 @@ class ClusterSimulation:
         exploration_decay: float = 0.99,
         min_exploration_sigma: float = 0.05,
         trace_decay: Optional[float] = None,
+        use_reward_baseline: bool = False,
+        baseline_decay: float = 0.98,
     ) -> None:
         self.scheduler = scheduler
         self.grid_size = grid_size
@@ -135,6 +137,23 @@ class ClusterSimulation:
         self.exploration_sigma = exploration_sigma
         self.exploration_decay = exploration_decay
         self.min_exploration_sigma = min_exploration_sigma
+
+        # Reward-baseline subtraction (REINFORCE-style variance reduction).
+        # Without this, broadcast_reward(total_reward) nudges every cluster's
+        # weights on every single episode regardless of whether that episode
+        # was better or worse than typical — a policy that stumbles into a
+        # good trajectory gets reinforced, but the *next* average-or-worse
+        # episode immediately perturbs the same weights again with no
+        # memory of "this was already good." Subtracting a running EMA
+        # baseline means only above-baseline episodes reinforce (positive
+        # update) and below-baseline episodes correct away — this is the
+        # mechanism candidate identified in CYNOSURE_KB.md §20.3 for the
+        # catastrophic-forgetting regression seen after episode ~375 in the
+        # unbaselined 1000-episode run (successes stopped being consolidated
+        # once found).
+        self.use_reward_baseline = use_reward_baseline
+        self.baseline_decay = baseline_decay
+        self._reward_baseline: Optional[float] = None
 
         # Encoder is frozen (same weights in sim and hardware)
         self._encoder = SimEncoder(seed=42)
@@ -203,6 +222,20 @@ class ClusterSimulation:
             return self.GOAL_REWARD
         return self.STEP_PENALTY + self.DIST_SCALE * (prev_dist - curr_dist)
 
+    def _end_episode_update(self, total_reward: float) -> None:
+        """Apply the episode's Hebbian update, optionally baselined."""
+        if self.use_reward_baseline:
+            if self._reward_baseline is None:
+                self._reward_baseline = total_reward
+            applied = total_reward - self._reward_baseline
+            self._reward_baseline = (
+                self.baseline_decay * self._reward_baseline
+                + (1 - self.baseline_decay) * total_reward
+            )
+        else:
+            applied = total_reward
+        self.scheduler.broadcast_reward(applied)
+
     def run_episode(self) -> EpisodeResult:
         """Run one complete episode. Returns metrics."""
         self._episode += 1
@@ -236,7 +269,7 @@ class ClusterSimulation:
             prev_dist = curr_dist
 
             if reached:
-                self.scheduler.broadcast_reward(total_reward)
+                self._end_episode_update(total_reward)
                 self.exploration_sigma = max(
                     self.min_exploration_sigma, self.exploration_sigma * self.exploration_decay
                 )
@@ -248,7 +281,7 @@ class ClusterSimulation:
                     final_distance=curr_dist,
                 )
 
-        self.scheduler.broadcast_reward(total_reward)
+        self._end_episode_update(total_reward)
         self.exploration_sigma = max(
             self.min_exploration_sigma, self.exploration_sigma * self.exploration_decay
         )

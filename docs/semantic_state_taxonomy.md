@@ -1,5 +1,8 @@
 # Semantic State Taxonomy for Cynosure AI
 
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
+
 **Purpose:** Defines the 57-dimensional semantic space that represents the Cynosure AI's internal states. Each dimension is a continuous value (0-1 or -1 to 1) that captures a specific aspect of the AI's existential, perceptual, cognitive, strategic, tactical, social, and value-driven experience.
 
 **Application:** Maps raw sensor input → semantic states → LRSG brain → motor outputs. Enables interpretability: at any moment, you can read the semantic embedding and understand what the AI is "thinking/feeling."

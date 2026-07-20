@@ -1,0 +1,49 @@
+{
+  "timestamp": 1782295759.5628202,
+  "device": "NVIDIA GeForce RTX 2070",
+  "total_vram_gb": 8.589606912,
+  "results": [
+    {
+      "label": "Config 1: Compact",
+      "neurons": 1048576,
+      "max_out_degree": 24,
+      "estimated_synapses": 17616076,
+      "success": true,
+      "metrics": {
+        "init_time_sec": 4.808708906173706,
+        "vram_init_mb": 442.819411968,
+        "vram_final_mb": 442.819411968,
+        "avg_reset_ms": 0.008392333984375,
+        "nans": 0
+      }
+    },
+    {
+      "label": "Config 2: Standard",
+      "neurons": 4194304,
+      "max_out_degree": 24,
+      "estimated_synapses": 70464307,
+      "success": true,
+      "metrics": {
+        "init_time_sec": 6.969244718551636,
+        "vram_init_mb": 1769.964306432,
+        "vram_final_mb": 1769.964306432,
+        "avg_reset_ms": 0.009822845458984375,
+        "nans": 0
+      }
+    },
+    {
+      "label": "Config 3: Medium",
+      "neurons": 8388608,
+      "max_out_degree": 12,
+      "estimated_synapses": 70464307,
+      "success": true,
+      "metrics": {
+        "init_time_sec": 6.847748756408691,
+        "vram_init_mb": 2508.698681344,
+        "vram_final_mb": 2508.698681344,
+        "avg_reset_ms": 0.014925003051757812,
+        "nans": 0
+      }
+    }
+  ]
+}

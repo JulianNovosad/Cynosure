@@ -57,6 +57,11 @@ python tests/test_agent.py               # run single test file (also works stan
 | `src/simulation/conflict.py` | Conflict resolution matrix (ATTACK/MERGE/DEFEND outcomes) |
 | `src/announcer/` | LLM announcer with fallback mode |
 | `src/harness/` | Security audit, telemetry, metrics validation, resource monitoring, checkpointing |
+| `src/cluster/` | Cluster-brain runtime (`cluster.py`, `packet.py`, `scheduler.py`) — used by `src/simulation/cluster_loop.py` |
+| `src/evaluation/` | Evaluation suite for locomotion, navigation, and transfer (`evaluation_suite.py`) |
+| `src/simulation/embodied_loop.py` | Embodied pet loop: physics + LRSG + reward in a single step |
+| `src/simulation/battleground_env.py` | Procedural battleground with enemy spawning/behavior and combat resolution |
+| `src/simulation/embodied_visualizer.py` | Real-time web visualization for the embodied loop (`static/`, `templates/`) |
 | `frontend/` | Web dashboard (served on localhost:8080 during simulation) |
 | `tests/` | pytest tests (also runnable as `python tests/test_*.py`) |
 

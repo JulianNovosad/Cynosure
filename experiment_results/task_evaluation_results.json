@@ -1,0 +1,69 @@
+{
+  "timestamp": 1782296352.2083313,
+  "results": [
+    {
+      "config": "Config 1: 4.2M neurons",
+      "neurons": 4194304,
+      "max_degree": 24,
+      "tasks": {
+        "navigation": {
+          "success_rate": 1.0,
+          "avg_ticks": 63.0,
+          "avg_final_distance": 1.3856406460550954,
+          "avg_learning_gain": 0.0
+        },
+        "collection": {
+          "success_rate": 1.0,
+          "avg_collected": 3.0,
+          "avg_reward": 29.349999999999994,
+          "avg_learning_gain": 0.0
+        },
+        "survival": {
+          "success_rate": 1.0,
+          "avg_survival_ticks": 300.0,
+          "avg_final_health": 96.0,
+          "avg_learning_gain": -0.006124579124579127
+        }
+      },
+      "intelligence_metrics": {
+        "navigation_score": 100.0,
+        "collection_score": 100.0,
+        "survival_score": 100.0,
+        "learning_capability": 0,
+        "overall_intelligence_score": 100.0
+      }
+    },
+    {
+      "config": "Config 3: 1.0M neurons",
+      "neurons": 1048576,
+      "max_degree": 24,
+      "tasks": {
+        "navigation": {
+          "success_rate": 1.0,
+          "avg_ticks": 63.0,
+          "avg_final_distance": 1.3856406460550954,
+          "avg_learning_gain": 0.0
+        },
+        "collection": {
+          "success_rate": 1.0,
+          "avg_collected": 3.0,
+          "avg_reward": 29.349999999999994,
+          "avg_learning_gain": 0.0
+        },
+        "survival": {
+          "success_rate": 1.0,
+          "avg_survival_ticks": 300.0,
+          "avg_final_health": 96.0,
+          "avg_learning_gain": -0.006124579124579127
+        }
+      },
+      "intelligence_metrics": {
+        "navigation_score": 100.0,
+        "collection_score": 100.0,
+        "survival_score": 100.0,
+        "learning_capability": 0,
+        "overall_intelligence_score": 100.0
+      }
+    }
+  ]
+}

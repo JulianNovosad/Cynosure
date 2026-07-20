@@ -1,0 +1,76 @@
+{
+  "timestamp": 1782296041.0905497,
+  "device": "NVIDIA GeForce RTX 2070",
+  "vram_gb": 8.589606912,
+  "metrics": {
+    "initialization": [
+      "time_seconds",
+      "vram_allocated_mb",
+      "vram_percentage"
+    ],
+    "stability": [
+      "nan_count",
+      "inf_count",
+      "graph_integrity"
+    ],
+    "performance": [
+      "activation_reset_ms"
+    ],
+    "scaling": [
+      "vram_per_1m_neurons",
+      "init_time_per_1m_neurons"
+    ],
+    "feasibility": [
+      "config_viable",
+      "error_description"
+    ]
+  },
+  "results": [
+    {
+      "id": 1,
+      "name": "Config 1",
+      "neurons": 4194304,
+      "synapses": 4294967296,
+      "status": "SUCCESS",
+      "metrics": {
+        "init_time_sec": 6.67952561378479,
+        "vram_mb": 1769.964306432,
+        "vram_pct": 20.122932116779964,
+        "nan_count": 0,
+        "inf_count": 0,
+        "mb_per_1m": 421.99237500000004,
+        "ms_per_1m": 1592.5230059110618
+      },
+      "error": null,
+      "required_degree": 1462
+    },
+    {
+      "id": 2,
+      "name": "Config 2",
+      "neurons": 33554432,
+      "synapses": 536870912,
+      "status": "FAILED_OOM",
+      "metrics": {},
+      "error": "CUDA out of memory",
+      "required_degree": 22
+    },
+    {
+      "id": 3,
+      "name": "Config 3",
+      "neurons": 1048576,
+      "synapses": 4294967296,
+      "status": "SUCCESS",
+      "metrics": {
+        "init_time_sec": 5.074980020523071,
+        "vram_mb": 442.819411968,
+        "vram_pct": 5.034465912472247,
+        "nan_count": 0,
+        "inf_count": 0,
+        "mb_per_1m": 422.3055,
+        "ms_per_1m": 4839.878101847717
+      },
+      "error": null,
+      "required_degree": 5851
+    }
+  ]
+}

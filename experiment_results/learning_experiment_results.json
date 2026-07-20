@@ -1,0 +1,358 @@
+{
+  "timestamp": 1782296570.3425922,
+  "experiment": "Learning Capability Comparison",
+  "results": [
+    {
+      "config": "Config 1: 4.2M neurons",
+      "neurons": 4194304,
+      "num_episodes": 20,
+      "episodes": [
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        }
+      ],
+      "metrics": {
+        "final_success_rate": 0.0,
+        "early_success_rate": 0.0,
+        "late_success_rate": 0.0,
+        "learning_improvement": 0.0,
+        "reward_improvement": 0.0,
+        "distance_improvement": 0.0,
+        "elapsed_time": 1.1915879249572754
+      }
+    },
+    {
+      "config": "Config 3: 1.0M neurons",
+      "neurons": 1048576,
+      "num_episodes": 20,
+      "episodes": [
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        },
+        {
+          "episode": 0,
+          "success": false,
+          "ticks": 200,
+          "reward": -207.84609690826457,
+          "final_distance": 10.392304845413264,
+          "actions": 200
+        }
+      ],
+      "metrics": {
+        "final_success_rate": 0.0,
+        "early_success_rate": 0.0,
+        "late_success_rate": 0.0,
+        "learning_improvement": 0.0,
+        "reward_improvement": 0.0,
+        "distance_improvement": 0.0,
+        "elapsed_time": 1.431281328201294
+      }
+    }
+  ]
+}

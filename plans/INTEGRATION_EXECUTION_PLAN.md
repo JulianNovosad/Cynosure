@@ -1,4 +1,7 @@
 # Integration Execution Plan - Cynosure v0.4.1
+
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
 **Created**: 2026-06-23  
 **Status**: Framework Complete, Tests In Progress  
 **Goal**: Complete 7-phase integration checkpoint for production release

@@ -1,4 +1,7 @@
 # Integration Checkpoint Summary - Cynosure v0.4.1
+
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
 **Date**: 2026-06-23  
 **Session**: Integration Validation Framework Setup  
 **Status**: Frameworks complete, validation tests ready

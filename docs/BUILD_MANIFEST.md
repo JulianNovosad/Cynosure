@@ -1,4 +1,7 @@
 # Cynosure Build Manifest v0.4.1
+
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
 **Generated:** 2026-06-23  
 **Status:** Integration Validation In Progress  
 **Goal:** Establish single reproducible build with full module connectivity and capability coverage

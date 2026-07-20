@@ -1,5 +1,8 @@
 # Semantic State Integration Guide
 
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
+
 ## 1. Overview
 
 Cynosure's semantic integration system maps raw sensor inputs (vision, lidar, IMU) into a continuous 57-dimensional semantic embedding that represents the AI's internal state. This embedding captures existential, perceptual, cognitive, strategic, tactical, social, and value-driven aspects of the agent's "experience."

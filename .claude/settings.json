@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"$p='C:\\Cynosure\\@TASKS.md'; if(Test-Path $p) { $r=Get-Content $p -Raw; $m=[regex]::Matches($r, '### Task \\d+ \\(\\d{4}-\\d{2}-\\d{2}\\)\\s+(.+?)(?=###|\\Z)', [System.Text.RegularExpressions.RegexOptions]::Singleline) | Select-Object -Last 4 | ForEach-Object { $_.Groups[1].Value.Trim() }; $msg='**Last 4 Completed Tasks:**\\n\\n' + ($m -join '\\n\\n'); @{systemMessage=$msg} | ConvertTo-Json -Compress } else { @{systemMessage='Task file not found at @TASKS.md'} | ConvertTo-Json -Compress }\"",
+            "statusMessage": "Loading task context...",
+            "shell": "powershell"
+          }
+        ]
+      }
+    ]
+  }
+}

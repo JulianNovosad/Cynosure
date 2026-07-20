@@ -136,13 +136,16 @@ C:\Cynosure\
 │   ├── analysis/                   # Data analysis scripts (all analyze*.py files)
 │   ├── announcer/
 │   ├── arena/                      # Environment simulation
+│   ├── cluster/                    # Cluster-brain runtime: cluster.py, packet.py, scheduler.py
+│   ├── evaluation/                 # Evaluation suite (locomotion, navigation, transfer)
 │   ├── experiments/                # Experiment runners (all run_*.py files)
 │   ├── harness/                    # System harness utilities
 │   ├── lrsg/                       # Learning/state structure
 │   ├── metrics/
 │   ├── robotics_agent/             # Robotics-specific agent implementation
 │   ├── robot/
-│   ├── simulation/                 # Simulation core
+│   ├── simulation/                 # Simulation core (embodied_loop, battleground_env, cluster_loop,
+│   │                                #   embodied_visualizer, static/ + templates/ for the web dashboard)
 │   └── tools/                      # Utility tools (audit, health checks, etc.)
 ├── state/                          # State persistence files
 │   ├── agent_state.pkl

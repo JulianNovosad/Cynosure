@@ -1,5 +1,7 @@
 # Embodied Home Pet System Architecture
 
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
 ## Overview
 
 Cynosure now includes a complete embodied agent system: a single LRSG-based neural brain controls a simulated differential-drive robot in a procedurally generated 10×10×10 grid environment. The agent learns goal-seeking behavior through Hebbian plasticity on shaped distance-based rewards. All components (physics, control, learning, navigation) execute in a single loop with no bypass logic.
@@ -373,3 +375,18 @@ C:\Cynosure\
 **Last Updated:** 2026-06-23  
 **Status:** MVP Complete ✅  
 **All 9 Tasks Done:** Physics ✅ Locomotion ✅ Navigation ✅ Reward ✅ Loop ✅ Behaviors ✅ Evaluation ✅ Learning Test ✅ Documentation ✅
+
+## Post-MVP Extensions (not covered above)
+
+This document describes the MVP as of 2026-06-23. Since then the embodied track was extended
+with a battleground/combat layer and a separate distributed "cluster-brain" execution model;
+this file has not been restructured to cover them. See instead:
+
+- **Battleground + combat:** `src/simulation/battleground_env.py` (enemy spawning/behavior),
+  combat resolution with strength scaling, and a 64D semantic state encoder over
+  observations + enemies + reward.
+- **Real-time dashboard:** `src/simulation/embodied_visualizer.py` (+ `static/`, `templates/`).
+- **Cluster-brain runtime:** `src/cluster/` (`cluster.py`, `packet.py`, `scheduler.py`) driven by
+  `src/simulation/cluster_loop.py` — a separate execution model from the single-loop MVP above,
+  currently in active experimentation (no directed goal-seeking demonstrated yet).
+- Full narrative and current status: `CYNOSURE_KB.md` §20 and `docs/CHANGELOG.md` ("Unreleased").

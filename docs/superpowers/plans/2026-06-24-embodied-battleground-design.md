@@ -1,4 +1,7 @@
 # Embodied Learning Battleground: Design Specification
+
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
 **Date:** 2026-06-24  
 **Goal:** Build a complete intelligent embodied learning agent system where a 4m-neuron LRSG agent learns to navigate, fight, and survive in a procedural battleground over 100+ episodes, with real-time visualization.
 

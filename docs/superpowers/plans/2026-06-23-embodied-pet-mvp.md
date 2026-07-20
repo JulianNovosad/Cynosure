@@ -1,5 +1,8 @@
 # Embodied Home Pet MVP Implementation Plan
 
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Implement a stable, continuously learning LRSG-based home companion agent that walks via differential-drive locomotion, navigates procedurally generated indoor grids through learned goal-seeking, performs pet-level behaviors (idle safety, approach, flee), and demonstrates reproducible sim-based behavior transfer.

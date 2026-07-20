@@ -1,4 +1,7 @@
 # Numerical Validation Report
+
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
 **Date**: 22 June 2026  
 **Status**: CRITICAL ISSUES IDENTIFIED
 

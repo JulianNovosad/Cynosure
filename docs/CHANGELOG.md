@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased (as of 20 Jul 2026)
+
+### Embodied Pet / Battleground Track
+
+- **Embodied loop** (`src/simulation/embodied_loop.py`): Integrates physics, LRSG, and reward shaping in a single step loop for a single embodied agent (distinct from the multi-agent mainframe arena).
+- **Battleground environment** (`src/simulation/battleground_env.py`): Procedural arena with enemy spawning and chase/flee/random-walk NPC behavior.
+- **Combat system**: Attack resolution with strength scaling, integrated into the embodied reward.
+- **64D semantic state encoder**: Maps observations + enemies + reward into a 64-dimensional semantic state.
+- **Shaped reward**: Goal-seeking navigation reward plus combat/survival terms.
+- **Evaluation suite** (`src/evaluation/evaluation_suite.py`): Locomotion, navigation, and transfer evaluation.
+- **Real-time web visualization** (`src/simulation/embodied_visualizer.py`, `src/simulation/static/`, `src/simulation/templates/`): Live dashboard for the embodied loop.
+
+### Cluster-Brain Track
+
+- **Cluster runtime** (`src/cluster/`): New `cluster.py`, `packet.py`, `scheduler.py` — a distributed/clustered execution model for the brain, driven by `src/simulation/cluster_loop.py` and `src/experiments/run_cluster_navigation.py`.
+- **Bug fixes** (commit `1046407`): Fixed dead-motor-output bug and embodied-loop/cluster-brain learning bugs; validated with real runs.
+- **Episode-batched Hebbian reward + exploration noise** (commit `8629e78`): Reward broadcast batched per-episode instead of per-step; added exploration noise. See `CYNOSURE_KB.md` §20 for the full experimental writeup (net result: agent moves but wanders, no directed goal-seeking emerged yet).
+- Uncommitted, unvalidated: reward-baseline subtraction in `cluster_loop.py` (see `CYNOSURE_KB.md` §20.4).
+
 ## v0.3.0 (25 May 2026)
 
 ### Phase 2 Performance Optimizations

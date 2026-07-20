@@ -1,6 +1,6 @@
 # CYNOSURE KNOWLEDGE BASE
 _Compiled by agent. Single source of truth for all agents operating in this codebase._
-_Last updated: 11 Jul 2026 (§20: cluster-brain rewrite — fixed dead-motor-output bug and recurrent instability, but no learning trend demonstrated yet)_
+_Last updated: 20 Jul 2026 (§20.4: reward-baseline subtraction added to cluster_loop.py, uncommitted and not yet validated)_
 
 ---
 
@@ -859,5 +859,11 @@ So the agent moves but wanders — no directed goal-seeking behavior emerged fro
 **Net assessment:** three real bugs found and fixed this session (dead motor output, unstable-vs-inert recurrent dynamics tradeoff, too-narrow credit-assignment window), each with concrete evidence. The architecture demonstrably *can* produce goal-reaching behavior (proven by the 8 successes), but does not yet retain it — this is squarely a goal-tier-1 (stable dynamics / no catastrophic forgetting) failure, not a goal-tier-2 (associative learning) one; the association clearly can form (successes happened), it just isn't stabilized. Candidate next steps for a future session: decay the Hebbian learning rate over training (not just exploration), add a floor under `exploration_sigma` that's higher relative to task variance, or add weight consolidation (e.g. only decay/update weights when reward is below some running baseline, an actor-critic-like baseline subtraction) so a working policy stops being overwritten once found.
 
 All three result files are saved: `experiment_results/cluster_navigation.json` (pre-fix, dead motor), `experiment_results/cluster_navigation_with_exploration.json` (exploration-only), `experiment_results/cluster_navigation_batched_reward.json` (episode-batched reward, 1000 episodes — the result described above).
+
+### 20.4 Reward-baseline subtraction (WIP, uncommitted, not yet run)
+
+`src/simulation/cluster_loop.py` currently has uncommitted changes implementing the "actor-critic-like baseline subtraction" candidate named in §20.3's net assessment: `ClusterSimulation.__init__` gained `use_reward_baseline: bool = False` and `baseline_decay: float = 0.98`, and episode-end reward broadcast was refactored into a new `_end_episode_update` method. When enabled, it tracks a running EMA of `total_reward` (`_reward_baseline`) and broadcasts `total_reward - baseline` instead of the raw reward, so only above-baseline episodes reinforce and below-baseline ones correct away — intended to stop the ep-375 regression-to-baseline pattern from §20.3 (fragile good policies getting overwritten by ordinary-episode updates with no memory of "already good").
+
+**Status: implemented but not validated.** No experiment run has exercised `use_reward_baseline=True` yet (no result file, no test references it as of this writing) — do not cite a resolution to the §20.3 forgetting problem until a 1000-episode run with the flag on is actually completed and compared against the unbaselined baseline run.
 
 ---

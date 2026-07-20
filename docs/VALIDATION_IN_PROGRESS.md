@@ -1,4 +1,7 @@
 # Validation In Progress - Real-Time Status
+
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
 **Started**: 2026-06-23 (Phase 3, 4, 6 executing in parallel)  
 **Expected Completion**: ~3-5 hours  
 

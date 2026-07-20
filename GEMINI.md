@@ -46,6 +46,11 @@ These rules are absolute. Never compromise on them.
 | `src/simulation/conflict.py` | Conflict resolution matrix (ATTACK/MERGE/DEFEND outcomes). |
 | `src/announcer/` | LLM announcer (TinyLlama 1.1B Q4) with fallback mode. |
 | `src/harness/` | Security audit, telemetry, resource monitoring, checkpointing. |
+| `src/cluster/` | Cluster-brain runtime (`cluster.py`, `packet.py`, `scheduler.py`), driven by `src/simulation/cluster_loop.py`. |
+| `src/evaluation/` | Evaluation suite for locomotion, navigation, and transfer. |
+| `src/simulation/embodied_loop.py` | Embodied pet loop combining physics + LRSG + reward. |
+| `src/simulation/battleground_env.py` | Procedural battleground: enemy spawning/behavior + combat resolution. |
+| `src/simulation/embodied_visualizer.py` | Real-time web visualization dashboard for the embodied loop. |
 | `frontend/` | Web dashboard served on localhost:8080 during simulation. |
 | `tests/` | Pytest suite (runnable standalone via `python tests/test_*.py`). |
 

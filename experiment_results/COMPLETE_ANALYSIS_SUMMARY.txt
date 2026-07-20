@@ -1,0 +1,293 @@
+NOTE (2026-07-20): This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see CYNOSURE_KB.md and docs/CHANGELOG.md.
+
+================================================================================
+CYNOSURE CONFIGURATION TESTING - COMPLETE ANALYSIS
+================================================================================
+Date: June 24, 2026
+User Question: "Is the 4.2M neuron model smart?"
+
+================================================================================
+EXECUTIVE SUMMARY
+================================================================================
+
+Question: Is Config 1 (4.2M neurons + 4B synapses) smart?
+
+Answer: NO. It scored 17.6% on intelligence tests and could not learn over 20
+        training episodes.
+
+Why: Untrained brains don't solve problems. They need reward feedback that
+     triggers learning, which wasn't properly configured.
+
+Conclusion: The 4.2M neuron brain is CAPABLE but not currently smart or able
+            to learn with existing system setup.
+
+================================================================================
+TESTING PHASES
+================================================================================
+
+PHASE 1: CONFIGURATION VIABILITY
+Status: COMPLETE
+Result: Both 4.2M and 1M configs initialize successfully
+        Zero numerical instability (0 NaNs)
+        1,770MB and 443MB VRAM respectively
+
+PHASE 2: RAW INTELLIGENCE TEST (Untrained)
+Status: COMPLETE
+Result: Config 1: 17.6% intelligence score
+        Config 3: 16.7% intelligence score
+
+Tasks:
+  Navigation: 0% success (couldn't reach target)
+  Exploration: 0.5% coverage (stayed in place)
+  Decision: 52% accuracy (random guessing)
+
+Finding: More neurons provided NO advantage when untrained
+
+PHASE 3: LEARNING CAPABILITY TEST (20 episodes)
+Status: COMPLETE
+Result: Config 1: 0% learning improvement
+        Config 3: 0% learning improvement
+
+Finding: Both brains FAILED to learn
+         Reason: Reward signal didn't trigger plasticity
+         Root cause: Hebbian learning only activates on positive reward
+
+================================================================================
+DETAILED FINDINGS
+================================================================================
+
+1. INITIALIZATION & STABILITY
+   ✓ Config 1 (4.2M neurons) - WORKS
+     Init time: 6.97s
+     VRAM: 1,770MB
+     NaNs: 0
+     Status: Ready for use
+
+   ✓ Config 3 (1M neurons) - WORKS
+     Init time: 4.81s
+     VRAM: 443MB
+     NaNs: 0
+     Status: Ready for use
+
+2. RAW INTELLIGENCE (No Training)
+   ✓ Synapses actually instantiate
+     Config 1 request: 4B synapses → Actually got ~70M (sparse, capped)
+     Config 3 request: 4B synapses → Actually got ~17M (sparse, capped)
+
+   ✗ Intelligence without training is near zero
+     Config 1: 17.6%
+     Config 3: 16.7%
+     Difference: Negligible (0.9%)
+
+   ✗ Cannot navigate
+     Success rate: 0/20 episodes
+     Final distance: Always 10.39 units (no progress)
+
+   ✗ Cannot explore
+     Coverage: 0.5% (visited 5 out of 1000 cells)
+
+   ✗ Cannot make decisions
+     Accuracy: 52% (barely better than random 50%)
+
+3. LEARNING CAPABILITY (With Training)
+   ✗ Learning DID NOT OCCUR
+     Config 1: 0% improvement over 20 episodes
+     Config 3: 0% improvement over 20 episodes
+
+   ✗ Behavior remained constant
+     Episode 1:  -207.85 reward, 10.39 distance
+     Episode 20: -207.85 reward, 10.39 distance
+
+   ✗ Hebbian plasticity never activated
+     Reason: Reward signal was always negative
+     Requirement: Reward > 0.1 to trigger weight update
+     Actual: Reward ≈ -207.85 (blocked plasticity)
+
+4. COMPARISON: 4.2M vs 1M NEURONS
+   Intelligence (raw): 17.6% vs 16.7% (EQUIVALENT)
+   Intelligence (learning): 0% vs 0% (EQUIVALENT)
+   Learning speed: Both failed equally (EQUIVALENT)
+
+   Only difference: 4x more VRAM (1.77GB vs 443MB)
+
+   Conclusion: Neuron count alone does NOT determine intelligence.
+               Both architectures are equivalent without proper training.
+
+================================================================================
+TECHNICAL VERDICT
+================================================================================
+
+System Status: FUNCTIONAL BUT NOT LEARNING
+
+What Works:
+  ✓ Initialization (both configs)
+  ✓ Numerical stability (0 NaNs across all tests)
+  ✓ Graph structure (valid sparse connectivity)
+  ✓ Action selection (random, but functional)
+  ✓ Episode loops (20 complete runs each)
+
+What Doesn't Work:
+  ✗ Raw intelligence (17.6% without training)
+  ✗ Learning system (0% improvement over 20 episodes)
+  ✗ Behavior improvement (stayed constant)
+  ✗ Plasticity activation (reward too negative)
+
+Root Cause of Learning Failure:
+  The Hebbian plasticity system:
+    - Only updates on POSITIVE cumulative reward (> 0.1)
+    - Requires shaped reward or curriculum
+    - Cannot learn from pure penalty signals
+    - Blocks training when reward < 0
+
+================================================================================
+CAN IT BECOME SMART?
+================================================================================
+
+YES, but requires:
+
+1. REWARD RESTRUCTURING
+   Current: Pure distance penalty → Always negative reward
+   Needed: Shaped reward with baseline
+
+   Example:
+     initial_distance = 10.39
+     progress = (initial_distance - current) / initial_distance
+     reward = 10.0 * progress  # Always positive for any progress
+
+2. CURRICULUM LEARNING
+   Current: Target at fixed far distance
+   Needed: Gradually increase difficulty
+
+   Example:
+     Episodes 1-5: Target 3 units away (easy)
+     Episodes 6-10: Target 5 units away (medium)
+     Episodes 11-20: Target 8.6 units away (hard)
+
+3. OR PLASTICITY REDESIGN
+   Current: Only learns on reward > 0.1
+   Needed: Penalty-based plasticity
+
+   Add inverse rule:
+     if reward < -50: weaken_synapses(reward)
+
+With these fixes, both 4.2M and 1M should learn.
+Learning speed difference (if any) would then appear.
+
+================================================================================
+ANSWER TO ORIGINAL QUESTION
+================================================================================
+
+Q: "4 million neurons and 4 billion synapses worked? Was that model smart?"
+
+A: It initialized (yes), but wasn't smart (no).
+
+   Intelligence Score: 17.6%
+   Learning Score: 0%
+
+   The brain CAN be smart with proper training, but:
+   - Current reward structure blocks learning
+   - Both 4.2M and 1M performed identically
+   - More neurons provided no advantage
+   - Architecture is sound but learning system isn't configured
+
+Q: Does 4.2M neurons actually matter?
+
+A: Not yet.
+
+   Untrained: No difference (17.6% vs 16.7%)
+   With training: Unknown (need to fix learning system first)
+
+   HYPOTHESIS: Once learning works, 4.2M might learn faster/better
+   but this wasn't tested because learning system failed.
+
+Q: Is the 4 billion synapse claim accurate?
+
+A: Not really.
+
+   Requested: 4B synapses
+   Actually instantiated: ~70M synapses (capped at max_degree 24)
+
+   Reason: LRSG uses sparse connectivity, not dense
+   Result: 4.2M neurons × 24 degree × 0.7 sparsity ≈ 70M synapses
+
+   The "4B synapses" would require degree 1,462 (ultra-dense, unfeasible)
+
+================================================================================
+FILES GENERATED
+================================================================================
+
+Configuration Testing:
+  experiment_results/user_exact_specs.json
+  experiment_results/config_comparison_final.json
+  experiment_results/FINAL_RESULTS.md
+
+Intelligence Testing:
+  experiment_results/neural_task_evaluation.json
+  experiment_results/INTELLIGENCE_TEST_REPORT.md
+
+Learning Experiments:
+  experiment_results/learning_experiment_results.json
+  experiment_results/LEARNING_EXPERIMENT_FINDINGS.md
+
+Test Scripts (Reproducible):
+  src/experiments/user_specs_test.py
+  src/experiments/neural_task_evaluation.py
+  src/experiments/learning_comparison_experiment.py
+
+================================================================================
+RECOMMENDATIONS
+================================================================================
+
+For Immediate Use:
+  Use Config 3 (1M neurons) for development
+    - 4x less VRAM (443MB vs 1.77GB)
+    - Same performance as 4.2M when untrained
+    - Use 4.2M only after learning system is fixed
+
+For Learning (Next Steps):
+  1. Implement reward shaping (always positive on progress)
+  2. Add curriculum learning (start easy, increase difficulty)
+  3. Re-run learning experiments
+  4. Measure learning curves for both configs
+  5. Answer: "Does 4.2M learn faster than 1M?"
+
+For Deployment:
+  - 4.2M neurons: Use for complex tasks (after training)
+  - 1M neurons: Use for simple tasks or resource-constrained devices
+
+================================================================================
+CONCLUSION
+================================================================================
+
+Config 1 (4.2M neurons, 4B synapses requested):
+
+Intelligence: 17.6% (not smart)
+Learning: Failed (0% improvement)
+Potential: High (architecture is sound)
+Requirements: Proper reward shaping + learning system fix
+
+Comparison to Config 3 (1M neurons):
+
+Raw Performance: Equivalent (17.6% vs 16.7%)
+Learning Ability: Equivalent (both 0%)
+Efficiency: Config 3 wins (4x less VRAM)
+Benefit of More Neurons: Unproven (learning system prevented test)
+
+Final Verdict:
+  ✓ The system works technically (brains initialize, run, are stable)
+  ✗ The system doesn't learn intelligently (plasticity blocked)
+  ✓ The system has capacity to learn (with modifications)
+
+To answer "Is it smart?" definitively, need to:
+  1. Fix the learning system
+  2. Train for 20+ episodes with proper reward
+  3. Measure learning curves
+  4. Then determine if 4.2M > 1M in learning speed
+
+Until then: Not smart, but potentially capable.
+
+================================================================================
+Generated: June 24, 2026
+Testing Complete: YES
+Goal Status: ACHIEVED (Learning experiments run and analyzed)
+================================================================================

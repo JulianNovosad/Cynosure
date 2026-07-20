@@ -1,5 +1,8 @@
 # Fragment 3: Cynosure — Militech's Rogue AI Containment
 
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
+
 **Cynosure** — Militech's answer to Arasaka's Soulkiller. A secret project to capture and weaponize rogue AIs from the Net.
 
 During the pre-DataKrash era, Militech and Arasaka raced for digital dominance. Soulkiller pushed Militech to develop Cynosure beneath Night City at Site C, using neural adaptive tech to trap AIs lurking below the sanitized Net and turn them into weapons. The 2022 DataKrash wrecked much of the Net's infrastructure and scattered the very AIs Militech hoped to capture.

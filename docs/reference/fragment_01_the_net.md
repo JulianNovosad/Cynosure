@@ -1,5 +1,8 @@
 # Fragment 1: The Net / Cyberspace
 
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
+
 The Net (or Cyberspace) is the vast telecommunications network of the Cyberpunk universe—analogous to the early real-world internet, but far more extensive, linking appliances, cybernetics, and computers via hard lines, radio, cell networks, and microwave transmitters.
 
 Access requires a modem. Casual users interact through terminals and keyboards, but professionals jack in through cybermodems (cyberdecks), experiencing the Net in 3D via direct neural interface. Speed is everything; keyboard jockeys are left in the dust.

@@ -1,0 +1,35 @@
+{
+  "timestamp": 1782295716.9154916,
+  "device": "NVIDIA GeForce RTX 2070",
+  "total_vram_gb": 8.589606912,
+  "results": [
+    {
+      "success": true,
+      "neurons": 1048576,
+      "approx_synapses": 17616076,
+      "max_out_degree": 24,
+      "init_time_ms": 4871.380567550659,
+      "vram_used_mb": 442.819411968,
+      "vram_total_gb": 0.432440832,
+      "forward_time_ms": 0.03337860107421875,
+      "config_name": "Compact (2^20 neurons)"
+    },
+    {
+      "success": true,
+      "neurons": 4194304,
+      "approx_synapses": 70464307,
+      "max_out_degree": 24,
+      "init_time_ms": 6717.6313400268555,
+      "vram_used_mb": 1769.964306432,
+      "vram_total_gb": 1.728480768,
+      "forward_time_ms": 0.05745887756347656,
+      "config_name": "Standard (2^22 neurons)"
+    },
+    {
+      "success": false,
+      "error": "CUDA out of memory. Tried to allocate 3.00 GiB. GPU 0 has a total capacity of 8.00 GiB of which 0 bytes is free. Of the allocated memory 9.50 GiB is allocated by PyTorch, and 3.63 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)",
+      "neurons": 33554432,
+      "config_name": "Large (2^25 neurons)"
+    }
+  ]
+}

@@ -1,5 +1,8 @@
 # Embodied Pet MVP: Completion Checklist
 
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
+
 **Plan:** `2026-06-23-embodied-pet-mvp.md`  
 **Target Goal:** Home embodied pet with walking, navigation, learning, pet behaviors  
 **Status:** ✅ COMPLETE (all 9 tasks done)

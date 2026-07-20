@@ -1,4 +1,7 @@
 # Project Cynosure Development Protocol v5.3
+
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
 ## Context
 This project simulates an advanced multi-agent Learning Structures/Graph (LRSG) system integrated with physical robot control on the AuroreMkVII platform. The core goal is to achieve robust, predictable simulation behavior and eventual hardware operability.
 

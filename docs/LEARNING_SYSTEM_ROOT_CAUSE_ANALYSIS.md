@@ -1,5 +1,8 @@
 # Learning System Root Cause Analysis
 
+> **Documentation note (2026-07-20):** This file is a historical, point-in-time snapshot and is intentionally not rewritten to reflect current state (rewriting it would falsify the record it captured). For current system status, see `CYNOSURE_KB.md` and `docs/CHANGELOG.md`.
+
+
 ## Problem Statement
 Hebbian learning produces **worse** performance than random baseline across 3 independent experiments:
 - v4: 38.5% (learning) vs 41.5% (baseline) = -3.0%
